@@ -151,6 +151,8 @@ export default function Home() {
       {/* ══ 1. HERO ══════════════════════════════════════════════════════════ */}
       <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-16">
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0D1F33 0%, #111827 60%, #0a1628 100%)' }} />
+        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600&auto=format&fit=crop&q=80" alt="" className="absolute inset-0 w-full h-full object-cover opacity-8" />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(13,31,51,0.88) 0%, rgba(17,24,39,0.92) 60%, rgba(10,22,40,0.9) 100%)' }} />
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(5,225,174,1) 1px, transparent 1px), linear-gradient(90deg, rgba(5,225,174,1) 1px, transparent 1px)', backgroundSize: '72px 72px' }} />
         <div className="absolute top-1/3 end-1/5 w-[600px] h-[600px] rounded-full opacity-8 blur-[120px]" style={{ background: '#05E1AE' }} />
 
