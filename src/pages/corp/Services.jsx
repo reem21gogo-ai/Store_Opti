@@ -1,33 +1,174 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '@/lib/LanguageContext';
-import { translations } from '@/lib/i18n';
-import { ArrowRight, ArrowLeft, Building2, Users, Target, BookOpen, Wrench, GraduationCap, BarChart2, Compass, Briefcase } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Building2, Users, Target, BookOpen, Wrench, GraduationCap, BarChart2, Compass, Briefcase, Cpu } from 'lucide-react';
 import CorpNavbar from '@/components/corp/CorpNavbar';
 import CorpFooter from '@/components/corp/CorpFooter';
 
 const SERVICES = {
   ar: [
-    { icon: Building2, title: 'الاستشارات المؤسسية', desc: 'نساعد المؤسسات على تحسين بنيتها التنظيمية وعملياتها وثقافتها.', audience: 'المؤسسات الحكومية والخاصة والقادة التنفيذيون', deliverables: 'تقرير تشخيصي + خارطة طريق استراتيجية + آليات قياس' },
-    { icon: Users, title: 'التدريب التنفيذي', desc: 'برامج تدريب فردي مخصصة للقادة التنفيذيين.', audience: 'المدراء التنفيذيون وكبار القادة', deliverables: 'تقييم شامل + جلسات فردية + خطة تطوير شخصية' },
-    { icon: Target, title: 'تطوير القيادة', desc: 'برامج شاملة لتطوير القدرات القيادية على جميع المستويات.', audience: 'مدراء الإدارة الوسطى والمشرفون والقادة الجدد', deliverables: 'برنامج تطوير + ورش عمل + أدوات تقييم' },
-    { icon: BookOpen, title: 'بناء الكفاءات', desc: 'تصميم أطر الكفاءات وبناء منظومات تطوير الموظفين.', audience: 'إدارة الموارد البشرية والقادة المعنيون', deliverables: 'إطار كفاءات + مسارات تطوير + أدوات قياس' },
-    { icon: Wrench, title: 'تصميم الأدوات', desc: 'تصميم أدوات تقييم وقياس مخصصة للمؤسسات.', audience: 'إدارة الموارد البشرية والمؤسسات', deliverables: 'أداة تقييم مخصصة + دليل استخدام + تقرير نتائج' },
-    { icon: GraduationCap, title: 'التدريب والتطوير', desc: 'برامج تدريبية متكاملة في مجالات القيادة والإدارة.', audience: 'فرق العمل على جميع المستويات', deliverables: 'برنامج تدريبي + مواد تعليمية + تقرير قياس الأثر' },
-    { icon: BarChart2, title: 'تقييمات المؤسسات', desc: 'تقييمات مؤسسية شاملة تكشف الواقع الحالي وتحدد أولويات التطوير.', audience: 'القيادة العليا وإدارة الموارد البشرية', deliverables: 'تقرير تقييمي شامل + مصفوفة أولويات' },
-    { icon: Compass, title: 'التخطيط الاستراتيجي', desc: 'دعم المؤسسات في بناء رؤيتها الاستراتيجية وخارطة طريقها.', audience: 'القيادة العليا ومجالس الإدارة', deliverables: 'خطة استراتيجية + مؤشرات أداء + آلية متابعة' },
-    { icon: Briefcase, title: 'الشراكات الاستراتيجية', desc: 'بناء علاقات شراكة استراتيجية طويلة الأمد مع المؤسسات.', audience: 'المؤسسات الراغبة في شريك استراتيجي دائم', deliverables: 'إطار شراكة + خطة تطوير سنوية + مراجعات دورية' },
+    {
+      icon: Building2,
+      title: 'الاستشارات المؤسسية',
+      desc: 'نساعد المؤسسات على تحسين هياكلها التنظيمية وعملياتها وثقافتها لتحقيق الكفاءة والنمو المستدام.',
+      audience: 'المؤسسات الحكومية والخاصة والقادة التنفيذيون وأصحاب القرار',
+      deliverables: 'تقرير تشخيصي شامل + خارطة طريق استراتيجية + آليات قياس وتقييم',
+      outcomes: 'تحسين الكفاءة التشغيلية، تعزيز الأداء المؤسسي، بناء ثقافة مؤسسية فاعلة',
+    },
+    {
+      icon: Users,
+      title: 'التدريب التنفيذي والتمكيني',
+      desc: 'جلسات تدريب فردي وجماعي مخصصة لتطوير القادة التنفيذيين والناشئين وتمكينهم من قيادة التغيير.',
+      audience: 'المدراء التنفيذيون وكبار القادة والقادة الناشئون',
+      deliverables: 'تقييم شامل للقيادة + جلسات تدريب فردية + خطة تطوير شخصية مخصصة',
+      outcomes: 'تعزيز الكفاءة القيادية، تطوير مهارات اتخاذ القرار، بناء القدرة على التأثير',
+    },
+    {
+      icon: Target,
+      title: 'تطوير القيادة',
+      desc: 'برامج شاملة لتطوير القدرات القيادية على جميع المستويات الإدارية من خلال أدوات علمية معتمدة.',
+      audience: 'مدراء الإدارة الوسطى والمشرفون والقادة الجدد والمرشحون للتقدم الوظيفي',
+      deliverables: 'برنامج تطوير قيادي + ورش عمل تطبيقية + أدوات تقييم وقياس الأثر',
+      outcomes: 'بناء مخزون قيادي قوي، تطوير مهارات التواصل والإقناع، تعزيز ثقافة القيادة',
+    },
+    {
+      icon: BookOpen,
+      title: 'بناء الكفاءات',
+      desc: 'تصميم أطر الكفاءات المؤسسية وبناء منظومات متكاملة لتطوير الموظفين بناءً على أحدث المنهجيات.',
+      audience: 'إدارات الموارد البشرية والقادة المعنيون والفرق التنفيذية',
+      deliverables: 'إطار كفاءات مؤسسي + مسارات تطوير فردية + أدوات قياس وتقييم الكفاءات',
+      outcomes: 'تحديد فجوات المهارات، بناء خطط تطوير فعالة، تحسين أداء الفرق',
+    },
+    {
+      icon: Compass,
+      title: 'تصميم مسارات التعلم',
+      desc: 'تصميم مسارات تعليمية وتطويرية متكاملة تتناسب مع أهداف المؤسسة واحتياجات الموظفين.',
+      audience: 'إدارات التدريب والتطوير والموارد البشرية في المؤسسات',
+      deliverables: 'خارطة مسار التعلم + محتوى تدريبي مخصص + نظام تقييم ومتابعة',
+      outcomes: 'تحسين جودة التدريب، ربط التطوير باحتياجات العمل، تعزيز انخراط الموظفين',
+    },
+    {
+      icon: BarChart2,
+      title: 'تقييم الكفاءات والأداء',
+      desc: 'تقييمات مؤسسية وفردية شاملة باستخدام منهجية ROUTE™ وHarrison وNCDA للكشف عن نقاط القوة وتحديد أولويات التطوير.',
+      audience: 'القيادة العليا وإدارات الموارد البشرية والموظفين على جميع المستويات',
+      deliverables: 'تقرير تقييمي تفصيلي + تحليل نقاط القوة والتطوير + توصيات عملية',
+      outcomes: 'فهم أعمق لنقاط القوة، تحديد أولويات التطوير، بناء قرارات موارد بشرية مبنية على البيانات',
+    },
+    {
+      icon: GraduationCap,
+      title: 'تطوير الموارد البشرية والمواهب',
+      desc: 'حلول متكاملة لتطوير الموارد البشرية تشمل بناء الاستراتيجيات واكتشاف المواهب وإدارة مسارات الأداء.',
+      audience: 'إدارات الموارد البشرية ومتخصصو التعلم والتطوير',
+      deliverables: 'استراتيجية موارد بشرية + برامج اكتشاف المواهب + نظام إدارة الأداء',
+      outcomes: 'تعزيز استبقاء الكفاءات، بناء ثقافة التعلم المستمر، تطوير منظومة المواهب',
+    },
+    {
+      icon: Wrench,
+      title: 'تصميم الأدوات والتقييمات المخصصة',
+      desc: 'تصميم أدوات تقييم وقياس مخصصة تناسب طبيعة ومتطلبات مؤسستك، بعيداً عن الحلول الجاهزة.',
+      audience: 'المؤسسات التي تحتاج إلى أدوات قياس مخصصة لتقييم الكفاءات أو الأداء',
+      deliverables: 'أداة تقييم مخصصة + دليل الاستخدام + تقرير نتائج تفصيلي',
+      outcomes: 'قياس دقيق لما يهم مؤسستك، بيانات أكثر موثوقية، قرارات موارد بشرية أفضل',
+    },
+    {
+      icon: Briefcase,
+      title: 'تحسين الأداء المؤسسي',
+      desc: 'برامج متكاملة لتشخيص أسباب تراجع الأداء وتصميم تدخلات فعالة لتحقيق نتائج ملموسة وقابلة للقياس.',
+      audience: 'الإدارة العليا والمدراء المعنيون بتحسين مؤشرات الأداء المؤسسي',
+      deliverables: 'تشخيص شامل + خطة تحسين الأداء + مؤشرات قياس + تقارير متابعة دورية',
+      outcomes: 'تحسين مؤشرات الأداء الرئيسية، تعزيز الإنتاجية، رفع مستوى التحفيز والانخراط',
+    },
+    {
+      icon: Cpu,
+      title: 'الأدوات الرقمية التطويرية',
+      desc: 'تقييمات ومنتجات رقمية تطويرية مصممة لدعم رحلة التطوير الفردي والمؤسسي بشكل مرن وفعال من حيث التكلفة.',
+      audience: 'الأفراد والقادة والمؤسسات التي تسعى للتطوير الذاتي أو المؤسسي عبر الفضاء الرقمي',
+      deliverables: 'وصول إلى المتجر الرقمي + تقييمات تفاعلية + تقارير PDF + أدلة وأطر عمل',
+      outcomes: 'تطوير مرن وبتكلفة مناسبة، وصول في أي وقت ومن أي مكان، نتائج فورية وقابلة للتطبيق',
+    },
   ],
   en: [
-    { icon: Building2, title: 'Organizational Consulting', desc: 'We help organizations improve their structure, processes, and culture.', audience: 'Government and private sector organizations, C-suite executives', deliverables: 'Diagnostic report + Strategic roadmap + Measurement frameworks' },
-    { icon: Users, title: 'Executive Coaching', desc: 'Customized coaching programs for executive leaders.', audience: 'C-suite executives and senior leaders', deliverables: 'Comprehensive assessment + Individual sessions + Personal development plan' },
-    { icon: Target, title: 'Leadership Development', desc: 'Comprehensive programs to develop leadership capabilities at all levels.', audience: 'Middle managers, supervisors, and emerging leaders', deliverables: 'Development program + Workshops + Assessment tools' },
-    { icon: BookOpen, title: 'Capability Building', desc: 'Designing competency frameworks and employee development systems.', audience: 'HR management and relevant leadership', deliverables: 'Competency framework + Development pathways + Measurement tools' },
-    { icon: Wrench, title: 'Tool Design', desc: 'Designing customized assessment and measurement tools.', audience: 'HR departments and organizations', deliverables: 'Custom tool + User guide + Results report' },
-    { icon: GraduationCap, title: 'Training & Development', desc: 'Integrated training programs in leadership and management.', audience: 'Teams at all levels', deliverables: 'Training program + Learning materials + Impact report' },
-    { icon: BarChart2, title: 'Organizational Assessments', desc: 'Comprehensive assessments revealing current reality and priorities.', audience: 'Senior leadership and HR management', deliverables: 'Comprehensive report + Priority matrix' },
-    { icon: Compass, title: 'Strategic Planning', desc: 'Supporting organizations in building their strategic vision and roadmap.', audience: 'Senior leadership and boards of directors', deliverables: 'Strategic plan + KPIs + Follow-up mechanism' },
-    { icon: Briefcase, title: 'Strategic Partnerships', desc: 'Building long-term strategic partnerships for continuous development.', audience: 'Organizations seeking a permanent strategic partner', deliverables: 'Partnership framework + Annual plan + Periodic reviews' },
+    {
+      icon: Building2,
+      title: 'Organizational Consulting',
+      desc: 'We help organizations improve their organizational structures, processes, and culture to achieve efficiency and sustainable growth.',
+      audience: 'Government and private organizations, C-suite executives, and decision-makers',
+      deliverables: 'Comprehensive diagnostic report + Strategic roadmap + Measurement and evaluation mechanisms',
+      outcomes: 'Improve operational efficiency, enhance institutional performance, build an effective organizational culture',
+    },
+    {
+      icon: Users,
+      title: 'Executive Coaching & Empowerment',
+      desc: 'Individual and group coaching sessions tailored to develop and empower executive and emerging leaders to drive change.',
+      audience: 'C-suite executives, senior leaders, and emerging leaders',
+      deliverables: 'Comprehensive leadership assessment + Individual coaching sessions + Personalized development plan',
+      outcomes: 'Enhance leadership competence, develop decision-making skills, build influence capacity',
+    },
+    {
+      icon: Target,
+      title: 'Leadership Development',
+      desc: 'Comprehensive programs to develop leadership capabilities at all management levels through scientifically validated tools.',
+      audience: 'Middle managers, supervisors, new leaders, and career advancement candidates',
+      deliverables: 'Leadership development program + Applied workshops + Impact assessment tools',
+      outcomes: 'Build a strong leadership pipeline, develop communication and persuasion skills, promote leadership culture',
+    },
+    {
+      icon: BookOpen,
+      title: 'Capability Building',
+      desc: 'Design organizational competency frameworks and build integrated employee development systems based on latest methodologies.',
+      audience: 'HR management, relevant leaders, and executive teams',
+      deliverables: 'Institutional competency framework + Individual development pathways + Competency assessment tools',
+      outcomes: 'Identify skill gaps, build effective development plans, improve team performance',
+    },
+    {
+      icon: Compass,
+      title: 'Learning Journey Design',
+      desc: 'Design integrated educational and developmental pathways that align with organizational goals and employee needs.',
+      audience: 'Training, development, and HR departments in organizations',
+      deliverables: 'Learning pathway map + Customized training content + Assessment and follow-up system',
+      outcomes: 'Improve training quality, link development to business needs, enhance employee engagement',
+    },
+    {
+      icon: BarChart2,
+      title: 'Competency Assessment',
+      desc: 'Comprehensive institutional and individual assessments using ROUTE™, Harrison, and NCDA methodologies to uncover strengths and identify development priorities.',
+      audience: 'Senior leadership, HR departments, and employees at all levels',
+      deliverables: 'Detailed assessment report + Strengths and development analysis + Practical recommendations',
+      outcomes: 'Deeper understanding of strengths, identification of development priorities, data-driven HR decisions',
+    },
+    {
+      icon: GraduationCap,
+      title: 'HR & Talent Development Solutions',
+      desc: 'Integrated HR development solutions including strategy building, talent discovery, and performance pathway management.',
+      audience: 'HR departments and learning & development professionals',
+      deliverables: 'HR strategy + Talent discovery programs + Performance management system',
+      outcomes: 'Enhance talent retention, build a continuous learning culture, develop the talent ecosystem',
+    },
+    {
+      icon: Wrench,
+      title: 'Custom Internal Assessments',
+      desc: 'Design customized assessment and measurement tools tailored to your organization\'s nature and requirements, away from off-the-shelf solutions.',
+      audience: 'Organizations needing customized measurement tools for competency or performance assessment',
+      deliverables: 'Custom assessment tool + User guide + Detailed results report',
+      outcomes: 'Precise measurement of what matters to your organization, more reliable data, better HR decisions',
+    },
+    {
+      icon: Briefcase,
+      title: 'Performance Improvement',
+      desc: 'Integrated programs to diagnose performance decline causes and design effective interventions to achieve tangible, measurable results.',
+      audience: 'Senior management and managers responsible for improving institutional performance indicators',
+      deliverables: 'Comprehensive diagnosis + Performance improvement plan + KPIs + Periodic follow-up reports',
+      outcomes: 'Improve key performance indicators, enhance productivity, boost motivation and engagement',
+    },
+    {
+      icon: Cpu,
+      title: 'Digital Development Tools',
+      desc: 'Digital development assessments and products designed to support individual and organizational development journeys flexibly and cost-effectively.',
+      audience: 'Individuals, leaders, and organizations seeking self or organizational development through digital channels',
+      deliverables: 'Digital store access + Interactive assessments + PDF reports + Guides and frameworks',
+      outcomes: 'Flexible development at appropriate cost, access anytime anywhere, immediate and applicable results',
+    },
   ],
 };
 
@@ -38,51 +179,83 @@ export default function Services() {
   const srvs = SERVICES[lang];
 
   return (
-    <div className="bg-corp-dark min-h-screen">
+    <div className="bg-corp-dark min-h-screen" dir={isRTL ? 'rtl' : 'ltr'}>
       <CorpNavbar />
       <section className="pt-28 pb-12 px-6 text-center">
         <div className="max-w-3xl mx-auto">
-          <p className="text-brand-accent text-sm font-medium uppercase tracking-widest mb-4">{translations.nav.services[lang]}</p>
-          <h1 className="font-heading font-black text-4xl md:text-6xl text-white mb-6">{lang === 'ar' ? 'خدماتنا الاستشارية' : 'Our Consulting Services'}</h1>
-          <p className="text-white/60 text-lg">{lang === 'ar' ? 'تسعة محاور تغطي كل احتياجات مؤسستك' : "Nine pillars covering all your organization's needs"}</p>
+          <p className="text-brand-accent text-sm font-medium uppercase tracking-widest mb-4">{lang === 'ar' ? 'خدماتنا' : 'Our Services'}</p>
+          <h1 className="font-heading font-black text-4xl md:text-6xl text-white mb-6">
+            {lang === 'ar' ? 'خدماتنا الاستشارية' : 'Our Consulting Services'}
+          </h1>
+          <p className="text-white/60 text-lg leading-relaxed">
+            {lang === 'ar'
+              ? 'عشرة محاور استشارية متكاملة تغطي احتياجات مؤسستك من التشخيص إلى التطوير إلى القياس والأثر.'
+              : 'Ten integrated consulting pillars covering your organization\'s needs from diagnosis to development to measurement and impact.'}
+          </p>
         </div>
       </section>
+
       <section className="py-12 px-6 pb-24">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {srvs.map((s, i) => {
-            const Icon = s.icon;
-            const isExpanded = expanded === i;
-            return (
-              <div key={i} onClick={() => setExpanded(isExpanded ? null : i)}
-                className={`p-6 rounded-3xl border bg-corp-surface/40 transition-all cursor-pointer group ${isExpanded ? 'border-brand-accent/50 bg-corp-surface/80' : 'border-white/10 hover:border-brand-accent/30'}`}>
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-brand-accent/10 flex items-center justify-center group-hover:bg-brand-accent/20 transition-all">
-                    <Icon size={18} className="text-brand-accent" />
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {srvs.map((s, i) => {
+              const Icon = s.icon;
+              const isOpen = expanded === i;
+              return (
+                <div key={i}
+                  onClick={() => setExpanded(isOpen ? null : i)}
+                  className={`p-6 rounded-3xl border bg-corp-surface/40 transition-all cursor-pointer group ${isOpen ? 'border-brand-accent/50 bg-corp-surface/80' : 'border-white/10 hover:border-brand-accent/30'}`}>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-brand-accent/10 flex items-center justify-center group-hover:bg-brand-accent/20 transition-all">
+                      <Icon size={18} className="text-brand-accent" />
+                    </div>
+                    <span className="text-white/20 text-xs font-mono">{String(i + 1).padStart(2, '0')}</span>
                   </div>
-                  <span className="text-white/30 text-xs">{String(i + 1).padStart(2, '0')}</span>
+                  <h3 className="font-heading font-bold text-white text-lg mb-3">{s.title}</h3>
+                  <p className="text-white/50 text-sm leading-relaxed">{s.desc}</p>
+
+                  {isOpen && (
+                    <div className="mt-5 pt-5 border-t border-white/10 space-y-4">
+                      <div>
+                        <span className="text-brand-accent text-xs font-bold uppercase tracking-wider block mb-1">{lang === 'ar' ? 'الجمهور المستهدف' : 'Target Audience'}</span>
+                        <p className="text-white/60 text-sm">{s.audience}</p>
+                      </div>
+                      <div>
+                        <span className="text-brand-accent text-xs font-bold uppercase tracking-wider block mb-1">{lang === 'ar' ? 'المخرجات' : 'Deliverables'}</span>
+                        <p className="text-white/60 text-sm">{s.deliverables}</p>
+                      </div>
+                      <div>
+                        <span className="text-brand-accent text-xs font-bold uppercase tracking-wider block mb-1">{lang === 'ar' ? 'النتائج المتوقعة' : 'Expected Outcomes'}</span>
+                        <p className="text-white/60 text-sm">{s.outcomes}</p>
+                      </div>
+                      <Link to="/consultation" onClick={e => e.stopPropagation()}
+                        className="inline-flex items-center gap-2 text-brand-accent text-sm font-medium hover:gap-3 transition-all mt-1">
+                        {lang === 'ar' ? 'اطلب هذه الخدمة' : 'Request This Service'} <Arrow size={14} />
+                      </Link>
+                    </div>
+                  )}
                 </div>
-                <h3 className="font-heading font-bold text-white text-lg mb-3">{s.title}</h3>
-                <p className="text-white/50 text-sm leading-relaxed">{s.desc}</p>
-                {isExpanded && (
-                  <div className="mt-5 pt-5 border-t border-white/10 space-y-3">
-                    <div>
-                      <span className="text-brand-accent text-xs font-bold uppercase tracking-wider">{lang === 'ar' ? 'الجمهور المستهدف' : 'Target Audience'}</span>
-                      <p className="text-white/60 text-sm mt-1">{s.audience}</p>
-                    </div>
-                    <div>
-                      <span className="text-brand-accent text-xs font-bold uppercase tracking-wider">{lang === 'ar' ? 'المخرجات' : 'Deliverables'}</span>
-                      <p className="text-white/60 text-sm mt-1">{s.deliverables}</p>
-                    </div>
-                    <Link to="/consultation" onClick={e => e.stopPropagation()} className="inline-flex items-center gap-2 text-brand-accent text-sm font-medium hover:gap-3 transition-all mt-2">
-                      {lang === 'ar' ? 'اطلب هذه الخدمة' : 'Request This Service'} <Arrow size={14} />
-                    </Link>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+
+          {/* CTA */}
+          <div className="mt-16 text-center">
+            <div className="inline-block p-8 rounded-3xl border border-brand-accent/20 bg-corp-surface/40 max-w-xl">
+              <h3 className="font-heading font-black text-white text-2xl mb-3">
+                {lang === 'ar' ? 'لا تجد ما تبحث عنه؟' : 'Can\'t Find What You\'re Looking For?'}
+              </h3>
+              <p className="text-white/50 text-sm mb-5">
+                {lang === 'ar' ? 'نصمم حلولاً مخصصة لاحتياجاتك. تحدث معنا وسنبني الحل المناسب.' : 'We design custom solutions for your needs. Talk to us and we\'ll build the right solution.'}
+              </p>
+              <Link to="/consultation" className="btn-catalyst px-6 py-3 rounded-xl inline-flex items-center gap-2">
+                {lang === 'ar' ? 'طلب استشارة' : 'Request Consultation'} <Arrow size={14} />
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
+
       <CorpFooter />
     </div>
   );
