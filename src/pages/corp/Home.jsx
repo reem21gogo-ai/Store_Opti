@@ -150,11 +150,10 @@ export default function Home() {
 
       {/* ══ 1. HERO ══════════════════════════════════════════════════════════ */}
       <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-16">
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0D1F33 0%, #111827 60%, #0a1628 100%)' }} />
-        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600&auto=format&fit=crop&q=80" alt="" className="absolute inset-0 w-full h-full object-cover opacity-6" />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(13,31,51,0.88) 0%, rgba(17,24,39,0.92) 60%, rgba(10,22,40,0.9) 100%)' }} />
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(5,225,174,1) 1px, transparent 1px), linear-gradient(90deg, rgba(5,225,174,1) 1px, transparent 1px)', backgroundSize: '72px 72px' }} />
-        <div className="absolute top-1/3 end-1/5 w-[600px] h-[600px] rounded-full opacity-8 blur-[120px]" style={{ background: '#05E1AE' }} />
+        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600&auto=format&fit=crop&q=80" alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(13,31,51,0.94) 0%, rgba(13,31,51,0.88) 50%, rgba(13,31,51,0.92) 100%)' }} />
+        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(5,225,174,1) 1px, transparent 1px), linear-gradient(90deg, rgba(5,225,174,1) 1px, transparent 1px)', backgroundSize: '72px 72px' }} />
+        <div className="absolute top-20 right-1/4 w-[700px] h-[700px] rounded-full opacity-10 blur-[140px]" style={{ background: '#05E1AE' }} />
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 py-28 w-full">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22,1,0.36,1] }}>
@@ -167,14 +166,14 @@ export default function Home() {
           </motion.div>
 
           <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1, ease: [0.22,1,0.36,1] }}
-            className="font-heading font-black leading-tight mb-6 max-w-3xl" style={{ fontSize: 'clamp(2.8rem, 6vw, 5rem)', color: '#fff' }}>
+            className="font-heading font-black leading-tight mb-6 max-w-3xl" style={{ fontSize: 'clamp(3.5rem, 8vw, 6rem)', color: '#fff', fontWeight: 900 }}>
             {lang === 'ar'
               ? <><span style={{ color: '#05E1AE' }}>وضوح.</span> نمو. <span style={{ color: '#05E1AE' }}>تأثير.</span></>
               : <><span style={{ color: '#05E1AE' }}>Clarity.</span> Growth. <span style={{ color: '#05E1AE' }}>Impact.</span></>}
           </motion.h1>
 
           <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-white/60 text-base md:text-lg leading-relaxed mb-10 max-w-2xl">
+            className="text-white/50 text-lg md:text-xl leading-relaxed mb-12 max-w-2xl font-light">
             {lang === 'ar'
               ? 'أوبتيفانس تساعد القادة والفرق والمؤسسات على تحقيق تحوّل قابل للقياس من خلال الاستشارات الاستراتيجية والتدريب التنفيذي وأدوات التقييم والحلول الرقمية للتطوير.'
               : 'OPTIVANCE helps leaders, teams, and organizations achieve measurable transformation through strategic consulting, executive coaching, assessment tools, and digital development solutions.'}
@@ -219,12 +218,13 @@ export default function Home() {
       </section>
 
       {/* ══ 2. WHO WE ARE ════════════════════════════════════════════════════ */}
-      <section className="py-24 px-6" style={{ background: '#0D1F33' }}>
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
+      <section className="py-32 px-6 relative" style={{ background: '#0D1F33' }}>
+        <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'linear-gradient(rgba(5,225,174,1) 1px, transparent 1px), linear-gradient(90deg, rgba(5,225,174,1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        <div className="max-w-6xl mx-auto relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             {/* Left */}
             <FadeIn direction="right">
-              <div className="relative rounded-3xl overflow-hidden mb-8" style={{ height: '320px' }}>
+              <div className="relative rounded-3xl overflow-hidden mb-8" style={{ height: '400px' }}>
                 <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&auto=format&fit=crop&q=80" alt="Executive consulting" className="w-full h-full object-cover" />
                 <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(13,31,51,0.85) 0%, transparent 55%)' }} />
                 <div className="absolute bottom-5 start-5 flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: 'rgba(13,31,51,0.85)', border: '1px solid rgba(5,225,174,0.25)', backdropFilter: 'blur(10px)' }}>
@@ -278,11 +278,12 @@ export default function Home() {
       </section>
 
       {/* ══ 3. SERVICES ══════════════════════════════════════════════════════ */}
-      <section className="py-24 px-6" style={{ background: '#111827' }}>
-        <div className="max-w-6xl mx-auto">
-          <FadeIn className="text-center mb-14">
+      <section className="py-32 px-6 relative" style={{ background: '#111827' }}>
+        <div className="absolute inset-0 opacity-5" style={{ background: 'radial-gradient(ellipse at center, #05E1AE 0%, transparent 70%)' }} />
+        <div className="max-w-6xl mx-auto relative z-10">
+          <FadeIn className="text-center mb-16">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: '#05E1AE' }}>{lang === 'ar' ? 'خدماتنا' : 'Our Services'}</p>
-            <h2 className="font-heading font-black text-3xl md:text-4xl text-white mb-4">{lang === 'ar' ? 'حلول استشارية متكاملة' : 'Comprehensive Consulting Solutions'}</h2>
+            <h2 className="font-heading font-black text-4xl md:text-5xl text-white mb-5">{lang === 'ar' ? 'حلول استشارية متكاملة' : 'Comprehensive Consulting Solutions'}</h2>
             <p className="text-white/45 text-base max-w-xl mx-auto">
               {lang === 'ar' ? 'من الاستراتيجية المؤسسية إلى التدريب الفردي، نصمم حلولاً مخصصة تُحدث أثراً دائماً.' : 'From organizational strategy to individual coaching, we design tailored solutions that create lasting impact.'}
             </p>
@@ -318,7 +319,7 @@ export default function Home() {
       </section>
 
       {/* ══ 4. WHO WE SERVE ══════════════════════════════════════════════════ */}
-      <section className="py-24 px-6" style={{ background: '#0D1F33' }}>
+      <section className="py-32 px-6 relative" style={{ background: '#0D1F33' }}>
         <div className="max-w-6xl mx-auto">
           {/* Photo strip */}
           <FadeIn>
@@ -368,11 +369,12 @@ export default function Home() {
       </section>
 
       {/* ══ 5. WHY OPTIVANCE ═════════════════════════════════════════════════ */}
-      <section className="py-24 px-6" style={{ background: '#111827' }}>
-        <div className="max-w-6xl mx-auto">
-          <FadeIn className="text-center mb-14">
+      <section className="py-32 px-6 relative" style={{ background: '#111827' }}>
+        <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'linear-gradient(rgba(5,225,174,1) 1px, transparent 1px), linear-gradient(90deg, rgba(5,225,174,1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        <div className="max-w-6xl mx-auto relative z-10">
+          <FadeIn className="text-center mb-16">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: '#05E1AE' }}>{lang === 'ar' ? 'لماذا أوبتيفانس' : 'Why OPTIVANCE'}</p>
-            <h2 className="font-heading font-black text-3xl md:text-4xl text-white mb-4">{lang === 'ar' ? 'نوع مختلف من الاستشارات' : 'A Different Kind of Consulting'}</h2>
+            <h2 className="font-heading font-black text-4xl md:text-5xl text-white mb-5">{lang === 'ar' ? 'نوع مختلف من الاستشارات' : 'A Different Kind of Consulting'}</h2>
             <p className="text-white/45 text-base max-w-xl mx-auto">
               {lang === 'ar' ? 'نجمع بين الفهم الإنساني والمنهجية المنظمة لتقديم نتائج عملية وقابلة للقياس.' : 'We combine human insight with structured methodology to deliver practical, measurable results.'}
             </p>
@@ -405,7 +407,7 @@ export default function Home() {
       </section>
 
       {/* ══ 6. ROUTE° METHOD ═════════════════════════════════════════════════ */}
-      <section className="py-24 px-6 relative overflow-hidden" style={{ background: '#0D1F33' }}>
+      <section className="py-32 px-6 relative overflow-hidden" style={{ background: '#0D1F33' }}>
         <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: 'linear-gradient(rgba(5,225,174,1) 1px, transparent 1px), linear-gradient(90deg, rgba(5,225,174,1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         <div className="relative z-10 max-w-6xl mx-auto">
           <FadeIn className="text-center mb-16">
@@ -428,11 +430,12 @@ export default function Home() {
       </section>
 
       {/* ══ 7. DIGITAL STORE PREVIEW ═════════════════════════════════════════ */}
-      <section className="py-24 px-6" style={{ background: '#111827' }}>
-        <div className="max-w-6xl mx-auto">
-          <FadeIn className="text-center mb-14">
+      <section className="py-32 px-6 relative" style={{ background: '#111827' }}>
+        <div className="absolute inset-0 opacity-5" style={{ background: 'radial-gradient(ellipse at center, #05E1AE 0%, transparent 70%)' }} />
+        <div className="max-w-6xl mx-auto relative z-10">
+          <FadeIn className="text-center mb-16">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: '#05E1AE' }}>{lang === 'ar' ? 'المتجر الرقمي' : 'Digital Store'}</p>
-            <h2 className="font-heading font-black text-3xl md:text-4xl text-white mb-4">{lang === 'ar' ? 'أدوات تعمل بين الجلسات' : 'Tools That Work Between Sessions'}</h2>
+            <h2 className="font-heading font-black text-4xl md:text-5xl text-white mb-5">{lang === 'ar' ? 'أدوات تعمل بين الجلسات' : 'Tools That Work Between Sessions'}</h2>
             <p className="text-white/45 text-base max-w-xl mx-auto">
               {lang === 'ar' ? 'تصفح مجموعتنا من التقييمات والنماذج وأدوات القيادة وموارد التطوير.' : 'Browse our collection of assessments, templates, leadership tools, and development resources.'}
             </p>
@@ -495,7 +498,7 @@ export default function Home() {
       </section>
 
       {/* ══ 8. FINAL CTA ═════════════════════════════════════════════════════ */}
-      <section className="py-28 px-6 relative overflow-hidden" style={{ background: '#0D1F33' }}>
+      <section className="py-32 px-6 relative overflow-hidden" style={{ background: '#0D1F33' }}>
         <div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(ellipse at center, #1A3A5C 0%, transparent 70%)' }} />
         <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: 'linear-gradient(rgba(5,225,174,1) 1px, transparent 1px), linear-gradient(90deg, rgba(5,225,174,1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         <FadeIn className="relative z-10 max-w-2xl mx-auto text-center">
