@@ -88,13 +88,13 @@ const FEATURED_PRODUCTS = [
     price: { en: '199 SAR', ar: '١٩٩ ر.س' },
   },
   {
-    tag: { en: 'Template', ar: 'نموذج' }, badge: { en: 'Free', ar: 'مجاني' }, badgeColor: '#3B82F6',
+    tag: { en: 'Template', ar: 'نموذج' }, badge: { en: 'Free', ar: 'مجاني' }, badgeColor: '#336fa3',
     en: { title: 'Career Clarity Workbook', desc: 'A structured workbook to help you define your professional direction and goals.' },
     ar: { title: 'كتاب وضوح المسار المهني', desc: 'كتاب عمل منظم يساعدك على تحديد اتجاهك ومسارك المهني.' },
     price: { en: 'Free', ar: 'مجاني' },
   },
   {
-    tag: { en: 'Tool', ar: 'أداة' }, badge: { en: 'New', ar: 'جديد' }, badgeColor: '#F59E0B',
+    tag: { en: 'Tool', ar: 'أداة' }, badge: { en: 'New', ar: 'جديد' }, badgeColor: '#3a9abf',
     en: { title: 'Team Performance Diagnostic', desc: "Evaluate your team's performance dynamics and identify key development areas." },
     ar: { title: 'تشخيص أداء الفريق', desc: 'قيّم ديناميكيات أداء فريقك وحدد مجالات التطوير الرئيسية.' },
     price: { en: '299 SAR', ar: '٢٩٩ ر.س' },
@@ -219,9 +219,9 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-4">
                 {[
                   { value: '200+', label: { ar: 'قائد تم تدريبه', en: 'Leaders Coached' },       color: '#05E1AE', icon: Users },
-                  { value: '85+',  label: { ar: 'مؤسسة خدمناها', en: 'Organizations Served' },   color: '#3B82F6', icon: Building2 },
-                  { value: '95%',  label: { ar: 'رضا العملاء',    en: 'Client Satisfaction' },    color: '#F59E0B', icon: Star },
-                  { value: '12+',  label: { ar: 'سنة من الخبرة',  en: 'Years of Experience' },    color: '#8B5CF6', icon: Shield },
+                  { value: '85+',  label: { ar: 'مؤسسة خدمناها', en: 'Organizations Served' },   color: '#3a9abf', icon: Building2 },
+                  { value: '95%',  label: { ar: 'رضا العملاء',    en: 'Client Satisfaction' },    color: '#336fa3', icon: Star },
+                  { value: '12+',  label: { ar: 'سنة من الخبرة',  en: 'Years of Experience' },    color: '#5bbdd6', icon: Shield },
                 ].map((s, i) => {
                   const Icon = s.icon;
                   return (
@@ -238,8 +238,8 @@ export default function Home() {
                 <div className="text-white/50 text-xs mb-3">{lang === 'ar' ? 'توزيع الخدمات' : 'Service Distribution'}</div>
                 {[
                   { label: { ar: 'تطوير القيادة', en: 'Leadership Development' }, pct: 42, color: '#05E1AE' },
-                  { label: { ar: 'الاستشارات المؤسسية', en: 'Org Consulting' },   pct: 31, color: '#3B82F6' },
-                  { label: { ar: 'بناء القدرات', en: 'Capability Building' },      pct: 27, color: '#8B5CF6' },
+                  { label: { ar: 'الاستشارات المؤسسية', en: 'Org Consulting' },   pct: 31, color: '#3a9abf' },
+                  { label: { ar: 'بناء القدرات', en: 'Capability Building' },      pct: 27, color: '#336fa3' },
                 ].map((bar, i) => (
                   <div key={i} className="mb-2.5 last:mb-0">
                     <div className="flex justify-between text-xs mb-1">
@@ -420,7 +420,7 @@ export default function Home() {
             <div className="flex flex-col md:flex-row items-stretch gap-3">
               {ROUTE_STEPS.map((step, i) => {
                 const Icon = step.icon;
-                const colors = ['#05E1AE', '#38BDF8', '#818CF8', '#FB923C', '#34D399'];
+                const colors = ['#05E1AE', '#3a9abf', '#336fa3', '#5bbdd6', '#2ec9a0'];
                 return (
                   <div key={i} className="flex-1 rounded-2xl p-6 text-center transition-all hover:scale-[1.04] cursor-default relative"
                     style={{ background: '#1a2535', border: `1px solid ${colors[i]}22` }}>
