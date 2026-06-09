@@ -5,347 +5,255 @@ import { ArrowRight, ArrowLeft, ChevronDown, Award, TrendingUp, Users, Zap, Glob
 import CorpNavbar from '@/components/corp/CorpNavbar';
 import CorpFooter from '@/components/corp/CorpFooter';
 
-const STATS = [
-  { ar: '+٤٧٠٠', en: '+4,700', label: { ar: 'ساعات تدريب وتطوير', en: 'Coaching & Consulting Hours' } },
-  { ar: '+٢٠٠', en: '+200', label: { ar: 'مدير وقائد تنفيذي', en: 'Executives & Leaders' } },
-  { ar: '+٣٥٠٠٠', en: '+35,000', label: { ar: 'متدرب ومستفيد', en: 'Trainees & Beneficiaries' } },
-  { ar: '+١٥٠', en: '+150', label: { ar: 'مشروع مُنجز', en: 'Projects Delivered' } },
+const STATS_ROW = [
+  { ar: '+٤,٧٠٠', en: '+4,700', label: { ar: 'ساعات تدريب واستشارات', en: 'Coaching & Consulting Hours' } },
+  { ar: '+٢٠٠', en: '+200', label: { ar: 'قادة وتنفيذيين', en: 'Executives & Leaders' } },
+  { ar: '+٣٥,٠٠٠', en: '+35,000', label: { ar: 'مدربين ومستفيدين', en: 'Trainees & Beneficiaries' } },
+  { ar: '+١٥٠', en: '+150', label: { ar: 'مشاريع منجزة', en: 'Projects Delivered' } },
 ];
 
-const WHO_WE_SERVE = {
-  ar: ['التنفيذيون والمدراء', 'القادة الناشئون', 'المحترفون والمتخصصون', 'رواد الأعمال', 'إدارات الموارد البشرية', 'الفرق المؤسسية', 'المنظمات والشركات', 'الجهات الحكومية وشبه الحكومية'],
-  en: ['Executives & C-Suite Leaders', 'Emerging Leaders', 'Professionals & Specialists', 'Entrepreneurs', 'HR Departments', 'Organizational Teams', 'Companies & Corporations', 'Government & Semi-Government Entities'],
-};
-
 const ROUTE_STEPS = [
-  { letter: 'R', word: { ar: 'Reflect', en: 'Reflect' }, desc: { ar: 'الوعي الذاتي والبصيرة', en: 'Self-awareness and insight' } },
-  { letter: 'O', word: { ar: 'Orient', en: 'Orient' }, desc: { ar: 'التوجه الاستراتيجي والوضوح', en: 'Strategic direction and clarity' } },
-  { letter: 'U', word: { ar: 'Upskill', en: 'Upskill' }, desc: { ar: 'بناء القدرات والمهارات', en: 'Capability and skill development' } },
-  { letter: 'T', word: { ar: 'Track', en: 'Track' }, desc: { ar: 'مراقبة التقدم المستمر', en: 'Continuous progress monitoring' } },
-  { letter: 'E', word: { ar: 'Embed', en: 'Embed' }, desc: { ar: 'التغيير المستدام والتكامل الثقافي', en: 'Sustainable change and cultural integration' } },
+  { letter: 'R', word: 'Reflect', desc: { ar: 'التفكر والتبصر', en: 'Self-awareness and insight' } },
+  { letter: 'O', word: 'Orient', desc: { ar: 'التوجيه والتركيز', en: 'Strategic direction and clarity' } },
+  { letter: 'U', word: 'Upskill', desc: { ar: 'الارتقاء بالمؤهلات', en: 'Capability and skill development' } },
+  { letter: 'T', word: 'Track', desc: { ar: 'النتج والقياس', en: 'Continuous progress monitoring' } },
+  { letter: 'E', word: 'Embed', desc: { ar: 'التمكين والدمج', en: 'Sustainable change and cultural integration' } },
 ];
 
 const SERVICES_OVERVIEW = {
   ar: [
-    { icon: Users, title: 'التدريب التنفيذي والقيادي', desc: 'برامج متخصصة لتعزيز القيادة والتواصل وإدارة التغيير' },
-    { icon: Target, title: 'التدريب التنفيذي والتمكيني', desc: 'جلسات فردية وجماعية لتطوير القادة التنفيذيين والناشئين' },
-    { icon: BarChart2, title: 'الاستشارات المؤسسية', desc: 'تصميم الهياكل التنظيمية وتحسين الكفاءة والأداء المؤسسي' },
-    { icon: Lightbulb, title: 'بناء الكفاءات والتقييمات', desc: 'باستخدام منهجية ROUTE™ وHarrison وNCDA لتقييم الكفاءات وتطويرها' },
-    { icon: TrendingUp, title: 'استراتيجيات النمو والتحول', desc: 'دعم المؤسسات في قيادة التغيير وتحقيق النمو المستدام' },
-    { icon: Shield, title: 'الأدوات الرقمية التطويرية', desc: 'أدوات وتقييمات رقمية مصممة لدعم رحلة التطوير الفردي والمؤسسي' },
+    { icon: Users, num: '1', title: 'تدريب القيادة والتنفيذيين' },
+    { icon: Target, num: '2', title: 'التدريب والتوجيه التنفيذي' },
+    { icon: BarChart2, num: '3', title: 'الاستشارات المؤسسية' },
+    { icon: Lightbulb, num: '4', title: 'تطوير الكفاءات والتقييمات' },
+    { icon: TrendingUp, num: '5', title: 'استراتيجيات النمو والتحول' },
+    { icon: Shield, num: '6', title: 'أدوات التطوير الرقمي' },
   ],
   en: [
-    { icon: Users, title: 'Executive & Leadership Training', desc: 'Specialized programs to enhance leadership, communication, and change management' },
-    { icon: Target, title: 'Executive Coaching & Empowerment', desc: 'Individual and group coaching for senior and emerging leaders' },
-    { icon: BarChart2, title: 'Institutional Consulting', desc: 'Designing organizational structures and improving institutional efficiency' },
-    { icon: Lightbulb, title: 'Competency Development & Assessments', desc: 'Using ROUTE™, Harrison, and NCDA methodologies to evaluate and develop competencies' },
-    { icon: TrendingUp, title: 'Growth & Transformation Strategies', desc: 'Supporting organizations in leading change and achieving sustainable growth' },
-    { icon: Shield, title: 'Digital Development Tools', desc: 'Digital tools and assessments designed to support individual and organizational development' },
+    { icon: Users, num: '1', title: 'Executive & Leadership Training' },
+    { icon: Target, num: '2', title: 'Executive Coaching & Empowerment' },
+    { icon: BarChart2, num: '3', title: 'Institutional Consulting' },
+    { icon: Lightbulb, num: '4', title: 'Competency Development & Assessments' },
+    { icon: TrendingUp, num: '5', title: 'Growth & Transformation Strategies' },
+    { icon: Shield, num: '6', title: 'Digital Development Tools' },
   ],
 };
 
-const WHY_US = {
-  ar: [
-    { icon: Award, title: 'ملكية فكرية حصرية', sub: 'منهجية ROUTE°', desc: 'إطارنا المسجَّل الذي يجمع بين التميز العالمي والعمق الخليجي.' },
-    { icon: Globe, title: 'خبرة تنفيذية مثبتة', sub: 'منطقة الخليج', desc: 'أكثر من ١٥ عاماً في التدريب التنفيذي والاستشارات عبر دول الخليج.' },
-    { icon: Shield, title: 'اعتمادات دولية موثوقة', sub: 'معايير عالمية', desc: 'مدعومون بـ Harrison وNCDA وشهادات تدريب دولية معتمدة.' },
-    { icon: Target, title: 'حلول عملية وقابلة للقياس', sub: 'نتائج حقيقية', desc: 'كل حل مصمم للتطبيق الفعلي بمؤشرات واضحة وتقدم قابل للتتبع.' },
-    { icon: Zap, title: 'سياق خليجي ورؤى وطنية', sub: 'رؤية ٢٠٣٠', desc: 'توافق عميق مع أجندات التحول الإقليمية وفهم المشهد القيادي الخليجي.' },
-  ],
-  en: [
-    { icon: Award, title: 'Exclusive Intellectual Property', sub: 'ROUTE° Methodology', desc: 'Our proprietary, registered framework combining global excellence with Gulf-specific insight.' },
-    { icon: Globe, title: 'Proven Executive Experience', sub: 'Gulf Region', desc: 'Over 15 years delivering executive coaching and consulting across the GCC with measurable results.' },
-    { icon: Shield, title: 'Trusted International Accreditations', sub: 'Global Standards', desc: 'Backed by Harrison Assessments, NCDA, and international coaching certifications.' },
-    { icon: Target, title: 'Practical, Measurable Solutions', sub: 'Real Results', desc: 'Every solution designed for real-world application with clear metrics and trackable progress.' },
-    { icon: Zap, title: 'Gulf Context & National Visions', sub: 'Vision 2030', desc: 'Deep alignment with regional transformation agendas and Gulf leadership landscape.' },
-  ],
+const WHO_WE_SERVE = {
+  ar: ['القادة التنفيذيون وإدارة العليا', 'المؤهلون والمتخصصون', 'المؤهلون والمتخصصون', 'التنفيذيون وقيادة الإدارة العليا', 'الفرق التنظيمية', 'إدارات الموارد البشرية', 'إدارة الموارد البشرية', 'الجهات الحكومية وشبه الحكومية'],
+  en: ['Executives & C-Suite Leaders', 'Professionals & Specialists', 'Emerging Leaders', 'Board Members & Directors', 'Organizational Teams', 'HR Departments', 'Companies & Corporations', 'Government & Semi-Government Entities'],
 };
 
 const ACCREDITATIONS = [
-  { name: 'Harrison', desc: { ar: 'تقييمات Harrison', en: 'Harrison Assessments' } },
-  { name: 'NCDA', desc: { ar: 'التطوير المهني', en: 'Career Development' } },
-  { name: 'ICF', desc: { ar: 'اتحاد التدريب الدولي', en: 'Coaching Federation' } },
-  { name: 'Gallup', desc: { ar: 'تقييم نقاط القوة', en: 'Strengths Assessment' } },
-  { name: 'Thomas', desc: { ar: 'التحليل السلوكي', en: 'Behavioral Analysis' } },
-  { name: 'CPD', desc: { ar: 'شهادة مهنية', en: 'Professional Certification' } },
-  { name: 'Kaizen', desc: { ar: 'التحسين المستمر', en: 'Continuous Improvement' } },
-  { name: 'ATD', desc: { ar: 'تطوير المواهب', en: 'Talent Development' } },
-  { name: 'Six Seconds', desc: { ar: 'الذكاء العاطفي', en: 'Emotional Intelligence' } },
-  { name: 'EQ360', desc: { ar: 'التقييم ٣٦٠ درجة', en: '360 Assessment' } },
-  { name: 'TKI', desc: { ar: 'إدارة النزاعات', en: 'Conflict Management' } },
-  { name: 'GCDF', desc: { ar: 'تيسير المسار المهني', en: 'Career Facilitation' } },
+  { name: 'Harrison Assessments', short: 'H' },
+  { name: 'NCDA', short: 'NC' },
+  { name: 'Coaching Federation', short: 'CF' },
+  { name: 'Strengths Assessment', short: 'GA' },
+  { name: 'Behavioral Analysis', short: 'BH' },
+  { name: 'Professional Certification', short: 'PF' },
+  { name: 'Continuous Improvement', short: 'KI' },
+  { name: 'Talent Development', short: 'AT' },
+  { name: 'Emotional Intelligence', short: 'S' },
+  { name: '360 Assessment', short: 'EQ' },
+  { name: 'Conflict Management', short: 'TK' },
+  { name: 'Career Facilitation', short: 'GC' },
 ];
 
-const PARTNERS_COUNT = 30;
+const IMPACT_STATS = [
+  { ar: '+٤,٧٠٠', en: '+4,700', label: { ar: 'ساعات تدريب واستشارات', en: 'Coaching and Consulting Hours' } },
+  { ar: '+٢٠٠', en: '+200', label: { ar: 'قادة وتنفيذيين', en: 'Executives & Leaders' } },
+  { ar: '+٣٥,٠٠٠', en: '+35,000', label: { ar: 'مدربين ومستفيدين', en: 'Trainees and Beneficiaries' } },
+  { ar: '+١٥٠', en: '+150', label: { ar: 'مشاريع منجزة', en: 'Projects Delivered' } },
+  { ar: '+٨٧', en: '+87', label: { ar: 'شراكة استراتيجية', en: 'Strategic Partnerships' } },
+  { ar: '+٥٥٠', en: '+550', label: { ar: 'محتوى تدريبي للقيادة', en: 'Leadership Training Contents' } },
+];
+
+const WHY_US = {
+  ar: [
+    { icon: Award, title: 'الملكية الفكرية الحصرية', sub: 'Exclusive Intellectual\nProperty title…' },
+    { icon: Globe, title: 'خبرة تنفيذية مثبتة حول مجلس التعاون الخليجي', sub: 'Proven Exec experience\naround the Gulf…' },
+    { icon: Shield, title: 'اعتمادات دولية موثوقة', sub: 'Trusted International\nAccreditations…' },
+    { icon: Target, title: 'حلول عملية وقابلة للقياس وفاعلة', sub: 'Practical, measurable\nNetwork Solutions…' },
+  ],
+  en: [
+    { icon: Award, title: 'Exclusive Intellectual Property', sub: 'ROUTE° Methodology' },
+    { icon: Globe, title: 'Proven Executive Experience', sub: 'Gulf Region GCC' },
+    { icon: Shield, title: 'Trusted International Accreditations', sub: 'Global Standards' },
+    { icon: Target, title: 'Practical, Measurable Solutions', sub: 'Real Results' },
+  ],
+};
 
 export default function Home() {
   const { lang, isRTL } = useLang();
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
 
   return (
-    <div className="bg-corp-dark min-h-screen" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen font-body" dir={isRTL ? 'rtl' : 'ltr'} style={{ background: '#111827' }}>
       <CorpNavbar />
 
-      {/* Hero */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-24 pb-16 overflow-hidden">
-        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'linear-gradient(#05E1AE 1px, transparent 1px), linear-gradient(90deg, #05E1AE 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-10 blur-3xl" style={{ background: 'radial-gradient(circle, #05E1AE, #1A3A5C)' }} />
-        <div className="relative z-10 max-w-5xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-brand-accent/30 bg-brand-accent/10 mb-6">
-            <div className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse"></div>
-            <span className="text-brand-accent text-sm font-medium">{lang === 'ar' ? 'شركاء النمو المؤسسي في منطقة الخليج' : 'Organizational Growth Partners Across the Gulf Region'}</span>
-          </div>
-          <h1 className="font-heading font-black text-5xl md:text-7xl text-white leading-tight mb-6">
-            {lang === 'ar'
-              ? <> وضوح الرؤية، <span style={{ color: '#05E1AE' }}>نمو حقيقي،</span><br />قيادة مؤثرة، <span style={{ color: '#05E1AE' }}>أثر مستدام</span></>
-              : <> Clarity. <span style={{ color: '#05E1AE' }}>Growth.</span><br />Leadership. <span style={{ color: '#05E1AE' }}>Impact.</span></>}
-          </h1>
-          <p className="text-white/60 text-lg md:text-xl max-w-3xl mx-auto mb-10 leading-relaxed">
-            {lang === 'ar'
-              ? 'أوبتيفانس شريكك الاستراتيجي في الاستشارات المؤسسية، التدريب التنفيذي، وتطوير القدرات المبنية على القياس والأثر الحقيقي. بخبرة تمتد لأكثر من ١٥ عاماً عبر دول الخليج.'
-              : 'OPTIVANCE is your strategic partner in organizational consulting, executive coaching, and capability development built on measurement and real impact — with 15+ years of proven results across the GCC.'}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/consultation" className="btn-catalyst px-8 py-4 rounded-2xl text-base flex items-center justify-center gap-2">
-              {lang === 'ar' ? 'طلب استشارة' : 'Request Consultation'} <Arrow size={16} />
-            </Link>
-            <Link to="/store" className="btn-outline-white px-8 py-4 rounded-2xl text-base flex items-center justify-center gap-2">
-              {lang === 'ar' ? 'زيارة المتجر الرقمي' : 'Visit Digital Store'} <Arrow size={16} />
-            </Link>
+      {/* ═══════════════ HERO ═══════════════ */}
+      <section className="relative min-h-screen flex items-center overflow-hidden pt-16">
+        {/* Background gradient */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0D1F33 0%, #111827 50%, #0a1628 100%)' }} />
+        {/* Subtle grid */}
+        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(#05E1AE 1px, transparent 1px), linear-gradient(90deg, #05E1AE 1px, transparent 1px)', backgroundSize: '80px 80px' }} />
+        {/* Glow */}
+        <div className="absolute top-1/3 end-1/4 w-[500px] h-[500px] rounded-full opacity-10 blur-[100px]" style={{ background: '#05E1AE' }} />
+
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 py-20">
+          <div className="max-w-3xl">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-brand-accent/25 bg-brand-accent/8 mb-8">
+              <div className="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse" />
+              <span className="text-brand-accent text-xs font-medium">
+                {lang === 'ar' ? 'شركاء النمو المؤسسي في دول مجلس التعاون الخليجي' : 'Organizational Growth Partners in the GCC'}
+              </span>
+            </div>
+
+            {/* Headline */}
+            <h1 className="font-heading font-black leading-tight mb-6" style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', color: '#fff' }}>
+              {lang === 'ar'
+                ? <><span style={{ color: '#05E1AE' }}>وضوح.</span> نمو. قيادة. <span style={{ color: '#05E1AE' }}>تأثير.</span></>
+                : <><span style={{ color: '#05E1AE' }}>Clarity.</span> Growth. Leadership. <span style={{ color: '#05E1AE' }}>Impact.</span></>}
+            </h1>
+
+            {/* Sub */}
+            <p className="text-white/60 text-base md:text-lg leading-relaxed mb-10 max-w-xl">
+              {lang === 'ar'
+                ? 'أوبتيفانس هو شريكك الاستراتيجي في الاستشارات التنفيذية والتدريب التنفيذي، ولتطوير الأداء المبنية على القياس والأثر الحقيقي. مع أكثر من ١٥ عاماً من النتائج الموثقة في دول مجلس التعاون الخليجي.'
+                : 'OPTIVANCE is your strategic partner in organizational consulting, executive coaching, and capability development built on measurement and real impact — with 15+ years of proven results across the GCC.'}
+            </p>
+
+            {/* CTAs */}
+            <div className="flex flex-wrap gap-3">
+              <Link to="/consultation" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-heading font-bold text-sm transition-all" style={{ background: '#05E1AE', color: '#0D1F33' }}>
+                {lang === 'ar' ? 'طلب استشارة' : 'Request Consultation'} <Arrow size={15} />
+              </Link>
+              <Link to="/store" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-heading font-bold text-sm transition-all border border-white/20 text-white hover:bg-white/5">
+                {lang === 'ar' ? 'زيارة المتجر الرقمي' : 'Visit Digital Store'} <Arrow size={15} />
+              </Link>
+            </div>
+
+            {/* Years badge */}
+            <div className="mt-12">
+              <span className="font-heading font-black text-6xl md:text-8xl" style={{ color: '#05E1AE', opacity: 0.15 }}>+15 Years</span>
+            </div>
           </div>
         </div>
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/30 animate-bounce">
-          <ChevronDown size={20} />
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/20 animate-bounce">
+          <ChevronDown size={18} />
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="border-y border-white/10 py-14 px-6 bg-corp-surface/50">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-          {STATS.map((s, i) => (
+      {/* ═══════════════ STATS ROW ═══════════════ */}
+      <section style={{ background: '#0D1F33', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-6">
+          {STATS_ROW.map((s, i) => (
             <div key={i} className="text-center">
-              <div className="font-heading font-black text-4xl md:text-5xl gradient-text mb-2">{s[lang]}</div>
-              <div className="text-white/50 text-sm">{s.label[lang]}</div>
+              <div className="font-heading font-black text-3xl md:text-4xl mb-1" style={{ color: '#05E1AE' }}>{s[lang]}</div>
+              <div className="text-white/50 text-xs leading-snug">{s.label[lang]}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ROUTE Methodology */}
-      <section className="py-24 px-6">
+      {/* ═══════════════ ROUTE METHODOLOGY ═══════════════ */}
+      <section className="py-20 px-6" style={{ background: '#111827' }}>
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-brand-accent text-sm font-medium uppercase tracking-widest mb-3">{lang === 'ar' ? 'منهجيتنا الحصرية' : 'Our Exclusive Methodology'}</p>
-            <h2 className="font-heading font-black text-3xl md:text-5xl text-white mb-4">
+          <div className="text-center mb-12">
+            <p className="text-xs font-medium uppercase tracking-widest mb-2" style={{ color: '#05E1AE' }}>
+              {lang === 'ar' ? 'منهجيتنا الحصرية' : 'Our Exclusive Methodology'}
+            </p>
+            <h2 className="font-heading font-black text-2xl md:text-4xl text-white mb-2">
               {lang === 'ar' ? 'منهجية ROUTE° الحصرية' : 'The Exclusive ROUTE° Methodology'}
             </h2>
-            <p className="text-white/50 text-lg max-w-3xl mx-auto">
-              {lang === 'ar'
-                ? 'إطار متكامل مسجَّل يمزج بين أفضل الممارسات العالمية والرؤى الخليجية لخلق قيمة حقيقية وأثر دائم.'
-                : 'A proprietary, integrated registered framework that blends global best practices with Gulf-specific insights to create real value and lasting impact.'}
-            </p>
+            <p className="text-white/40 text-sm">Proprietary text and strategic partner for the Exclusive ROUTE° Methodology</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+
+          {/* ROUTE Cards */}
+          <div className="grid grid-cols-5 gap-3 mb-10">
             {ROUTE_STEPS.map((step, i) => (
-              <div key={i} className="relative p-6 rounded-3xl border border-white/10 bg-corp-surface/40 hover:border-brand-accent/40 transition-all group text-center">
-                <div className="w-14 h-14 rounded-2xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center mx-auto mb-4 group-hover:bg-brand-accent/20 transition-all">
-                  <span className="font-heading font-black text-2xl text-brand-accent">{step.letter}</span>
+              <div key={i} className="rounded-2xl p-4 text-center transition-all hover:scale-105" style={{ background: '#1a2535', border: '1px solid rgba(5,225,174,0.15)' }}>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(5,225,174,0.1)', border: '1px solid rgba(5,225,174,0.2)' }}>
+                  <span className="font-heading font-black text-2xl" style={{ color: '#05E1AE' }}>{step.letter}</span>
                 </div>
-                <h3 className="font-heading font-black text-white text-lg mb-2">{step.word[lang]}</h3>
-                <p className="text-white/50 text-xs leading-relaxed">{step.desc[lang]}</p>
-                {i < ROUTE_STEPS.length - 1 && (
-                  <div className="hidden md:block absolute -end-2 top-1/2 -translate-y-1/2 z-10">
-                    <Arrow size={16} className="text-brand-accent/30" />
-                  </div>
-                )}
+                <div className="font-heading font-bold text-white text-sm mb-1">{step.word}</div>
+                <div className="text-white/40 text-xs leading-snug">{step.desc[lang]}</div>
               </div>
             ))}
           </div>
+
+          {/* R – Reflect detail box */}
+          <div className="rounded-2xl p-6" style={{ background: '#1a2535', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <span className="font-heading font-black text-4xl" style={{ color: '#05E1AE' }}>R –</span>
+              </div>
+              <div>
+                <h3 className="font-heading font-bold text-white text-lg mb-1">
+                  {lang === 'ar' ? 'التفكر والتبصر – Reflect' : 'التفكر والتبصر – Reflect'}
+                </h3>
+                <div className="text-white/50 text-sm mb-3">
+                  {lang === 'ar' ? 'برنامج للتوعية والرقابة الذاتية' : 'Self-Awareness & Personal Mastery Program'}
+                </div>
+                <ul className="space-y-1.5 text-white/40 text-xs">
+                  {(lang === 'ar' ? [
+                    'يركز على التوعية الذاتية والتفكير النقدي والقيم العلمية',
+                    'يدعو المدربين إلى بناء علاقة قوية بين النفس والاتجاهات والحوافز',
+                    'يساعد على تطوير الأهداف الشخصية وتعزيز التعلم الذاتي',
+                    'يشجع الأفراد على اكتشاف نقاط القوة وتطوير ذكائهم العاطفي',
+                    'يمنح المتدربين الأدوات لمواجهة التحديات — نحو التطوير المستمر الذاتي',
+                  ] : [
+                    'Focuses on self-awareness, critical thinking, and scientific values',
+                    'Invites coaches to build strong self-direction and motivational relationships',
+                    'Helps develop personal goals and enhance self-directed learning',
+                    'Encourages individuals to discover strengths and develop emotional intelligence',
+                    'Equips trainees with tools to face challenges — toward continuous self-development',
+                  ]).map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span style={{ color: '#05E1AE' }} className="mt-0.5 flex-shrink-0">•</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
           <div className="text-center mt-6">
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-brand-accent/20 text-brand-accent/60 text-xs">
-              <Shield size={12} /> {lang === 'ar' ? 'إطار ملكية فكرية مسجَّل' : 'Registered Proprietary Framework'}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* Core Values */}
-      <section className="py-20 px-6 bg-corp-surface/30">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-brand-accent text-sm font-medium uppercase tracking-widest mb-3">{lang === 'ar' ? 'قيمنا الجوهرية' : 'Our Core Values'}</p>
-            <h2 className="font-heading font-black text-3xl md:text-4xl text-white mb-3">
-              {lang === 'ar' ? 'المبادئ التي تُشكِّل هويتنا' : 'The Principles That Shape Our Identity'}
-            </h2>
-            <p className="text-white/50">{lang === 'ar' ? 'القيم التي توجه قراراتنا اليومية' : 'The values that guide our daily decisions'}</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { num: '01', ar: { title: 'التمكين', desc: 'نخلق بيئات تُطلق الإمكانات الكاملة للأفراد والمؤسسات.' }, en: { title: 'Empowerment', desc: 'We create environments that unleash the full potential of individuals and organizations.' } },
-              { num: '02', ar: { title: 'الابتكار', desc: 'نقدم حلولاً إبداعية واستشرافية تتجاوز المألوف وتُحدث تغييراً حقيقياً.' }, en: { title: 'Innovation', desc: 'We provide creative, forward-thinking solutions that go beyond convention and drive real change.' } },
-              { num: '03', ar: { title: 'النمو المستدام', desc: 'نعتبر النمو المستدام المقياس الحقيقي لنجاحنا ونجاح شركائنا على المدى البعيد.' }, en: { title: 'Sustainable Growth', desc: 'We consider sustainable growth the true measure of our success and that of our partners over the long term.' } },
-            ].map((v, i) => (
-              <div key={i} className="p-8 rounded-3xl border border-white/10 bg-corp-dark hover:border-brand-accent/30 transition-all group">
-                <div className="font-heading font-black text-5xl gradient-text mb-4 opacity-40">{v.num}</div>
-                <h3 className="font-heading font-black text-white text-2xl mb-3">{v[lang].title}</h3>
-                <p className="text-white/50 leading-relaxed">{v[lang].desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Services Overview */}
-      <section className="py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-brand-accent text-sm font-medium uppercase tracking-widest mb-3">{lang === 'ar' ? 'خبراتنا' : 'Our Expertise'}</p>
-            <h2 className="font-heading font-black text-3xl md:text-4xl text-white mb-3">
-              {lang === 'ar' ? 'حلول متكاملة للقيادة والاستشارات' : 'Integrated Leadership & Consulting Solutions'}
-            </h2>
-            <p className="text-white/50 max-w-2xl mx-auto">
-              {lang === 'ar'
-                ? 'بخبرة سنوات عبر القطاعات في الخليج وما بعده، تدعم أوبتيفانس الشركات والقادة والمهنيين الساعين إلى نمو قابل للقياس.'
-                : 'With years of experience across sectors in the GCC and beyond, Optivance supports companies, leaders, and professionals seeking measurable growth aligned with Vision 2030.'}
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {SERVICES_OVERVIEW[lang].map((s, i) => {
-              const Icon = s.icon;
-              return (
-                <div key={i} className="p-6 rounded-2xl border border-white/10 bg-corp-surface/40 hover:border-brand-accent/30 transition-all group">
-                  <div className="w-10 h-10 rounded-xl bg-brand-accent/10 flex items-center justify-center mb-4 group-hover:bg-brand-accent/20 transition-all">
-                    <Icon size={18} className="text-brand-accent" />
-                  </div>
-                  <h3 className="font-heading font-bold text-white mb-2">{s.title}</h3>
-                  <p className="text-white/50 text-sm leading-relaxed">{s.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-          <div className="text-center mt-8">
-            <Link to="/services" className="inline-flex items-center gap-2 text-brand-accent font-medium hover:gap-3 transition-all">
-              {lang === 'ar' ? 'استعرض جميع الخدمات' : 'View All Services'} <Arrow size={16} />
+            <Link to="/store" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium border transition-all" style={{ borderColor: 'rgba(5,225,174,0.3)', color: '#05E1AE' }}>
+              {lang === 'ar' ? 'زيارة المتجر الرقمي' : 'Visit Digital Store'} <Arrow size={14} />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Who We Serve */}
-      <section className="py-20 px-6 bg-corp-surface/30">
+      {/* ═══════════════ SERVICES ═══════════════ */}
+      <section className="py-20 px-6" style={{ background: '#0D1F33' }}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-brand-accent text-sm font-medium uppercase tracking-widest mb-3">{lang === 'ar' ? 'من نخدم' : 'Who We Serve'}</p>
-            <h2 className="font-heading font-black text-3xl md:text-4xl text-white">
-              {lang === 'ar' ? 'نخدم المؤسسات والقادة في جميع القطاعات' : 'Serving Organizations & Leaders Across All Sectors'}
+            <p className="text-xs font-medium uppercase tracking-widest mb-2" style={{ color: '#05E1AE' }}>
+              {lang === 'ar' ? 'خبراتنا' : 'Our Expertise'}
+            </p>
+            <h2 className="font-heading font-black text-2xl md:text-3xl text-white mb-2">
+              {lang === 'ar' ? 'حلول القيادة والاستشارات المتكاملة' : 'Integrated Leadership & Consulting Solutions'}
             </h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {WHO_WE_SERVE[lang].map((c, i) => (
-              <div key={i} className="flex items-center gap-3 p-4 rounded-2xl border border-white/10 bg-corp-dark hover:border-brand-accent/30 transition-all group">
-                <div className="w-2 h-2 rounded-full bg-brand-accent flex-shrink-0"></div>
-                <span className="text-white/70 text-sm font-medium group-hover:text-white transition-colors">{c}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Accreditations */}
-      <section className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-brand-accent text-sm font-medium uppercase tracking-widest mb-3">{lang === 'ar' ? 'الاعتمادات المهنية' : 'Professional Accreditations'}</p>
-            <h2 className="font-heading font-black text-3xl md:text-4xl text-white mb-3">
-              {lang === 'ar' ? 'اعتمادات دولية يحملها فريقنا' : 'Held by Our Team'}
-            </h2>
-            <p className="text-white/50">{lang === 'ar' ? 'مدعومون بشهادات ومنهجيات معترف بها دولياً' : 'Backed by internationally recognized certifications and methodologies'}</p>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
-            {ACCREDITATIONS.map((a, i) => (
-              <div key={i} className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-white/10 bg-corp-surface/40 hover:border-brand-accent/30 transition-all text-center group">
-                <div className="w-10 h-10 rounded-xl bg-brand-accent/10 flex items-center justify-center group-hover:bg-brand-accent/20 transition-all">
-                  <span className="text-brand-accent font-heading font-black text-xs">{a.name.substring(0, 2)}</span>
-                </div>
-                <span className="text-white font-bold text-xs">{a.name}</span>
-                <span className="text-white/40 text-xs leading-tight">{a.desc[lang]}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Impact Numbers */}
-      <section className="py-20 px-6 bg-corp-surface/30">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-brand-accent text-sm font-medium uppercase tracking-widest mb-3">{lang === 'ar' ? 'أثرنا' : 'Our Impact'}</p>
-            <h2 className="font-heading font-black text-3xl md:text-4xl text-white">
-              {lang === 'ar' ? 'أرقام تروي قصتنا' : 'Numbers That Tell Our Story'}
-            </h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-            {[
-              { ar: '+٤٧٠٠', en: '+4,700', label: { ar: 'ساعة تدريب واستشارة', en: 'Coaching and Consulting Hours' } },
-              { ar: '+٢٠٠', en: '+200', label: { ar: 'مدير وقائد تنفيذي', en: 'Executives and Leaders' } },
-              { ar: '+٣٥٠٠٠', en: '+35,000', label: { ar: 'متدرب ومستفيد', en: 'Trainees and Beneficiaries' } },
-              { ar: '+١٥٠', en: '+150', label: { ar: 'مشروع مبتكر مُنجز', en: 'Innovative Projects Delivered' } },
-              { ar: '+٨٧', en: '+87', label: { ar: 'منظمة وشريك استراتيجي', en: 'Organizations & Strategic Partners' } },
-              { ar: '+٥٥٠', en: '+550', label: { ar: 'محتوى تدريب قيادي', en: 'Leadership Training Contents' } },
-            ].map((s, i) => (
-              <div key={i} className="p-8 rounded-3xl border border-white/10 bg-corp-dark text-center hover:border-brand-accent/20 transition-all">
-                <div className="font-heading font-black text-4xl md:text-5xl gradient-text mb-3">{s[lang]}</div>
-                <div className="text-white/50 text-sm">{s.label[lang]}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Trusted Partners */}
-      <section className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-brand-accent text-sm font-medium uppercase tracking-widest mb-3">{lang === 'ar' ? 'أثرنا' : 'Our Impact'}</p>
-            <h2 className="font-heading font-black text-3xl md:text-4xl text-white mb-3">
-              {lang === 'ar' ? 'شركاء موثوقون' : 'Trusted Partners'}
-            </h2>
-            <p className="text-white/50 max-w-2xl mx-auto">
-              {lang === 'ar'
-                ? 'تفخر أوبتيفانس بخدمة جهات حكومية رائدة وشركات كبرى ومؤسسات تعليمية في منطقة الخليج، وقد نجحت في تنفيذ أكثر من ١٥٠ مشروعاً.'
-                : 'Optivance is proud to serve leading government entities, major enterprises, and educational institutions across the Gulf region, having successfully delivered more than 150 projects.'}
+            <p className="text-white/40 text-sm">
+              {lang === 'ar' ? 'Integrating Solutions (With years test…)' : 'Integrating Solutions — proven across sectors'}
             </p>
           </div>
-          <div className="grid grid-cols-5 md:grid-cols-10 gap-3">
-            {Array.from({ length: PARTNERS_COUNT }, (_, i) => (
-              <div key={i} className="aspect-square rounded-xl border border-white/10 bg-corp-surface/40 flex items-center justify-center hover:border-brand-accent/30 transition-all group">
-                <span className="text-white/20 text-xs font-bold group-hover:text-white/40">{i + 1}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Why Us */}
-      <section className="py-24 px-6 bg-corp-surface/30">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-brand-accent text-sm font-medium uppercase tracking-widest mb-3">{lang === 'ar' ? 'لماذا أوبتيفانس؟' : 'Why Us?'}</p>
-            <h2 className="font-heading font-black text-3xl md:text-5xl text-white">
-              {lang === 'ar' ? 'ما يجعلنا مختلفين' : 'What Makes Us Different'}
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {WHY_US[lang].map((item, i) => {
-              const Icon = item.icon;
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {SERVICES_OVERVIEW[lang].map((s, i) => {
+              const Icon = s.icon;
               return (
-                <div key={i} className={`p-8 rounded-3xl border bg-corp-dark hover:border-brand-accent/40 transition-all group ${i === 0 ? 'border-brand-accent/30 md:col-span-2 lg:col-span-1' : 'border-white/10'}`}>
-                  <div className="w-12 h-12 rounded-2xl bg-brand-accent/10 flex items-center justify-center mb-5 group-hover:bg-brand-accent/20 transition-all">
-                    <Icon size={20} className="text-brand-accent" />
+                <div key={i} className="rounded-2xl p-5 transition-all hover:scale-[1.02] cursor-default" style={{ background: '#1a2535', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(5,225,174,0.1)' }}>
+                      <Icon size={15} style={{ color: '#05E1AE' }} />
+                    </div>
+                    <span className="text-white/25 font-mono text-xs">{s.num}</span>
                   </div>
-                  <p className="text-brand-accent text-xs font-medium mb-1">{item.sub}</p>
-                  <h3 className="font-heading font-black text-white text-xl mb-3">{item.title}</h3>
-                  <p className="text-white/50 text-sm leading-relaxed">{item.desc}</p>
+                  <h3 className="font-heading font-bold text-white text-sm leading-snug">{s.title}</h3>
                 </div>
               );
             })}
@@ -353,27 +261,176 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-24 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="relative rounded-3xl overflow-hidden p-12 md:p-16 text-center" style={{ background: 'linear-gradient(135deg, #1A3A5C, #0D1F33)' }}>
-            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'linear-gradient(#05E1AE 1px, transparent 1px), linear-gradient(90deg, #05E1AE 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-            <div className="relative z-10">
-              <h2 className="font-heading font-black text-3xl md:text-5xl text-white mb-4">
-                {lang === 'ar' ? 'هل أنت مستعد للخطوة التالية؟' : 'Ready for the Next Step?'}
-              </h2>
-              <p className="text-white/60 mb-10 text-lg">
-                {lang === 'ar' ? 'شاركنا تحديك وسنبني معك الحل المناسب لمؤسستك أو رحلتك القيادية.' : "Share your challenge and we'll build the right solution for your organization or leadership journey."}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/consultation" className="btn-catalyst px-8 py-4 rounded-2xl flex items-center justify-center gap-2 text-base">
-                  {lang === 'ar' ? 'طلب استشارة' : 'Request Consultation'} <Arrow size={16} />
-                </Link>
-                <Link to="/store" className="btn-outline-white px-8 py-4 rounded-2xl flex items-center justify-center gap-2 text-base">
-                  {lang === 'ar' ? 'تصفح المتجر الرقمي' : 'Browse Digital Store'}
-                </Link>
+      {/* ═══════════════ CORE VALUES ═══════════════ */}
+      <section className="py-20 px-6" style={{ background: '#111827' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-medium uppercase tracking-widest mb-2" style={{ color: '#05E1AE' }}>
+              {lang === 'ar' ? 'قيمنا الجوهرية' : 'Our Core Values'}
+            </p>
+            <h2 className="font-heading font-black text-2xl md:text-3xl text-white mb-1">
+              {lang === 'ar' ? 'المبادئ التي تشكل هويتنا' : 'The Principles That Shape Our Identity'}
+            </h2>
+            <p className="text-white/30 text-sm">Values test…</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              { num: '01', ar: { t: 'التمكين', d: 'نخلق بيئات تُطلق الإمكانات الكاملة للأفراد والمؤسسات وتمنحهم أدوات النمو الحقيقي.' }, en: { t: 'Empowerment', d: 'We create environments that unleash the full potential of individuals and organizations.' } },
+              { num: '02', ar: { t: 'الابتكار', d: 'نقدم حلولاً إبداعية واستشرافية تتجاوز الأساليب التقليدية وتُحدث تغييراً ملموساً.' }, en: { t: 'Innovation', d: 'We provide creative, forward-thinking solutions that go beyond convention and drive real change.' } },
+              { num: '03', ar: { t: 'النمو المستدام', d: 'نعتبر النمو المستدام في مسار ازدهار شركائنا على المدى الطويل المقياس الحقيقي للنجاح.' }, en: { t: 'Sustainable Growth', d: 'We consider sustainable growth the true measure of success for our partners over the long term.' } },
+            ].map((v, i) => (
+              <div key={i} className="rounded-2xl p-7 transition-all hover:border-teal-500/30" style={{ background: '#1a2535', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="font-heading font-black text-5xl mb-4" style={{ color: '#05E1AE', opacity: 0.2 }}>{v.num}</div>
+                <h3 className="font-heading font-black text-white text-xl mb-3">{v[lang].t}</h3>
+                <p className="text-white/50 text-sm leading-relaxed">{v[lang].d}</p>
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ WHO WE SERVE ═══════════════ */}
+      <section className="py-20 px-6" style={{ background: '#0D1F33' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-medium uppercase tracking-widest mb-2" style={{ color: '#05E1AE' }}>
+              {lang === 'ar' ? 'من نخدم' : 'Who We Serve'}
+            </p>
+            <h2 className="font-heading font-black text-2xl md:text-3xl text-white mb-1">
+              {lang === 'ar' ? 'خدمة المنظمات والقادة في جميع القطاعات' : 'Serving Organizations & Leaders Across All Sectors'}
+            </h2>
+            <p className="text-white/30 text-sm">Serving Organizations &amp; Leaders</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {WHO_WE_SERVE[lang].map((c, i) => (
+              <div key={i} className="flex items-center gap-3 p-4 rounded-xl transition-all hover:border-teal-500/30" style={{ background: '#1a2535', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#05E1AE' }} />
+                <span className="text-white/70 text-xs font-medium leading-snug">{c}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ ACCREDITATIONS ═══════════════ */}
+      <section className="py-20 px-6" style={{ background: '#111827' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-medium uppercase tracking-widest mb-2" style={{ color: '#05E1AE' }}>
+              {lang === 'ar' ? 'الاعتمادات المهنية' : 'Professional Accreditations'}
+            </p>
+            <h2 className="font-heading font-black text-2xl md:text-3xl text-white mb-1">
+              {lang === 'ar' ? 'شهادات مهنية يحملها فريقنا' : 'Held by Our Team'}
+            </h2>
+            <p className="text-white/30 text-sm">Backed by Team</p>
+          </div>
+          <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
+            {ACCREDITATIONS.map((a, i) => (
+              <div key={i} className="flex flex-col items-center gap-2 p-4 rounded-xl text-center transition-all hover:border-teal-500/20" style={{ background: '#1a2535', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-black" style={{ background: 'rgba(5,225,174,0.1)', color: '#05E1AE' }}>
+                  {a.short}
+                </div>
+                <span className="text-white/50 text-xs leading-tight">{a.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ IMPACT NUMBERS ═══════════════ */}
+      <section className="py-20 px-6" style={{ background: '#0D1F33' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-medium uppercase tracking-widest mb-2" style={{ color: '#05E1AE' }}>
+              {lang === 'ar' ? 'أثرنا' : 'Our Impact'}
+            </p>
+            <h2 className="font-heading font-black text-2xl md:text-3xl text-white mb-1">
+              {lang === 'ar' ? 'أرقام تروي قصتنا' : 'Numbers That Tell Our Story'}
+            </h2>
+            <p className="text-white/30 text-sm">Numbers That Tell Our Story</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {IMPACT_STATS.map((s, i) => (
+              <div key={i} className="rounded-2xl p-6 text-center transition-all hover:border-teal-500/20" style={{ background: '#1a2535', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="font-heading font-black text-3xl md:text-4xl mb-2" style={{ color: '#05E1AE' }}>{s[lang]}</div>
+                <div className="text-white/50 text-xs leading-snug">{s.label[lang]}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ TRUSTED PARTNERS ═══════════════ */}
+      <section className="py-20 px-6" style={{ background: '#111827' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-medium uppercase tracking-widest mb-2" style={{ color: '#05E1AE' }}>
+              {lang === 'ar' ? 'شركاؤنا' : 'Our Partners'}
+            </p>
+            <h2 className="font-heading font-black text-2xl md:text-3xl text-white mb-1">
+              {lang === 'ar' ? 'شركاؤنا الموثوقون' : 'Trusted Partners OPTIVANCE'}
+            </h2>
+          </div>
+          <div className="grid grid-cols-5 md:grid-cols-6 gap-3">
+            {Array.from({ length: 30 }, (_, i) => (
+              <div key={i} className="aspect-square rounded-xl flex items-center justify-center transition-all hover:border-teal-500/20" style={{ background: '#1a2535', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <span className="text-white/20 text-sm font-bold">{i + 1}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ WHY US ═══════════════ */}
+      <section className="py-20 px-6" style={{ background: '#0D1F33' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-medium uppercase tracking-widest mb-2" style={{ color: '#05E1AE' }}>
+              {lang === 'ar' ? 'ما الذي يميزنا' : 'What Distinguishes Us'}
+            </p>
+            <h2 className="font-heading font-black text-2xl md:text-3xl text-white">
+              {lang === 'ar' ? 'ما الذي يميزنا' : 'What Makes Us Different'}
+            </h2>
+            <p className="text-white/30 text-sm mt-1">What Makes Us Different</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {WHY_US[lang].map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <div key={i} className="rounded-2xl p-6 transition-all hover:border-teal-500/20" style={{ background: '#1a2535', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: 'rgba(5,225,174,0.1)' }}>
+                    <Icon size={18} style={{ color: '#05E1AE' }} />
+                  </div>
+                  <h3 className="font-heading font-bold text-white text-sm leading-snug mb-2">{item.title}</h3>
+                  <p className="text-white/35 text-xs leading-relaxed">{item.sub}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ FINAL CTA ═══════════════ */}
+      <section className="py-24 px-6 relative overflow-hidden" style={{ background: '#111827' }}>
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#05E1AE 1px, transparent 1px), linear-gradient(90deg, #05E1AE 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        <div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(ellipse at center, #1A3A5C 0%, transparent 70%)' }} />
+        <div className="relative z-10 max-w-3xl mx-auto text-center">
+          <h2 className="font-heading font-black text-3xl md:text-5xl text-white mb-4">
+            {lang === 'ar' ? 'جاهز للخطوة القادمة؟' : 'Ready for the Next Step?'}
+          </h2>
+          <p className="text-white/50 text-base mb-2">
+            {lang === 'ar' ? 'شارك تحدياتك…' : 'Share your challenges text…'}
+          </p>
+          <p className="text-white/50 mb-10">
+            {lang === 'ar' ? 'شاركنا تحديك وسنبني معك الحل المناسب' : "Share your challenge and we'll build the right solution together"}
+          </p>
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Link to="/consultation" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-heading font-bold text-sm transition-all" style={{ background: '#05E1AE', color: '#0D1F33' }}>
+              {lang === 'ar' ? 'طلب استشارة' : 'Request Consultation'} <Arrow size={15} />
+            </Link>
+            <Link to="/store" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-heading font-bold text-sm border transition-all text-white border-white/20 hover:bg-white/5">
+              {lang === 'ar' ? 'تصفح المتجر الرقمي' : 'Browse Digital Store'}
+            </Link>
           </div>
         </div>
       </section>
