@@ -10,6 +10,7 @@ import {
 import { motion, useInView } from 'framer-motion';
 import CorpNavbar from '@/components/corp/CorpNavbar';
 import CorpFooter from '@/components/corp/CorpFooter';
+import RouteInfographic from '@/components/corp/RouteInfographic';
 
 // ─── ANIMATION HELPERS ────────────────────────────────────────────────────────
 
@@ -413,45 +414,8 @@ export default function Home() {
             </p>
           </FadeIn>
 
-          {/* Pipeline infographic */}
-          <div className="relative mb-10">
-            <div className="hidden md:block absolute top-[60px] start-[8%] end-[8%] h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(5,225,174,0.25) 15%, rgba(5,225,174,0.25) 85%, transparent)' }} />
-            <div className="flex flex-col md:flex-row items-stretch gap-4">
-              {ROUTE_STEPS.map((step, i) => {
-                const Icon = step.icon;
-                const color = ROUTE_COLORS[i];
-                return (
-                  <FadeIn key={i} delay={i * 0.1} direction="up" className="flex-1">
-                    <motion.div whileHover={{ y: -8, boxShadow: `0 20px 40px ${color}18` }}
-                      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                      className="rounded-2xl p-6 text-center cursor-default relative h-full"
-                      style={{ background: '#1a2535', border: `1px solid ${color}25` }}>
-                      {/* step number bubble */}
-                      <motion.div
-                        initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }}
-                        transition={{ type: 'spring', delay: 0.3 + i * 0.1 }}
-                        className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shadow-lg"
-                        style={{ background: `linear-gradient(135deg, ${color}, ${color}cc)`, color: '#0D1F33' }}>
-                        {i + 1}
-                      </motion.div>
-
-                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 mt-3"
-                        style={{ background: `${color}12`, border: `1px solid ${color}28` }}>
-                        <span className="font-heading font-black text-4xl" style={{ color }}>{step.letter}</span>
-                      </div>
-
-                      <motion.div whileHover={{ rotate: 360 }} transition={{ duration: 0.5 }} className="w-7 h-7 mx-auto mb-2 flex items-center justify-center">
-                        <Icon size={16} style={{ color }} />
-                      </motion.div>
-
-                      <div className="font-heading font-bold text-white text-sm mb-1">{step.word}</div>
-                      <div className="text-xs leading-snug" style={{ color: `${color}90` }}>{step[lang]}</div>
-                    </motion.div>
-                  </FadeIn>
-                );
-              })}
-            </div>
-          </div>
+          {/* ── ROUTE Infographic: Professional Timeline ── */}
+          <RouteInfographic steps={ROUTE_STEPS} colors={ROUTE_COLORS} lang={lang} />
 
           <FadeIn className="flex justify-center">
             <Link to="/methodology" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium border transition-all hover:opacity-80" style={{ borderColor: 'rgba(5,225,174,0.3)', color: '#05E1AE' }}>
