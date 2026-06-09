@@ -1,0 +1,78 @@
+{
+  "name": "CompetencyAssessmentAttempt",
+  "type": "object",
+  "properties": {
+    "assessment_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "user_full_name": {
+      "type": "string"
+    },
+    "professional_level": {
+      "type": "string",
+      "enum": ["operational", "supervisory", "leadership"]
+    },
+    "version": {
+      "type": "string",
+      "enum": ["quick", "full"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["started", "in_progress", "completed"],
+      "default": "started"
+    },
+    "answers": {
+      "type": "object",
+      "description": "الإجابات حسب معرف السؤال"
+    },
+    "current_question_index": {
+      "type": "number",
+      "default": 0
+    },
+    "overall_score": {
+      "type": "number"
+    },
+    "overall_percentage": {
+      "type": "number"
+    },
+    "overall_rating": {
+      "type": "string",
+      "enum": ["critical", "needs_work", "moderate", "strong", "proficient"]
+    },
+    "domain_scores": {
+      "type": "object",
+      "description": "نقاط كل مجال"
+    },
+    "competency_scores": {
+      "type": "object",
+      "description": "نقاط كل جدارة"
+    },
+    "strengths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "development_areas": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "report_data": {
+      "type": "object",
+      "description": "بيانات التقرير الكاملة"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "paid": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": ["assessment_id", "user_email", "professional_level", "version"]
+}

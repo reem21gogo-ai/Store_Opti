@@ -28,6 +28,10 @@ import Cart from '@/pages/store/Cart';
 import Checkout from '@/pages/store/Checkout';
 import Account from '@/pages/store/Account';
 import StoreLogin from '@/pages/store/StoreLogin';
+import CompetencyAssessmentLanding from '@/pages/store/CompetencyAssessmentLanding';
+import CompetencyLevels from '@/pages/store/CompetencyLevels';
+import TakeCompetencyAssessment from '@/pages/store/TakeCompetencyAssessment';
+import CompetencyReport from '@/pages/store/CompetencyReport';
 
 // Admin
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -76,6 +80,10 @@ const AuthenticatedApp = () => {
       <Route path="/store/cart" element={<Cart />} />
       <Route path="/store/checkout" element={<Checkout />} />
       <Route path="/store/account" element={<Account />} />
+      <Route path="/store/competency" element={<CompetencyAssessmentLanding />} />
+      <Route path="/store/competency/levels" element={<CompetencyLevels />} />
+      <Route path="/store/competency/assessment" element={<TakeCompetencyAssessment />} />
+      <Route path="/store/competency/report/:attemptId" element={<CompetencyReport />} />
 
       {/* Admin */}
       <Route path="/admin" element={<AdminLayout />}>
