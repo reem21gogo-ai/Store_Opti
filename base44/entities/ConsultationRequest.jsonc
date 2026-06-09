@@ -1,0 +1,70 @@
+{
+  "name": "ConsultationRequest",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "mobile": {
+      "type": "string"
+    },
+    "organization": {
+      "type": "string"
+    },
+    "job_title": {
+      "type": "string"
+    },
+    "client_type": {
+      "type": "string",
+      "enum": [
+        "individual",
+        "leader",
+        "company",
+        "government",
+        "nonprofit",
+        "hr"
+      ]
+    },
+    "need_type": {
+      "type": "string",
+      "enum": [
+        "org-consulting",
+        "exec-coaching",
+        "leadership",
+        "competency",
+        "tool-design",
+        "training",
+        "unsure"
+      ]
+    },
+    "description": {
+      "type": "string"
+    },
+    "budget": {
+      "type": "string"
+    },
+    "preferred_time": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "reviewing",
+        "contacted",
+        "closed"
+      ],
+      "default": "new"
+    },
+    "internal_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "full_name",
+    "email"
+  ]
+}

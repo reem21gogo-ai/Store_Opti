@@ -1,0 +1,53 @@
+{
+  "name": "AssessmentQuestion",
+  "type": "object",
+  "properties": {
+    "assessment_id": {
+      "type": "string"
+    },
+    "question_ar": {
+      "type": "string"
+    },
+    "question_en": {
+      "type": "string"
+    },
+    "question_type": {
+      "type": "string",
+      "enum": [
+        "mcq",
+        "scale_5",
+        "scale_10",
+        "ranking",
+        "yes_no",
+        "open_text"
+      ]
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "weight": {
+      "type": "number",
+      "default": 1
+    },
+    "dimension": {
+      "type": "string"
+    },
+    "sort_order": {
+      "type": "number",
+      "default": 0
+    },
+    "is_required": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "assessment_id",
+    "question_ar",
+    "question_en",
+    "question_type"
+  ]
+}

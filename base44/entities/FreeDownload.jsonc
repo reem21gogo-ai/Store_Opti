@@ -1,0 +1,25 @@
+{
+  "name": "FreeDownload",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "product_id": {
+      "type": "string"
+    },
+    "product_title_ar": {
+      "type": "string"
+    },
+    "product_title_en": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "product_id",
+    "user_email"
+  ]
+}

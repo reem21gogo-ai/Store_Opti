@@ -1,0 +1,74 @@
+{
+  "name": "Assessment",
+  "type": "object",
+  "properties": {
+    "title_ar": {
+      "type": "string"
+    },
+    "title_en": {
+      "type": "string"
+    },
+    "description_ar": {
+      "type": "string"
+    },
+    "description_en": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "leadership",
+        "career",
+        "team",
+        "development",
+        "organizational",
+        "personal"
+      ]
+    },
+    "duration_minutes": {
+      "type": "number",
+      "default": 15
+    },
+    "question_count": {
+      "type": "number",
+      "default": 0
+    },
+    "is_free": {
+      "type": "boolean",
+      "default": false
+    },
+    "price": {
+      "type": "number",
+      "default": 0
+    },
+    "is_published": {
+      "type": "boolean",
+      "default": false
+    },
+    "cover_image_url": {
+      "type": "string"
+    },
+    "report_preview_ar": {
+      "type": "string"
+    },
+    "report_preview_en": {
+      "type": "string"
+    },
+    "scoring_config": {
+      "type": "object"
+    },
+    "levels_config": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "product_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title_ar",
+    "title_en"
+  ]
+}

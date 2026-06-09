@@ -1,0 +1,52 @@
+{
+  "name": "AssessmentAttempt",
+  "type": "object",
+  "properties": {
+    "assessment_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "started",
+        "in_progress",
+        "completed"
+      ],
+      "default": "started"
+    },
+    "answers": {
+      "type": "object"
+    },
+    "current_question_index": {
+      "type": "number",
+      "default": 0
+    },
+    "total_score": {
+      "type": "number"
+    },
+    "percentage": {
+      "type": "number"
+    },
+    "level": {
+      "type": "string"
+    },
+    "completed_at": {
+      "type": "string"
+    },
+    "report_data": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "assessment_id"
+  ]
+}

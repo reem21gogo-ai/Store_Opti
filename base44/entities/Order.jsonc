@@ -1,0 +1,50 @@
+{
+  "name": "Order",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "total_amount": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string",
+      "default": "SAR"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid",
+        "failed",
+        "refunded"
+      ],
+      "default": "pending"
+    },
+    "payment_method": {
+      "type": "string"
+    },
+    "tap_charge_id": {
+      "type": "string"
+    },
+    "tap_payment_url": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_email"
+  ]
+}

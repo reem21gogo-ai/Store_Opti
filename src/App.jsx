@@ -6,12 +6,41 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
-// Add page imports here
+import { LanguageProvider } from '@/lib/LanguageContext';
+
+// Corporate pages
+import Home from '@/pages/corp/Home';
+import About from '@/pages/corp/About';
+import Services from '@/pages/corp/Services';
+import Methodology from '@/pages/corp/Methodology';
+import Consultation from '@/pages/corp/Consultation';
+import Contact from '@/pages/corp/Contact';
+
+// Store pages
+import StoreHome from '@/pages/store/StoreHome';
+import Products from '@/pages/store/Products';
+import ProductDetail from '@/pages/store/ProductDetail';
+import Assessments from '@/pages/store/Assessments';
+import AssessmentDetail from '@/pages/store/AssessmentDetail';
+import TakeAssessment from '@/pages/store/TakeAssessment';
+import AssessmentResults from '@/pages/store/AssessmentResults';
+import Cart from '@/pages/store/Cart';
+import Checkout from '@/pages/store/Checkout';
+import Account from '@/pages/store/Account';
+import StoreLogin from '@/pages/store/StoreLogin';
+
+// Admin
+import AdminLayout from '@/components/admin/AdminLayout';
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import AdminProducts from '@/pages/admin/AdminProducts';
+import AdminAssessments from '@/pages/admin/AdminAssessments';
+import AdminOrders from '@/pages/admin/AdminOrders';
+import AdminConsultations from '@/pages/admin/AdminConsultations';
+import AdminClients from '@/pages/admin/AdminClients';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
-  // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -20,40 +49,63 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
   if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
-      navigateToLogin();
-      return null;
-    }
+    if (authError.type === 'user_not_registered') return <UserNotRegisteredError />;
+    else if (authError.type === 'auth_required') { navigateToLogin(); return null; }
   }
 
-  // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
+      {/* Corporate site */}
+      <Route path="/" element={<Home />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/services" element={<Services />} />
+      <Route path="/methodology" element={<Methodology />} />
+      <Route path="/consultation" element={<Consultation />} />
+      <Route path="/contact" element={<Contact />} />
+
+      {/* Store */}
+      <Route path="/store" element={<StoreHome />} />
+      <Route path="/store/login" element={<StoreLogin />} />
+      <Route path="/store/products" element={<Products />} />
+      <Route path="/store/products/:id" element={<ProductDetail />} />
+      <Route path="/store/assessments" element={<Assessments />} />
+      <Route path="/store/assessments/:id" element={<AssessmentDetail />} />
+      <Route path="/store/assessments/:id/take" element={<TakeAssessment />} />
+      <Route path="/store/assessments/:id/results/:attemptId" element={<AssessmentResults />} />
+      <Route path="/store/cart" element={<Cart />} />
+      <Route path="/store/checkout" element={<Checkout />} />
+      <Route path="/store/account" element={<Account />} />
+
+      {/* Admin */}
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="products" element={<AdminProducts />} />
+        <Route path="assessments" element={<AdminAssessments />} />
+        <Route path="orders" element={<AdminOrders />} />
+        <Route path="consultations" element={<AdminConsultations />} />
+        <Route path="clients" element={<AdminClients />} />
+      </Route>
+
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
 };
 
-
 function App() {
-
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <ScrollToTop />
-          <AuthenticatedApp />
-        </Router>
+        <LanguageProvider>
+          <Router>
+            <ScrollToTop />
+            <AuthenticatedApp />
+          </Router>
+        </LanguageProvider>
         <Toaster />
       </QueryClientProvider>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;
