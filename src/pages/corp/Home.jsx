@@ -176,8 +176,28 @@ export default function Home() {
       <section className="py-24 px-6" style={{ background: '#0D1F33' }}>
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
-            {/* Left: text */}
+            {/* Left: image + text */}
             <div>
+              {/* Real photo */}
+              <div className="relative rounded-3xl overflow-hidden mb-8" style={{ height: '320px' }}>
+                <img
+                  src="https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=800&auto=format&fit=crop&q=80"
+                  alt="Executive consulting session"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(13,31,51,0.85) 0%, transparent 55%)' }} />
+                {/* Floating badge on image */}
+                <div className="absolute bottom-5 start-5 flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: 'rgba(13,31,51,0.85)', border: '1px solid rgba(5,225,174,0.25)', backdropFilter: 'blur(10px)' }}>
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(5,225,174,0.15)' }}>
+                    <CheckCircle size={15} style={{ color: '#05E1AE' }} />
+                  </div>
+                  <div>
+                    <div className="font-heading font-black text-white text-sm">15+</div>
+                    <div className="text-white/50 text-xs">{lang === 'ar' ? 'سنة من الخبرة الميدانية' : 'Years of Field Experience'}</div>
+                  </div>
+                </div>
+              </div>
+
               <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: '#05E1AE' }}>
                 {lang === 'ar' ? 'من نحن' : 'Who We Are'}
               </p>
@@ -195,18 +215,43 @@ export default function Home() {
             </div>
 
             {/* Right: stats infographic */}
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { value: '200+', label: { ar: 'قائد تم تدريبه', en: 'Leaders Coached' },       color: '#05E1AE' },
-                { value: '85+',  label: { ar: 'مؤسسة خدمناها', en: 'Organizations Served' },   color: '#3B82F6' },
-                { value: '95%',  label: { ar: 'رضا العملاء',    en: 'Client Satisfaction' },    color: '#F59E0B' },
-                { value: '12+',  label: { ar: 'سنة من الخبرة',  en: 'Years of Experience' },    color: '#8B5CF6' },
-              ].map((s, i) => (
-                <div key={i} className="rounded-2xl p-6 text-center" style={{ background: '#1a2535', border: '1px solid rgba(255,255,255,0.07)' }}>
-                  <div className="font-heading font-black text-4xl mb-1" style={{ color: s.color }}>{s.value}</div>
-                  <div className="text-white/45 text-xs">{s.label[lang]}</div>
-                </div>
-              ))}
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { value: '200+', label: { ar: 'قائد تم تدريبه', en: 'Leaders Coached' },       color: '#05E1AE', icon: Users },
+                  { value: '85+',  label: { ar: 'مؤسسة خدمناها', en: 'Organizations Served' },   color: '#3B82F6', icon: Building2 },
+                  { value: '95%',  label: { ar: 'رضا العملاء',    en: 'Client Satisfaction' },    color: '#F59E0B', icon: Star },
+                  { value: '12+',  label: { ar: 'سنة من الخبرة',  en: 'Years of Experience' },    color: '#8B5CF6', icon: Shield },
+                ].map((s, i) => {
+                  const Icon = s.icon;
+                  return (
+                    <div key={i} className="rounded-2xl p-6 text-center" style={{ background: '#1a2535', border: '1px solid rgba(255,255,255,0.07)' }}>
+                      <Icon size={20} className="mx-auto mb-2" style={{ color: s.color }} />
+                      <div className="font-heading font-black text-4xl mb-1" style={{ color: s.color }}>{s.value}</div>
+                      <div className="text-white/45 text-xs">{s.label[lang]}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Satisfaction bar infographic */}
+              <div className="rounded-2xl p-5" style={{ background: '#1a2535', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="text-white/50 text-xs mb-3">{lang === 'ar' ? 'توزيع الخدمات' : 'Service Distribution'}</div>
+                {[
+                  { label: { ar: 'تطوير القيادة', en: 'Leadership Development' }, pct: 42, color: '#05E1AE' },
+                  { label: { ar: 'الاستشارات المؤسسية', en: 'Org Consulting' },   pct: 31, color: '#3B82F6' },
+                  { label: { ar: 'بناء القدرات', en: 'Capability Building' },      pct: 27, color: '#8B5CF6' },
+                ].map((bar, i) => (
+                  <div key={i} className="mb-2.5 last:mb-0">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-white/60">{bar.label[lang]}</span>
+                      <span className="font-bold" style={{ color: bar.color }}>{bar.pct}%</span>
+                    </div>
+                    <div className="h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                      <div className="h-full rounded-full" style={{ width: `${bar.pct}%`, background: bar.color }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -258,6 +303,24 @@ export default function Home() {
       {/* ══ 4. WHO WE SERVE ══════════════════════════════════════════════════ */}
       <section className="py-24 px-6" style={{ background: '#0D1F33' }}>
         <div className="max-w-6xl mx-auto">
+          {/* Photo strip */}
+          <div className="grid grid-cols-3 gap-3 mb-14 rounded-3xl overflow-hidden" style={{ height: '220px' }}>
+            <div className="relative overflow-hidden rounded-2xl">
+              <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=600&auto=format&fit=crop&q=80" alt="Team workshop" className="w-full h-full object-cover" />
+              <div className="absolute inset-0" style={{ background: 'rgba(13,31,51,0.4)' }} />
+              <div className="absolute bottom-3 start-3 text-white font-heading font-bold text-xs">{lang === 'ar' ? 'ورش عمل' : 'Workshops'}</div>
+            </div>
+            <div className="relative overflow-hidden rounded-2xl">
+              <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&auto=format&fit=crop&q=80" alt="Executive coaching" className="w-full h-full object-cover" />
+              <div className="absolute inset-0" style={{ background: 'rgba(13,31,51,0.4)' }} />
+              <div className="absolute bottom-3 start-3 text-white font-heading font-bold text-xs">{lang === 'ar' ? 'جلسات تدريب' : 'Coaching Sessions'}</div>
+            </div>
+            <div className="relative overflow-hidden rounded-2xl">
+              <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600&auto=format&fit=crop&q=80" alt="Strategy consulting" className="w-full h-full object-cover" />
+              <div className="absolute inset-0" style={{ background: 'rgba(13,31,51,0.4)' }} />
+              <div className="absolute bottom-3 start-3 text-white font-heading font-bold text-xs">{lang === 'ar' ? 'استشارات' : 'Consulting'}</div>
+            </div>
+          </div>
           <div className="text-center mb-14">
             <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: '#05E1AE' }}>
               {lang === 'ar' ? 'من نخدم' : 'Who We Serve'}
@@ -350,29 +413,31 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Horizontal flow infographic */}
-          <div className="flex flex-col md:flex-row items-stretch gap-0 mb-6">
-            {ROUTE_STEPS.map((step, i) => {
-              const Icon = step.icon;
-              return (
-                <React.Fragment key={i}>
-                  <div className="flex-1 rounded-2xl p-6 text-center transition-all hover:scale-[1.03] cursor-default"
-                    style={{ background: '#1a2535', border: '1px solid rgba(5,225,174,0.14)' }}>
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                      style={{ background: 'rgba(5,225,174,0.12)', border: '1px solid rgba(5,225,174,0.25)' }}>
-                      <span className="font-heading font-black text-3xl" style={{ color: '#05E1AE' }}>{step.letter}</span>
+          {/* ROUTE Infographic — pipeline style */}
+          <div className="relative mb-8">
+            {/* Connecting line behind cards */}
+            <div className="hidden md:block absolute top-[52px] start-[10%] end-[10%] h-0.5" style={{ background: 'linear-gradient(90deg, transparent, rgba(5,225,174,0.3) 20%, rgba(5,225,174,0.3) 80%, transparent)' }} />
+            <div className="flex flex-col md:flex-row items-stretch gap-3">
+              {ROUTE_STEPS.map((step, i) => {
+                const Icon = step.icon;
+                const colors = ['#05E1AE', '#38BDF8', '#818CF8', '#FB923C', '#34D399'];
+                return (
+                  <div key={i} className="flex-1 rounded-2xl p-6 text-center transition-all hover:scale-[1.04] cursor-default relative"
+                    style={{ background: '#1a2535', border: `1px solid ${colors[i]}22` }}>
+                    {/* Step number circle */}
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black"
+                      style={{ background: colors[i], color: '#0D1F33' }}>{i + 1}</div>
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 mt-2"
+                      style={{ background: `${colors[i]}14`, border: `1px solid ${colors[i]}30` }}>
+                      <span className="font-heading font-black text-3xl" style={{ color: colors[i] }}>{step.letter}</span>
                     </div>
-                    <div className="font-heading font-bold text-white text-base mb-1">{step.word}</div>
-                    <div className="text-white/45 text-xs leading-snug">{step[lang]}</div>
+                    <Icon size={14} className="mx-auto mb-2" style={{ color: colors[i] }} />
+                    <div className="font-heading font-bold text-white text-sm mb-1">{step.word}</div>
+                    <div className="text-xs leading-snug" style={{ color: `${colors[i]}99` }}>{step[lang]}</div>
                   </div>
-                  {i < ROUTE_STEPS.length - 1 && (
-                    <div className="hidden md:flex items-center justify-center w-6 flex-shrink-0">
-                      <Arrow size={14} style={{ color: 'rgba(5,225,174,0.3)' }} />
-                    </div>
-                  )}
-                </React.Fragment>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
 
           <div className="flex justify-center">
@@ -429,6 +494,35 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ 7.5 TESTIMONIAL / VISUAL STRIP ══════════════════════════════════ */}
+      <section className="py-0 relative overflow-hidden" style={{ height: '340px' }}>
+        <img
+          src="https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=1600&auto=format&fit=crop&q=80"
+          alt="Leadership summit"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(13,31,51,0.92) 0%, rgba(13,31,51,0.65) 60%, rgba(13,31,51,0.85) 100%)' }} />
+        <div className="absolute inset-0 flex items-center justify-center px-6">
+          <div className="max-w-3xl text-center">
+            <div className="text-4xl mb-4">❝</div>
+            <p className="font-heading font-bold text-white text-xl md:text-2xl leading-relaxed mb-5">
+              {lang === 'ar'
+                ? 'أوبتيفانس لم تقدم لنا تدريباً — قدمت لنا تحولاً حقيقياً في طريقة تفكير قياداتنا وأسلوب اتخاذ قراراتنا.'
+                : "OPTIVANCE didn't give us training — they gave us a real transformation in how our leaders think and make decisions."}
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-brand-accent/40">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&auto=format&fit=crop&q=80" alt="Client" className="w-full h-full object-cover" />
+              </div>
+              <div className="text-start">
+                <div className="text-white font-heading font-bold text-sm">{lang === 'ar' ? 'م. أحمد الشمري' : 'Ahmed Al-Shammari'}</div>
+                <div className="text-white/45 text-xs">{lang === 'ar' ? 'المدير التنفيذي، مجموعة الخليج للاستثمار' : 'CEO, Gulf Investment Group'}</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
