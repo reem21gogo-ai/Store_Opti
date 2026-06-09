@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useLang } from '@/lib/LanguageContext';
-import { motion } from 'framer-motion';
+import { Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import StoreNavbar from '@/components/store/StoreNavbar';
+import { base44 } from '@/api/base44Client';
 
 export default function TakeCompetencyAssessment() {
   const { lang, isRTL } = useLang();
@@ -16,36 +17,80 @@ export default function TakeCompetencyAssessment() {
   const [timeLeft, setTimeLeft] = useState(25);
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Mock questions
-  const questions = [
-    {
-      id: 1,
-      en: 'When faced with a complex problem at work, how do you typically approach it?',
-      ar: 'عندما تواجه مشكلة معقدة في العمل، كيف تتعامل معها؟',
-      options: [
-        { id: 'a', en: 'React immediately based on my first instinct', ar: 'تتفاعل فوراً بناءً على حدسك الأول', score: 20 },
-        { id: 'b', en: 'Take time to analyze the situation and consider options', ar: 'تأخذ وقتاً لتحليل الموقف والنظر في الخيارات', score: 75 },
-        { id: 'c', en: 'Ask colleagues for their opinions before deciding', ar: 'تطلب من الزملاء آرائهم قبل القرار', score: 50 },
-      ],
-      domain: 'thought_analysis',
-    },
-  ];
+  const questions = version === 'quick'
+    ? [
+        {
+          id: 1,
+          en: 'When faced with a complex problem at work, what is your first action?',
+          ar: 'عندما تواجه مشكلة معقدة في العمل، ما إجراؤك الأول؟',
+          options: [
+            { id: 'a', en: 'React immediately', ar: 'تتفاعل فوراً', score: 20 },
+            { id: 'b', en: 'Analyze thoroughly', ar: 'تحلل بعمق', score: 75 },
+            { id: 'c', en: 'Consult others', ar: 'تاستشير الآخرين', score: 50 },
+          ],
+        },
+        {
+          id: 2,
+          en: 'How do you typically handle team conflicts?',
+          ar: 'كيف تتعامل عادة مع تضاربات الفريق؟',
+          options: [
+            { id: 'a', en: 'Avoid them', ar: 'تتجنبها', score: 15 },
+            { id: 'b', en: 'Address directly', ar: 'تعالجها مباشرة', score: 80 },
+            { id: 'c', en: 'Delegate resolution', ar: 'تفوض الحل', score: 40 },
+          ],
+        },
+      ]
+    : [
+        {
+          id: 1,
+          en: 'When faced with a complex problem at work, what is your first action?',
+          ar: 'عندما تواجه مشكلة معقدة في العمل، ما إجراؤك الأول؟',
+          options: [
+            { id: 'a', en: 'React immediately', ar: 'تتفاعل فوراً', score: 20 },
+            { id: 'b', en: 'Analyze thoroughly', ar: 'تحلل بعمق', score: 75 },
+            { id: 'c', en: 'Consult others', ar: 'تاستشير الآخرين', score: 50 },
+          ],
+        },
+        {
+          id: 2,
+          en: 'How do you typically handle team conflicts?',
+          ar: 'كيف تتعامل عادة مع تضاربات الفريق؟',
+          options: [
+            { id: 'a', en: 'Avoid them', ar: 'تتجنبها', score: 15 },
+            { id: 'b', en: 'Address directly', ar: 'تعالجها مباشرة', score: 80 },
+            { id: 'c', en: 'Delegate resolution', ar: 'تفوض الحل', score: 40 },
+          ],
+        },
+        {
+          id: 3,
+          en: 'What is your approach to achieving results?',
+          ar: 'ما نهجك لتحقيق النتائج؟',
+          options: [
+            { id: 'a', en: 'Quick wins', ar: 'انتصارات سريعة', score: 45 },
+            { id: 'b', en: 'Sustainable growth', ar: 'نمو مستدام', score: 85 },
+            { id: 'c', en: 'Whatever works', ar: 'أي شيء ينجح', score: 30 },
+          ],
+        },
+      ];
 
-  const totalQuestions = version === 'quick' ? 15 : 40;
+  const totalQuestions = questions.length;
+  const timePerQuestion = 25;
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
+      setTimeLeft(prev => {
         if (prev <= 1) {
           handleNext();
-          return 25;
+          return timePerQuestion;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [currentQuestion]);
 
   const handleSelectAnswer = (optionId) => {
     const newAnswers = { ...answers };
@@ -56,7 +101,7 @@ export default function TakeCompetencyAssessment() {
   const handleNext = () => {
     if (currentQuestion < totalQuestions - 1) {
       setCurrentQuestion(currentQuestion + 1);
-      setTimeLeft(25);
+      setTimeLeft(timePerQuestion);
     } else {
       setSubmitted(true);
     }
@@ -65,112 +110,146 @@ export default function TakeCompetencyAssessment() {
   const handlePrevious = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
-      setTimeLeft(25);
+      setTimeLeft(timePerQuestion);
     }
   };
 
-  const handleSubmit = () => {
-    // Here, calculate scores and navigate to report
-    navigate(`/store/competency/report/attempt123`);
+  const handleSubmit = async () => {
+    setLoading(true);
+    // Simulate submission delay
+    setTimeout(() => {
+      navigate(`/store/competency/report/attempt123`);
+    }, 1500);
   };
 
   if (submitted) {
     return (
-      <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50">
+      <div className="min-h-screen bg-store-bg flex flex-col">
         <StoreNavbar />
-        <div className="pt-24 pb-16 px-6 flex items-center justify-center">
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-2xl p-12 max-w-2xl shadow-lg text-center">
-            <div className="text-6xl mb-6">✓</div>
-            <h1 className="text-3xl font-black text-slate-900 mb-4">
-              {lang === 'ar' ? 'تم إكمال التقييم بنجاح' : 'Assessment Completed'}
+        <div className="flex-1 flex items-center justify-center px-6 py-16">
+          <div className="bg-white rounded-2xl p-12 max-w-md w-full text-center shadow-lg">
+            <div className="mb-6 flex justify-center">
+              <div className="w-20 h-20 rounded-full bg-brand-accent/10 flex items-center justify-center">
+                <CheckCircle2 size={40} className="text-brand-accent" />
+              </div>
+            </div>
+            <h1 className="font-heading font-black text-corp-dark text-2xl mb-3">
+              {lang === 'ar' ? 'تم إكمال التقييم' : 'Assessment Complete!'}
             </h1>
-            <p className="text-lg text-slate-600 mb-8">
-              {lang === 'ar' ? 'يتم معالجة نتائجك الآن' : 'Your results are being processed...'}
+            <p className="text-slate-500 text-sm mb-8">
+              {lang === 'ar' ? 'شكراً لإكمالك التقييم. يتم معالجة نتائجك الآن...' : 'Thank you for completing the assessment. Your results are being processed...'}
             </p>
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity }} className="inline-block">
-              <div className="w-12 h-12 border-4 border-brand-accent border-t-brand-primary rounded-full"></div>
-            </motion.div>
-          </motion.div>
+            <div className="flex justify-center">
+              <div className="inline-flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-brand-accent animate-pulse" />
+                <div className="w-2.5 h-2.5 rounded-full bg-brand-accent animate-pulse" style={{ animationDelay: '0.2s' }} />
+                <div className="w-2.5 h-2.5 rounded-full bg-brand-accent animate-pulse" style={{ animationDelay: '0.4s' }} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
+  const question = questions[currentQuestion];
+  const progressPercent = ((currentQuestion + 1) / totalQuestions) * 100;
+  const isTimeWarning = timeLeft <= 5;
+
   return (
-    <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50">
+    <div className="min-h-screen bg-store-bg flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
       <StoreNavbar />
 
-      <div className="pt-24 pb-16 px-6">
+      <div className="flex-1 px-6 py-12">
         <div className="max-w-4xl mx-auto">
-          {/* Progress & Timer */}
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <div className="flex justify-between items-center mb-4">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-start justify-between gap-4 mb-4">
               <div>
-                <h2 className="text-2xl font-black text-slate-900">
+                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
                   {lang === 'ar' ? `السؤال ${currentQuestion + 1} من ${totalQuestions}` : `Question ${currentQuestion + 1} of ${totalQuestions}`}
-                </h2>
-                <p className="text-slate-600">{lang === 'ar' ? `المستوى: ${level}` : `Level: ${level}`}</p>
+                </div>
+                <h1 className="font-heading font-black text-corp-dark text-2xl">
+                  {question[lang === 'ar' ? 'ar' : 'en']}
+                </h1>
               </div>
-              <div className={`text-4xl font-black ${timeLeft <= 5 ? 'text-red-600' : 'text-brand-accent'}`}>
-                {timeLeft}s
+              <div className={`text-center flex-shrink-0 ${isTimeWarning ? 'animate-pulse' : ''}`}>
+                <div className={`font-heading font-black text-4xl mb-1 ${isTimeWarning ? 'text-red-500' : 'text-brand-accent'}`}>
+                  {timeLeft}
+                </div>
+                <div className="text-xs text-slate-500 flex items-center gap-1 justify-center">
+                  <Clock size={12} /> {lang === 'ar' ? 'ثانية' : 'sec'}
+                </div>
               </div>
             </div>
-            <div className="w-full bg-slate-200 rounded-full h-2">
-              <motion.div className="bg-gradient-to-r from-brand-accent to-brand-primary h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${((currentQuestion + 1) / totalQuestions) * 100}%` }} />
+
+            {/* Progress Bar */}
+            <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div
+                className="h-full transition-all duration-300 rounded-full"
+                style={{
+                  width: `${progressPercent}%`,
+                  background: 'linear-gradient(90deg, #1A3A5C, #05E1AE)',
+                }}
+              />
             </div>
-          </motion.div>
+          </div>
 
-          {/* Question Card */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl shadow-lg p-10 mb-8">
-            <h3 className="text-xl font-bold text-slate-900 mb-8">
-              {questions[0][lang === 'ar' ? 'ar' : 'en']}
-            </h3>
-
-            {/* Answer Options */}
-            <div className="space-y-4">
-              {questions[0].options.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => handleSelectAnswer(option.id)}
-                  className={`w-full p-5 rounded-xl border-2 transition-all text-left ${
-                    answers[currentQuestion] === option.id
-                      ? 'border-brand-accent bg-blue-50'
-                      : 'border-slate-200 hover:border-brand-primary'
-                  }`}
-                >
-                  <p className="font-semibold text-slate-900">
+          {/* Answer Options */}
+          <div className="space-y-3 mb-10">
+            {question.options.map(option => (
+              <button
+                key={option.id}
+                onClick={() => handleSelectAnswer(option.id)}
+                className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                  answers[currentQuestion] === option.id
+                    ? 'border-brand-primary bg-brand-primary/5'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    answers[currentQuestion] === option.id ? 'border-brand-primary bg-brand-primary' : 'border-slate-300'
+                  }`}>
+                    {answers[currentQuestion] === option.id && (
+                      <div className="w-2.5 h-2.5 rounded-full bg-white" />
+                    )}
+                  </div>
+                  <span className="font-medium text-slate-700">
                     {option[lang === 'ar' ? 'ar' : 'en']}
-                  </p>
-                </button>
-              ))}
-            </div>
-          </motion.div>
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
 
-          {/* Navigation Buttons */}
-          <div className="flex gap-4 justify-between">
+          {/* Navigation */}
+          <div className="flex gap-3">
             <button
               onClick={handlePrevious}
               disabled={currentQuestion === 0}
-              className="px-8 py-3 rounded-xl font-bold border-2 border-slate-300 text-slate-700 disabled:opacity-50 hover:bg-slate-50 transition-all"
+              className="px-6 py-3 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {lang === 'ar' ? 'السابق' : 'Previous'}
             </button>
 
-            {currentQuestion === totalQuestions - 1 ? (
-              <button
-                onClick={handleSubmit}
-                className="px-8 py-3 rounded-xl font-bold bg-gradient-to-r from-brand-primary to-brand-accent text-white hover:opacity-90 transition-all"
-              >
-                {lang === 'ar' ? 'إنهاء التقييم' : 'Submit Assessment'}
-              </button>
-            ) : (
-              <button
-                onClick={handleNext}
-                className="px-8 py-3 rounded-xl font-bold bg-gradient-to-r from-brand-primary to-brand-accent text-white hover:opacity-90 transition-all"
-              >
-                {lang === 'ar' ? 'التالي' : 'Next'}
-              </button>
-            )}
+            <button
+              onClick={currentQuestion === totalQuestions - 1 ? handleSubmit : handleNext}
+              disabled={!answers[currentQuestion] || loading}
+              className="flex-1 py-3 rounded-xl font-heading font-bold text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ background: !answers[currentQuestion] || loading ? '#ccc' : 'linear-gradient(135deg, #1A3A5C, #05E1AE)' }}
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  {lang === 'ar' ? 'جاري المعالجة...' : 'Processing...'}
+                </>
+              ) : currentQuestion === totalQuestions - 1 ? (
+                <>{lang === 'ar' ? 'أنهِ التقييم' : 'Submit Assessment'}</>
+              ) : (
+                <>{lang === 'ar' ? 'التالي' : 'Next'}</>
+              )}
+            </button>
           </div>
         </div>
       </div>
