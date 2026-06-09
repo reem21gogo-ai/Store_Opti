@@ -151,7 +151,7 @@ export default function Home() {
       {/* ══ 1. HERO ══════════════════════════════════════════════════════════ */}
       <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-16">
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0D1F33 0%, #111827 60%, #0a1628 100%)' }} />
-        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600&auto=format&fit=crop&q=80" alt="" className="absolute inset-0 w-full h-full object-cover opacity-8" />
+        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600&auto=format&fit=crop&q=80" alt="" className="absolute inset-0 w-full h-full object-cover opacity-6" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(13,31,51,0.88) 0%, rgba(17,24,39,0.92) 60%, rgba(10,22,40,0.9) 100%)' }} />
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(5,225,174,1) 1px, transparent 1px), linear-gradient(90deg, rgba(5,225,174,1) 1px, transparent 1px)', backgroundSize: '72px 72px' }} />
         <div className="absolute top-1/3 end-1/5 w-[600px] h-[600px] rounded-full opacity-8 blur-[120px]" style={{ background: '#05E1AE' }} />
@@ -225,7 +225,7 @@ export default function Home() {
             {/* Left */}
             <FadeIn direction="right">
               <div className="relative rounded-3xl overflow-hidden mb-8" style={{ height: '320px' }}>
-                <img src="https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=800&auto=format&fit=crop&q=80" alt="Executive consulting" className="w-full h-full object-cover" />
+                <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&auto=format&fit=crop&q=80" alt="Executive consulting" className="w-full h-full object-cover" />
                 <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(13,31,51,0.85) 0%, transparent 55%)' }} />
                 <div className="absolute bottom-5 start-5 flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: 'rgba(13,31,51,0.85)', border: '1px solid rgba(5,225,174,0.25)', backdropFilter: 'blur(10px)' }}>
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(5,225,174,0.15)' }}>
@@ -324,9 +324,9 @@ export default function Home() {
           <FadeIn>
             <div className="grid grid-cols-3 gap-3 mb-14" style={{ height: '220px' }}>
               {[
-                { src: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=600&auto=format&fit=crop&q=80', label: { ar: 'ورش عمل', en: 'Workshops' } },
-                { src: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&auto=format&fit=crop&q=80',   label: { ar: 'جلسات تدريب', en: 'Coaching Sessions' } },
-                { src: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600&auto=format&fit=crop&q=80',  label: { ar: 'استشارات', en: 'Consulting' } },
+                { src: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&auto=format&fit=crop&q=80', label: { ar: 'ورش عمل', en: 'Workshops' } },
+                { src: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&auto=format&fit=crop&q=80',   label: { ar: 'جلسات تدريب', en: 'Coaching Sessions' } },
+                { src: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&auto=format&fit=crop&q=80',  label: { ar: 'استشارات', en: 'Consulting' } },
               ].map((ph, i) => (
                 <motion.div key={i} className="relative overflow-hidden rounded-2xl" whileHover={{ scale: 1.03 }} transition={{ duration: 0.3 }}>
                   <img src={ph.src} alt={ph.label.en} className="w-full h-full object-cover" />
@@ -471,7 +471,7 @@ export default function Home() {
 
       {/* ══ 7.5 TESTIMONIAL STRIP ════════════════════════════════════════════ */}
       <section className="relative overflow-hidden" style={{ height: '340px' }}>
-        <img src="https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=1600&auto=format&fit=crop&q=80" alt="Leadership summit" className="w-full h-full object-cover" />
+        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600&auto=format&fit=crop&q=80" alt="Leadership summit" className="w-full h-full object-cover" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(13,31,51,0.92) 0%, rgba(13,31,51,0.65) 60%, rgba(13,31,51,0.85) 100%)' }} />
         <div className="absolute inset-0 flex items-center justify-center px-6">
           <FadeIn className="max-w-3xl text-center">
