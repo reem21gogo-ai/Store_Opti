@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '@/lib/LanguageContext';
 import { translations, productCategories } from '@/lib/i18n';
-import { ArrowRight, ArrowLeft, Download, BarChart2, Package, Sparkles } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Download, BarChart2, Package, Sparkles, Award } from 'lucide-react';
 import StoreNavbar from '@/components/store/StoreNavbar';
 import StoreFooter from '@/components/store/StoreFooter';
 import { base44 } from '@/api/base44Client';
@@ -113,12 +113,62 @@ export default function StoreHome() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-slate-400 text-sm">{lang === 'ar' ? 'لا توجد تقييمات بعد' : 'No assessments yet'}</div>
+           <div className="text-center py-12 text-slate-400 text-sm">{lang === 'ar' ? 'لا توجد تقييمات بعد' : 'No assessments yet'}</div>
           )}
-        </div>
-      </section>
+          </div>
+          </section>
 
-      {/* Free products */}
+          {/* Competency Assessment */}
+          <section className="py-14 px-6">
+          <div className="max-w-7xl mx-auto">
+          <div className="bg-gradient-to-r from-brand-primary to-brand-accent rounded-3xl overflow-hidden">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-10 items-center">
+             <div className="text-white">
+               <div className="flex items-center gap-2 mb-4">
+                 <Award size={24} />
+                 <h2 className="font-heading font-black text-2xl md:text-3xl">{lang === 'ar' ? 'مقياس الكفاءات' : 'Core Competency Assessment'}</h2>
+               </div>
+               <p className="text-white/80 mb-6 leading-relaxed">{lang === 'ar' ? 'تقييم شامل لـ 20 جدارة أساسية مع تقرير مفصل وخطة تطوير شخصية لمدة 90 يوم' : 'Comprehensive assessment of 20 core competencies with detailed report and 90-day development plan'}</p>
+               <div className="space-y-3 mb-8">
+                 <p className="text-sm flex items-center gap-2"><span className="text-lg">✓</span> {lang === 'ar' ? '6 مجالات رئيسية' : '6 Key Domains'}</p>
+                 <p className="text-sm flex items-center gap-2"><span className="text-lg">✓</span> {lang === 'ar' ? 'تقرير احترافي مفصل' : 'Professional Detailed Report'}</p>
+                 <p className="text-sm flex items-center gap-2"><span className="text-lg">✓</span> {lang === 'ar' ? 'خطة تطوير مخصصة' : 'Personalized Development Plan'}</p>
+               </div>
+               <Link to="/store/competency" className="bg-white text-brand-primary px-8 py-3.5 rounded-xl font-bold hover:opacity-90 transition-all inline-flex items-center gap-2">
+                 {lang === 'ar' ? 'ابدأ التقييم الآن' : 'Start Assessment'} <Award size={16} />
+               </Link>
+             </div>
+             <div className="text-white">
+               <div className="grid grid-cols-1 gap-4">
+                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                   <p className="text-xs text-white/60 mb-2">{lang === 'ar' ? 'المستوى التشغيلي' : 'Operational'}</p>
+                   <div className="flex items-baseline gap-2">
+                     <span className="text-3xl font-black">99</span>
+                     <span className="text-white/60">ر.س</span>
+                   </div>
+                 </div>
+                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                   <p className="text-xs text-white/60 mb-2">{lang === 'ar' ? 'المستوى الإشرافي' : 'Supervisory'}</p>
+                   <div className="flex items-baseline gap-2">
+                     <span className="text-3xl font-black">129</span>
+                     <span className="text-white/60">ر.س</span>
+                   </div>
+                 </div>
+                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                   <p className="text-xs text-white/60 mb-2">{lang === 'ar' ? 'المستوى القيادي' : 'Leadership'}</p>
+                   <div className="flex items-baseline gap-2">
+                     <span className="text-3xl font-black">159</span>
+                     <span className="text-white/60">ر.س</span>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </div>
+          </div>
+          </div>
+          </section>
+
+          {/* Free products */}
       <section className="py-14 px-6" style={{ background: 'linear-gradient(135deg, #f0fdf8, #e8f4fd)' }}>
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-8">
