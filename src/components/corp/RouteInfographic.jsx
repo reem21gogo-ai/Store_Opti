@@ -1,148 +1,215 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
+import { Star } from 'lucide-react';
+
+const ANGLES = [90, 18, -54, -126, -198]; // R=top, O=right, U=bottom-right, T=bottom-left, E=left
+
+function polarToXY(angleDeg, r) {
+  const rad = (angleDeg * Math.PI) / 180;
+  return {
+    x: 50 + r * Math.cos(rad),
+    y: 50 - r * Math.sin(rad),
+  };
+}
 
 export default function RouteInfographic({ steps, colors, lang }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-100px' });
+  const inView = useInView(ref, { once: true, margin: '-80px' });
+  const [active, setActive] = useState(null);
+
+  const R = 36; // orbit radius %
+  const dotR = 42; // decorative dots radius
+
+  // Decorative dots around the circle
+  const decorDots = Array.from({ length: 18 }, (_, i) => {
+    const a = (i * 360) / 18;
+    return polarToXY(a, dotR);
+  });
 
   return (
     <div ref={ref} className="mb-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
 
-      {/* ── DESKTOP: horizontal timeline ── */}
-      <div className="hidden md:block relative">
-
-        {/* Animated connecting track */}
-        <div className="absolute top-[72px] left-0 right-0 h-[2px] mx-16" style={{ background: 'rgba(255,255,255,0.05)' }}>
-          <motion.div className="h-full origin-left"
-            initial={{ scaleX: 0 }}
-            animate={inView ? { scaleX: 1 } : {}}
-            transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-            style={{ background: 'linear-gradient(90deg, #05E1AE, #3a9abf, #336fa3, #5bbdd6, #2ec9a0)' }}
-          />
-        </div>
-
-        {/* Steps row */}
-        <div className="flex items-start gap-0">
+        {/* ── LEFT: step list ── */}
+        <div className="flex flex-col gap-3">
           {steps.map((step, i) => {
-            const Icon = step.icon;
             const color = colors[i];
-            const isLast = i === steps.length - 1;
-
+            const isActive = active === i;
             return (
-              <div key={i} className="flex-1 flex flex-col items-center relative">
-
-                {/* Arrow connector (between cards) */}
-                {!isLast && (
-                  <motion.div
-                    initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}}
-                    transition={{ delay: 0.4 + i * 0.2 }}
-                    className="absolute top-[60px] right-0 translate-x-1/2 z-10"
-                    style={{ color: colors[i + 1] }}>
-                    <svg width="20" height="14" viewBox="0 0 20 14" fill="none">
-                      <path d="M13 1L19 7L13 13" stroke={colors[i + 1]} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </motion.div>
-                )}
-
-                {/* Icon circle on the track */}
-                <motion.div
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={inView ? { scale: 1, opacity: 1 } : {}}
-                  transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.15 + i * 0.15 }}
-                  className="relative z-10 w-[52px] h-[52px] rounded-full flex items-center justify-center shadow-lg mb-5"
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -30 }}
+                animate={inView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.5, delay: 0.1 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                onMouseEnter={() => setActive(i)}
+                onMouseLeave={() => setActive(null)}
+                className="flex items-center gap-4 px-4 py-3.5 rounded-2xl cursor-default transition-all duration-300"
+                style={{
+                  background: isActive ? `${color}14` : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${isActive ? color + '40' : 'rgba(255,255,255,0.07)'}`,
+                }}>
+                {/* Letter badge */}
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 font-heading font-black text-sm transition-all duration-300"
                   style={{
-                    background: `radial-gradient(circle at 35% 35%, ${color}ee, ${color}88)`,
-                    boxShadow: `0 0 0 4px #0D1F33, 0 0 0 6px ${color}40, 0 8px 24px ${color}44`,
+                    background: isActive ? color : `${color}18`,
+                    color: isActive ? '#0D1F33' : color,
+                    boxShadow: isActive ? `0 4px 16px ${color}44` : 'none',
                   }}>
-                  <Icon size={20} color="#0D1F33" strokeWidth={2.5} />
-                </motion.div>
-
-                {/* Card */}
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={inView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ duration: 0.55, delay: 0.3 + i * 0.13, ease: [0.22, 1, 0.36, 1] }}
-                  whileHover={{ y: -6, boxShadow: `0 20px 48px ${color}22` }}
-                  className="w-full mx-1 rounded-2xl px-4 py-5 text-center cursor-default relative overflow-hidden"
-                  style={{ background: '#161f2e', border: `1px solid ${color}30` }}>
-
-                  {/* Glow spot */}
-                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full blur-2xl pointer-events-none"
-                    style={{ background: `${color}18` }} />
-
-                  {/* Big letter */}
-                  <div className="font-heading font-black leading-none mb-1" style={{ fontSize: '3.2rem', color, opacity: 0.15 }}>
-                    {step.letter}
-                  </div>
-                  <div className="font-heading font-black text-white text-base -mt-3 mb-1">{step.word}</div>
-                  <div className="text-xs leading-snug px-1" style={{ color: `${color}bb` }}>{step[lang]}</div>
-
-                  {/* Bottom accent line */}
-                  <div className="absolute bottom-0 left-4 right-4 h-[2px] rounded-full" style={{ background: `linear-gradient(90deg, transparent, ${color}60, transparent)` }} />
-                </motion.div>
-
-                {/* Step index badge */}
-                <motion.div
-                  initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}}
-                  transition={{ delay: 0.5 + i * 0.13 }}
-                  className="mt-3 text-xs font-black tabular-nums"
-                  style={{ color: `${color}55` }}>
-                  0{i + 1}
-                </motion.div>
-              </div>
+                  {step.letter}
+                </div>
+                <div>
+                  <div className="font-heading font-bold text-white text-sm leading-snug">{step.word}</div>
+                  <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>{step[lang]}</div>
+                </div>
+              </motion.div>
             );
           })}
+
+          {/* Badge bottom */}
+          <motion.div
+            initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}}
+            transition={{ delay: 0.8 }}
+            className="inline-flex items-center gap-2 mt-2 px-4 py-2 rounded-xl self-start"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
+            <Star size={12} style={{ color: '#05E1AE' }} />
+            <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
+              {lang === 'ar' ? 'إطار حصري مُسجَّل' : 'Exclusive Registered Framework'}
+            </span>
+          </motion.div>
         </div>
-      </div>
 
-      {/* ── MOBILE: vertical timeline ── */}
-      <div className="md:hidden flex flex-col gap-0 relative">
-        {/* Vertical track */}
-        <div className="absolute top-6 bottom-6 left-[25px] w-[2px]" style={{ background: 'rgba(255,255,255,0.05)' }}>
-          <motion.div className="w-full origin-top"
-            initial={{ scaleY: 0 }}
-            animate={inView ? { scaleY: 1 } : {}}
-            transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-            style={{ height: '100%', background: 'linear-gradient(180deg, #05E1AE, #336fa3, #2ec9a0)' }}
-          />
-        </div>
+        {/* ── RIGHT: circular diagram ── */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={inView ? { opacity: 1, scale: 1 } : {}}
+          transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="relative flex items-center justify-center"
+          style={{ aspectRatio: '1', maxWidth: '420px', margin: '0 auto', width: '100%' }}>
 
-        {steps.map((step, i) => {
-          const Icon = step.icon;
-          const color = colors[i];
-          return (
-            <motion.div key={i}
-              initial={{ opacity: 0, x: -24 }}
-              animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.2 + i * 0.12, ease: [0.22, 1, 0.36, 1] }}
-              className="flex items-start gap-5 pb-6 relative">
+          {/* SVG layer */}
+          <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full" style={{ overflow: 'visible' }}>
+            {/* Dashed orbit ring */}
+            <motion.circle
+              cx="50" cy="50" r={R}
+              fill="none"
+              stroke="#05E1AE"
+              strokeWidth="0.4"
+              strokeDasharray="2 3"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={inView ? { pathLength: 1, opacity: 0.45 } : {}}
+              transition={{ duration: 1.4, delay: 0.3, ease: 'easeInOut' }}
+            />
 
-              {/* Circle on track */}
+            {/* Decorative dots on outer ring */}
+            {decorDots.map((d, i) => (
+              <motion.circle key={i} cx={d.x} cy={d.y} r="0.5"
+                fill="#05E1AE"
+                initial={{ opacity: 0 }} animate={inView ? { opacity: i % 3 === 0 ? 0.7 : 0.25 } : {}}
+                transition={{ delay: 0.6 + i * 0.03 }}
+              />
+            ))}
+
+            {/* Connecting lines from center to each node */}
+            {steps.map((step, i) => {
+              const pos = polarToXY(ANGLES[i], R);
+              const isActive = active === i;
+              return (
+                <motion.line key={i}
+                  x1="50" y1="50"
+                  x2={pos.x} y2={pos.y}
+                  stroke={colors[i]}
+                  strokeWidth={isActive ? "0.6" : "0.3"}
+                  strokeDasharray="1.5 1.5"
+                  opacity={isActive ? 0.7 : 0.2}
+                  style={{ transition: 'all 0.3s' }}
+                  initial={{ pathLength: 0 }}
+                  animate={inView ? { pathLength: 1 } : {}}
+                  transition={{ duration: 0.6, delay: 0.5 + i * 0.12 }}
+                />
+              );
+            })}
+          </svg>
+
+          {/* Center circle */}
+          <motion.div
+            initial={{ scale: 0 }} animate={inView ? { scale: 1 } : {}}
+            transition={{ type: 'spring', stiffness: 180, damping: 18, delay: 0.4 }}
+            className="absolute w-[26%] h-[26%] rounded-full flex flex-col items-center justify-center z-10"
+            style={{
+              top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+              background: 'linear-gradient(135deg, #1a2d45 0%, #0D1F33 100%)',
+              border: '1px solid rgba(5,225,174,0.3)',
+              boxShadow: '0 0 40px rgba(5,225,174,0.12), inset 0 1px 0 rgba(255,255,255,0.06)',
+            }}>
+            <span className="font-heading font-black text-white leading-none" style={{ fontSize: 'clamp(0.7rem, 2vw, 1.1rem)' }}>ROUTE°</span>
+            <span style={{ fontSize: 'clamp(0.4rem, 1vw, 0.6rem)', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.15em' }}>METHOD</span>
+          </motion.div>
+
+          {/* Node buttons for each step */}
+          {steps.map((step, i) => {
+            const pos = polarToXY(ANGLES[i], R);
+            const color = colors[i];
+            const isActive = active === i;
+
+            return (
               <motion.div
-                initial={{ scale: 0 }} animate={inView ? { scale: 1 } : {}}
-                transition={{ type: 'spring', delay: 0.3 + i * 0.12 }}
-                className="flex-shrink-0 w-[52px] h-[52px] rounded-full flex items-center justify-center z-10 shadow-md"
+                key={i}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={inView ? { scale: 1, opacity: 1 } : {}}
+                transition={{ type: 'spring', stiffness: 220, damping: 16, delay: 0.45 + i * 0.13 }}
+                onMouseEnter={() => setActive(i)}
+                onMouseLeave={() => setActive(null)}
+                className="absolute flex flex-col items-center cursor-pointer"
                 style={{
-                  background: `radial-gradient(circle at 35% 35%, ${color}ee, ${color}88)`,
-                  boxShadow: `0 0 0 3px #0D1F33, 0 0 0 5px ${color}40`,
+                  left: `${pos.x}%`, top: `${pos.y}%`,
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 20,
                 }}>
-                <Icon size={20} color="#0D1F33" strokeWidth={2.5} />
-              </motion.div>
 
-              {/* Content */}
-              <div className="flex-1 rounded-2xl px-4 py-4 relative overflow-hidden"
-                style={{ background: '#161f2e', border: `1px solid ${color}30` }}>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-heading font-black text-xl" style={{ color, opacity: 0.2 }}>{step.letter}</span>
-                  <span className="font-heading font-bold text-white text-sm">{step.word}</span>
-                  <span className="text-xs font-black ms-auto" style={{ color: `${color}55` }}>0{i + 1}</span>
+                {/* Outer glow ring */}
+                {isActive && (
+                  <motion.div
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1.4, opacity: 0 }}
+                    transition={{ duration: 0.8, repeat: Infinity }}
+                    className="absolute w-full h-full rounded-xl"
+                    style={{ background: color }}
+                  />
+                )}
+
+                {/* Node square */}
+                <motion.div
+                  animate={isActive ? { scale: 1.15 } : { scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 300 }}
+                  className="rounded-xl flex items-center justify-center font-heading font-black shadow-lg"
+                  style={{
+                    width: 'clamp(28px, 6vw, 36px)',
+                    height: 'clamp(28px, 6vw, 36px)',
+                    fontSize: 'clamp(0.75rem, 1.8vw, 1rem)',
+                    background: isActive
+                      ? `linear-gradient(135deg, ${color}, ${color}aa)`
+                      : `linear-gradient(135deg, #1e2f45, #162538)`,
+                    color: isActive ? '#0D1F33' : color,
+                    border: `1.5px solid ${color}${isActive ? 'ff' : '60'}`,
+                    boxShadow: isActive ? `0 6px 24px ${color}55` : `0 2px 8px rgba(0,0,0,0.4)`,
+                  }}>
+                  {step.letter}
+                </motion.div>
+
+                {/* Label below node */}
+                <div className="mt-1 font-heading font-bold text-center"
+                  style={{
+                    fontSize: 'clamp(0.45rem, 1.1vw, 0.6rem)',
+                    color: isActive ? color : 'rgba(255,255,255,0.4)',
+                    transition: 'color 0.2s',
+                    whiteSpace: 'nowrap',
+                  }}>
+                  {step.word}
                 </div>
-                <p className="text-xs leading-snug" style={{ color: `${color}bb` }}>{step[lang]}</p>
-                <div className="absolute bottom-0 left-3 right-3 h-[1px]" style={{ background: `linear-gradient(90deg, transparent, ${color}50, transparent)` }} />
-              </div>
-            </motion.div>
-          );
-        })}
+              </motion.div>
+            );
+          })}
+        </motion.div>
       </div>
     </div>
   );
