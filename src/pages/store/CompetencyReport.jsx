@@ -284,11 +284,11 @@ export default function CompetencyReport() {
             <div className="space-y-6">
                 {/* Cover */}
                 <div className="bg-gradient-to-br from-corp-dark via-brand-primary/90 to-corp-surface rounded-2xl p-8 text-center relative overflow-hidden">
-                  <div className="absolute inset-0 opacity-5"
+                  <div className="absolute inset-0 opacity-5 text-[hsl(var(--background))]"
                 style={{ backgroundImage: 'linear-gradient(rgba(5,225,174,1) 1px, transparent 1px), linear-gradient(90deg,rgba(5,225,174,1) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
                   <div className="relative z-10">
                     <div className="inline-flex items-center gap-2 bg-brand-accent/15 border border-brand-accent/25 rounded-full px-3 py-1 mb-4">
-                      <span className="font-heading font-black text-white text-xs tracking-widest">OPTIVANCE</span>
+                      <span className="font-heading font-black text-xs tracking-widest text-[hsl(var(--foreground))]">OPTIVANCE</span>
                     </div>
                     <h2 className="font-heading font-black text-2xl mb-1 text-[hsl(var(--foreground))]">
                       {t('تقرير الكفاءات والنمو المهني', 'Competency & Growth Report')}
@@ -313,8 +313,8 @@ export default function CompetencyReport() {
                           </defs>
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <div className="font-heading font-black text-4xl text-white">{overall.score}%</div>
-                          <div className="text-white/50 text-xs">{t('النتيجة الإجمالية', 'Overall Score')}</div>
+                          <div className="font-heading font-black text-4xl text-[hsl(var(--foreground))]">{overall.score}%</div>
+                          <div className="text-xs text-[hsl(var(--foreground))]">{t('النتيجة الإجمالية', 'Overall Score')}</div>
                         </div>
                       </div>
                     </div>
