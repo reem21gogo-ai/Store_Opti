@@ -1,877 +1,800 @@
 /**
- * OPTIVANCE — Competency Report PDF Engine  v5
- * Reference: competency-report-landing.html
- * A4 @ 3× · 12 pages · Bilingual AR/EN
- *
- * PAGES:
- *  1  — Front Cover
- *  2  — Welcome + Profile + How to Read
- *  3  — About the Assessment
- *  4  — Overall Snapshot (score + radar + 6 domain bars)
- *  5–10 — One page per domain (deep-dive)
- *  11 — Personal Development Plan
- *  12 — Back Cover (Next Steps + About)
+ * OPTIVANCE — Competency Report PDF Engine  v6
+ * Clean professional redesign — white base, clear hierarchy, no clutter.
+ * A4 @ 3× DPR · 12 pages · Bilingual AR/EN
  */
 import jsPDF from 'jspdf';
-import { DOMAINS, OVERALL_SUMMARIES, LEVEL_LABELS } from './competencyContent';
+import { DOMAINS, OVERALL_SUMMARIES, LEVEL_LABELS, BAND_CONFIG, getBand } from './competencyContent';
 
 // ─── PALETTE ──────────────────────────────────────────────────────────────────
-const P = {
-  navy:   '#0B1E30',
-  blue:   '#1A3A5C',
-  teal:   '#05E1AE',
-  white:  '#FFFFFF',
-  offwht: '#F7F9FC',
-  light:  '#EEF2F7',
-  border: '#D8E2EE',
-  text:   '#1E2D3D',
-  sub:    '#4A6080',
-  muted:  '#8EA5BF',
+const C = {
+  navy:    '#0D1E30',
+  blue:    '#1A3A5C',
+  teal:    '#05E1AE',
+  white:   '#FFFFFF',
+  bg:      '#F8FAFC',
+  card:    '#FFFFFF',
+  border:  '#E2EAF2',
+  text:    '#1E2D3D',
+  sub:     '#4A6080',
+  muted:   '#8EA5BF',
+  light:   '#EEF3FA',
 };
+
+// Per-domain brand colors (consistent across all pages)
+const DOMAIN_COLORS = ['#336FA3','#05C4A0','#7C3AED','#DC6803','#1D7A4A','#0E7490'];
+
+// Band config
 const BAND = {
-  Strong:     { c:'#1A7A4A', bg:'#E8F8EF', bdr:'#A8DFC0', ar:'متميز',          en:'Strong'               },
-  Proficient: { c:'#1558A0', bg:'#E6F0FB', bdr:'#A4C4ED', ar:'كفء',            en:'Proficient'           },
-  Moderate:   { c:'#B87000', bg:'#FDF3E0', bdr:'#F5C97A', ar:'متوسط',          en:'Moderate'             },
-  Critical:   { c:'#B52020', bg:'#FDEAEA', bdr:'#F0A0A0', ar:'أولوية تطوير',   en:'Development Priority' },
+  Strong:     { color:'#1A7A4A', bg:'#E8F8EF', border:'#A8DFC0', labelAr:'متميز',          labelEn:'Strong'     },
+  Proficient: { color:'#1558A0', bg:'#EBF3FC', border:'#9EC5EE', labelAr:'كفء',            labelEn:'Proficient' },
+  Moderate:   { color:'#B87000', bg:'#FEF5E5', border:'#F5C97A', labelAr:'متوسط',          labelEn:'Moderate'   },
+  Critical:   { color:'#B52020', bg:'#FDEAEA', border:'#F0A0A0', labelAr:'أولوية تطوير',   labelEn:'Critical'   },
 };
-const DC = ['#6B21A8','#1558A0','#1A7A4A','#B52020','#B87000','#0E7490']; // per domain
-const bc  = b => BAND[b]?.c   || P.muted;
-const bbg = b => BAND[b]?.bg  || P.light;
-const bbd = b => BAND[b]?.bdr || P.border;
-const bl  = (b,l) => BAND[b]?.[l==='ar'?'ar':'en'] || b;
-const sb  = s => s>=80?'Strong':s>=60?'Proficient':s>=40?'Moderate':'Critical';
+const bColor  = b => BAND[b]?.color  || C.muted;
+const bBg     = b => BAND[b]?.bg     || C.light;
+const bBorder = b => BAND[b]?.border || C.border;
+const bLabel  = (b, lang) => lang === 'ar' ? (BAND[b]?.labelAr || b) : (BAND[b]?.labelEn || b);
+const scoreBand = s => s >= 80 ? 'Strong' : s >= 60 ? 'Proficient' : s >= 40 ? 'Moderate' : 'Critical';
 
-// ─── CANVAS ───────────────────────────────────────────────────────────────────
-const W=210, H=297, DPR=3, PPM=3.7795*DPR;
-const CW=Math.round(W*PPM), CH=Math.round(H*PPM);
-const mm=v=>Math.round(v*PPM);
+// ─── CANVAS SETUP ─────────────────────────────────────────────────────────────
+const W = 210, H = 297, DPR = 3;
+const PX = v => Math.round(v * 3.7795 * DPR); // mm to px
+const CW = PX(W), CH = PX(H);
 
-function page(bg=P.white){
-  const c=document.createElement('canvas');
-  c.width=CW; c.height=CH;
-  const x=c.getContext('2d');
-  x.fillStyle=bg; x.fillRect(0,0,CW,CH);
-  return {cv:c,cx:x};
+function newPage(bgColor = C.white) {
+  const canvas = document.createElement('canvas');
+  canvas.width = CW; canvas.height = CH;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, CW, CH);
+  return { canvas, ctx };
 }
 
-// ─── PRIMITIVES ───────────────────────────────────────────────────────────────
-function rr(cx,x,y,w,h,fill,stroke,r=0,sw=0.35){
-  cx.save(); cx.beginPath();
-  const[X,Y,W2,H2,R]=[mm(x),mm(y),mm(w),mm(h),mm(r)];
-  if(R){
-    cx.moveTo(X+R,Y);cx.lineTo(X+W2-R,Y);cx.quadraticCurveTo(X+W2,Y,X+W2,Y+R);
-    cx.lineTo(X+W2,Y+H2-R);cx.quadraticCurveTo(X+W2,Y+H2,X+W2-R,Y+H2);
-    cx.lineTo(X+R,Y+H2);cx.quadraticCurveTo(X,Y+H2,X,Y+H2-R);
-    cx.lineTo(X,Y+R);cx.quadraticCurveTo(X,Y,X+R,Y);cx.closePath();
-  } else cx.rect(X,Y,W2,H2);
-  if(fill){cx.fillStyle=fill;cx.fill();}
-  if(stroke){cx.strokeStyle=stroke;cx.lineWidth=mm(sw);cx.stroke();}
-  cx.restore();
+// ─── DRAWING PRIMITIVES ───────────────────────────────────────────────────────
+function rect(ctx, x, y, w, h, fill, stroke, radius = 0, strokeWidth = 0.3) {
+  ctx.save(); ctx.beginPath();
+  const [X, Y, W2, H2, R] = [PX(x), PX(y), PX(w), PX(h), PX(radius)];
+  if (R > 0) {
+    ctx.moveTo(X + R, Y); ctx.lineTo(X + W2 - R, Y);
+    ctx.arcTo(X + W2, Y, X + W2, Y + R, R);
+    ctx.lineTo(X + W2, Y + H2 - R);
+    ctx.arcTo(X + W2, Y + H2, X + W2 - R, Y + H2, R);
+    ctx.lineTo(X + R, Y + H2);
+    ctx.arcTo(X, Y + H2, X, Y + H2 - R, R);
+    ctx.lineTo(X, Y + R);
+    ctx.arcTo(X, Y, X + R, Y, R);
+    ctx.closePath();
+  } else {
+    ctx.rect(X, Y, W2, H2);
+  }
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = PX(strokeWidth); ctx.stroke(); }
+  ctx.restore();
 }
-function seg(cx,x,y,w,h,c1,c2,r=0,dir='h'){
-  cx.save();
-  const g=dir==='h'?cx.createLinearGradient(mm(x),mm(y),mm(x+w),mm(y)):cx.createLinearGradient(mm(x),mm(y),mm(x),mm(y+h));
-  g.addColorStop(0,c1);g.addColorStop(1,c2);
-  cx.beginPath();
-  const[X,Y,W2,H2,R]=[mm(x),mm(y),mm(w),mm(h),mm(r)];
-  if(R){
-    cx.moveTo(X+R,Y);cx.lineTo(X+W2-R,Y);cx.quadraticCurveTo(X+W2,Y,X+W2,Y+R);
-    cx.lineTo(X+W2,Y+H2-R);cx.quadraticCurveTo(X+W2,Y+H2,X+W2-R,Y+H2);
-    cx.lineTo(X+R,Y+H2);cx.quadraticCurveTo(X,Y+H2,X,Y+H2-R);
-    cx.lineTo(X,Y+R);cx.quadraticCurveTo(X,Y,X+R,Y);cx.closePath();
-  } else cx.rect(X,Y,W2,H2);
-  cx.fillStyle=g;cx.fill();cx.restore();
+
+function line(ctx, x1, y1, x2, y2, color, width = 0.25) {
+  ctx.save(); ctx.beginPath();
+  ctx.moveTo(PX(x1), PX(y1)); ctx.lineTo(PX(x2), PX(y2));
+  ctx.strokeStyle = color; ctx.lineWidth = PX(width); ctx.stroke(); ctx.restore();
 }
-function ln(cx,x1,y1,x2,y2,c,w=0.3){
-  cx.save();cx.beginPath();cx.moveTo(mm(x1),mm(y1));cx.lineTo(mm(x2),mm(y2));
-  cx.strokeStyle=c;cx.lineWidth=mm(w);cx.stroke();cx.restore();
+
+function circle(ctx, cx, cy, r, fill, stroke, sw = 0.3) {
+  ctx.save(); ctx.beginPath(); ctx.arc(PX(cx), PX(cy), PX(r), 0, Math.PI * 2);
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = PX(sw); ctx.stroke(); }
+  ctx.restore();
 }
-function dot(cx,x,y,r,fill,stroke,sw=0.4){
-  cx.save();cx.beginPath();cx.arc(mm(x),mm(y),mm(r),0,Math.PI*2);
-  if(fill){cx.fillStyle=fill;cx.fill();}
-  if(stroke){cx.strokeStyle=stroke;cx.lineWidth=mm(sw);cx.stroke();}
-  cx.restore();
+
+function text(ctx, str, x, y, { size = 9, color = C.text, bold = false, align = 'left', rtl = false, maxWidth } = {}) {
+  if (str === null || str === undefined) return;
+  ctx.save();
+  const fs = Math.round(size * PX(1) * 0.37);
+  ctx.font = `${bold ? 700 : 400} ${fs}px Arial,sans-serif`;
+  ctx.fillStyle = color; ctx.textAlign = align; ctx.direction = rtl ? 'rtl' : 'ltr'; ctx.textBaseline = 'middle';
+  const args = [String(str), PX(x), PX(y)];
+  if (maxWidth) args.push(PX(maxWidth));
+  ctx.fillText(...args); ctx.restore();
 }
-function T(cx,str,x,y,{s=9,c=P.text,b=false,a='left',rtl=false,mw}={}){
-  if(str===null||str===undefined)return;
-  cx.save();
-  cx.font=`${b?700:400} ${Math.round(s*PPM*0.37)}px Arial,sans-serif`;
-  cx.fillStyle=c;cx.textAlign=a;cx.direction=rtl?'rtl':'ltr';cx.textBaseline='middle';
-  const args=[String(str),mm(x),mm(y)];
-  if(mw)args.push(mm(mw));
-  cx.fillText(...args);cx.restore();
-}
-function wrap(cx,str,x,y,mw,lh,opts={}){
-  if(!str)return 0;
-  cx.save();
-  const{s=8.5,c=P.text,b=false,rtl=false}=opts;
-  cx.font=`${b?700:400} ${Math.round(s*PPM*0.37)}px Arial,sans-serif`;
-  cx.fillStyle=c;cx.direction=rtl?'rtl':'ltr';cx.textBaseline='middle';
-  const words=String(str).split(' '),mwpx=mm(mw),lhpx=mm(lh);
-  let line='',cy=mm(y),lines=0;
-  words.forEach((w2,i)=>{
-    const t=line?line+' '+w2:w2;
-    if(cx.measureText(t).width>mwpx&&i>0){cx.fillText(line,mm(x),cy);line=w2;cy+=lhpx;lines++;}
-    else line=t;
+
+function wrapText(ctx, str, x, y, maxW, lineH, opts = {}) {
+  if (!str) return y;
+  const { size = 8, color = C.sub, bold = false, rtl = false } = opts;
+  ctx.save();
+  const fs = Math.round(size * PX(1) * 0.37);
+  ctx.font = `${bold ? 700 : 400} ${fs}px Arial,sans-serif`;
+  ctx.fillStyle = color; ctx.direction = rtl ? 'rtl' : 'ltr'; ctx.textBaseline = 'middle';
+  const words = String(str).split(' '), mwPx = PX(maxW);
+  let line2 = '', curY = PX(y);
+  words.forEach((w, i) => {
+    const test = line2 ? line2 + ' ' + w : w;
+    if (ctx.measureText(test).width > mwPx && i > 0) {
+      ctx.fillText(line2, PX(x), curY); line2 = w; curY += PX(lineH);
+    } else line2 = test;
   });
-  if(line){cx.fillText(line,mm(x),cy);lines++;}
-  cx.restore();return lines;
+  if (line2) ctx.fillText(line2, PX(x), curY);
+  ctx.restore();
+  return (curY / PX(1)) + lineH;
 }
 
-// ─── CHARTS ───────────────────────────────────────────────────────────────────
+function gradientRect(ctx, x, y, w, h, c1, c2, dir = 'h', radius = 0) {
+  ctx.save();
+  const g = dir === 'h'
+    ? ctx.createLinearGradient(PX(x), 0, PX(x + w), 0)
+    : ctx.createLinearGradient(0, PX(y), 0, PX(y + h));
+  g.addColorStop(0, c1); g.addColorStop(1, c2);
+  ctx.beginPath();
+  const [X, Y, W2, H2, R] = [PX(x), PX(y), PX(w), PX(h), PX(radius)];
+  if (R > 0) {
+    ctx.moveTo(X + R, Y); ctx.lineTo(X + W2 - R, Y);
+    ctx.arcTo(X + W2, Y, X + W2, Y + R, R);
+    ctx.lineTo(X + W2, Y + H2 - R);
+    ctx.arcTo(X + W2, Y + H2, X + W2 - R, Y + H2, R);
+    ctx.lineTo(X + R, Y + H2);
+    ctx.arcTo(X, Y + H2, X, Y + H2 - R, R);
+    ctx.lineTo(X, Y + R);
+    ctx.arcTo(X, Y, X + R, Y, R);
+    ctx.closePath();
+  } else ctx.rect(X, Y, W2, H2);
+  ctx.fillStyle = g; ctx.fill(); ctx.restore();
+}
 
-/* HALF-ARC GAUGE — clean, no zone rings, just track + fill */
-function gauge(cx,ox,oy,r,score,color,trackC=P.border){
-  const SW=mm(r*0.28),START=Math.PI,S=score;
-  cx.save();
+// ─── SCORE ARC (half-circle gauge) ───────────────────────────────────────────
+function scoreArc(ctx, cx, cy, radius, score, color) {
+  const sw = PX(radius * 0.22);
   // track
-  cx.beginPath();cx.arc(mm(ox),mm(oy),mm(r),START,Math.PI*2);
-  cx.strokeStyle=trackC;cx.lineWidth=SW;cx.lineCap='butt';cx.stroke();
-  // zone tint (4 segments)
-  const segs=[{f:'#FDEAEA',t:'#FDF3E0'},{f:'#FDF3E0',t:'#E6F0FB'},{f:'#E6F0FB',t:'#E8F8EF'},{f:'#E8F8EF',t:'#C8EDD8'}];
-  segs.forEach((_,i)=>{
-    const a0=START+i*(Math.PI/4), a1=START+(i+1)*(Math.PI/4);
-    cx.beginPath();cx.arc(mm(ox),mm(oy),mm(r),a0,a1);
-    cx.strokeStyle=segs[i].f;cx.lineWidth=SW*0.88;cx.lineCap='butt';cx.stroke();
-  });
-  // fill arc
-  if(S>0){
-    const fillEnd=START+(S/100)*Math.PI;
-    cx.beginPath();cx.arc(mm(ox),mm(oy),mm(r),START,fillEnd);
-    cx.strokeStyle=color;cx.lineWidth=SW;cx.lineCap='round';cx.stroke();
+  ctx.save(); ctx.beginPath();
+  ctx.arc(PX(cx), PX(cy), PX(radius), Math.PI, 0);
+  ctx.strokeStyle = C.border; ctx.lineWidth = sw; ctx.lineCap = 'round'; ctx.stroke(); ctx.restore();
+  // fill
+  if (score > 0) {
+    const end = Math.PI + (score / 100) * Math.PI;
+    ctx.save(); ctx.beginPath();
+    ctx.arc(PX(cx), PX(cy), PX(radius), Math.PI, end);
+    ctx.strokeStyle = color; ctx.lineWidth = sw; ctx.lineCap = 'round'; ctx.stroke(); ctx.restore();
   }
-  // tick marks at 0,25,50,75,100
-  [0,.25,.5,.75,1].forEach(t=>{
-    const a=START+t*Math.PI;
-    const r1=mm(r)-SW*0.65,r2=mm(r)+SW*0.65;
-    cx.beginPath();cx.moveTo(mm(ox)+r1*Math.cos(a),mm(oy)+r1*Math.sin(a));
-    cx.lineTo(mm(ox)+r2*Math.cos(a),mm(oy)+r2*Math.sin(a));
-    cx.strokeStyle=P.white;cx.lineWidth=mm(0.45);cx.stroke();
+}
+
+// ─── HORIZONTAL BAR ───────────────────────────────────────────────────────────
+function hBar(ctx, x, y, w, h, score, color) {
+  rect(ctx, x, y, w, h, C.light, C.border, h / 2, 0.2);
+  if (score > 0) {
+    const fw = Math.max((score / 100) * w, h);
+    gradientRect(ctx, x, y, fw, h, color, color + 'AA', 'h', h / 2);
+  }
+}
+
+// ─── DOMAIN COLOR STRIP (thin, Gallup-style) ─────────────────────────────────
+function domainStrip(ctx, highlightIdx) {
+  const slotW = W / 6;
+  DOMAIN_COLORS.forEach((clr, i) => {
+    const active = highlightIdx < 0 || i === highlightIdx;
+    rect(ctx, i * slotW, 0, slotW, 2.5, active ? clr : C.border + '66');
   });
-  cx.restore();
 }
 
-/* HORIZONTAL SCORE BAR — 4 zone segments + needle */
-function hbar(cx,x,y,w,h,score){
-  const zs=[{bg:'#FDEAEA',bd:BAND.Critical.c},{bg:'#FDF3E0',bd:BAND.Moderate.c},{bg:'#E6F0FB',bd:BAND.Proficient.c},{bg:'#E8F8EF',bd:BAND.Strong.c}];
-  const zw=w/4;
-  zs.forEach((z,i)=>rr(cx,x+i*zw,y,zw,h,z.bg,z.bd+'44',0,0.2));
-  [1,2,3].forEach(i=>ln(cx,x+i*zw,y,x+i*zw,y+h,P.white+'dd',0.5));
-  // needle
-  const nx=x+(score/100)*w;
-  rr(cx,nx-0.5,y-1.5,1,h+3,bc(sb(score)),null,0.5);
-  T(cx,score+'%',nx,y-5,{s:8,c:bc(sb(score)),b:true,a:'center'});
+// ─── PAGE HEADER ──────────────────────────────────────────────────────────────
+function pageHeader(ctx, rpt, pageNum, lang, highlightIdx = -1) {
+  const rtl = lang === 'ar';
+  const user = rpt.user || {};
+  // thin color strip at very top
+  domainStrip(ctx, highlightIdx);
+  // white header bg
+  rect(ctx, 0, 2.5, W, 13, C.white);
+  line(ctx, 0, 15.5, W, 15.5, C.border, 0.3);
+  // brand
+  text(ctx, 'OPTIVANCE', rtl ? W - 12 : 12, 9, { size: 8, color: C.navy, bold: true, align: rtl ? 'right' : 'left' });
+  // name + date (other side)
+  const info = [user.name, user.completion_date].filter(Boolean).join('  ·  ');
+  text(ctx, info, rtl ? 12 : W - 12, 9, { size: 7, color: C.muted, align: rtl ? 'left' : 'right' });
 }
 
-/* RADAR/SPIDER — clean lines, semi-transparent fill */
-function radar(cx,ocx,ocy,r,scores,colors){
-  const N=6,step=(Math.PI*2)/N,off=-Math.PI/2;
-  // rings
-  [.25,.5,.75,1].forEach(f=>{
-    cx.save();cx.beginPath();
-    for(let i=0;i<N;i++){
-      const a=off+i*step,x2=mm(ocx)+mm(r)*f*Math.cos(a),y2=mm(ocy)+mm(r)*f*Math.sin(a);
-      i===0?cx.moveTo(x2,y2):cx.lineTo(x2,y2);
+// ─── PAGE FOOTER ──────────────────────────────────────────────────────────────
+function pageFooter(ctx, pageNum) {
+  line(ctx, 0, H - 9, W, H - 9, C.border, 0.25);
+  text(ctx, 'OPTIVANCE  ·  www.optivance.com', 12, H - 5, { size: 6, color: C.muted });
+  text(ctx, String(pageNum), W - 12, H - 5, { size: 6.5, color: C.sub, bold: true, align: 'right' });
+}
+
+// ─── SECTION HEADING ─────────────────────────────────────────────────────────
+function sectionHeading(ctx, title, x, y, rtl, accentColor = C.teal) {
+  const align = rtl ? 'right' : 'left';
+  text(ctx, title, x, y, { size: 10.5, color: C.blue, bold: true, align, rtl });
+  line(ctx, rtl ? x - 50 : x, y + 5, rtl ? x : x + 50, y + 5, accentColor, 1.2);
+}
+
+// ─── BAND PILL ────────────────────────────────────────────────────────────────
+function bandPill(ctx, band, lang, x, y) {
+  const label = bLabel(band, lang);
+  const pw = lang === 'ar' ? 24 : 28, ph = 6.5;
+  rect(ctx, x, y, pw, ph, bBg(band), bColor(band), ph / 2, 0.35);
+  text(ctx, label, x + pw / 2, y + ph / 2, { size: 6, color: bColor(band), bold: true, align: 'center' });
+  return pw;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PAGE 1 — COVER
+// ═══════════════════════════════════════════════════════════════════════════════
+function buildCover(rpt, lang) {
+  const { canvas, ctx } = newPage();
+  const rtl = lang === 'ar', tr = (ar, en) => rtl ? ar : en;
+  const user = rpt.user || {}, ov = rpt.overall || { score: 0, band: 'Moderate' };
+  const band = ov.band || scoreBand(ov.score);
+  const lv = LEVEL_LABELS[user.professional_level]?.[lang] || '—';
+
+  // Dark gradient background
+  const bg = ctx.createLinearGradient(0, 0, 0, CH);
+  bg.addColorStop(0, '#0B1E30'); bg.addColorStop(0.7, '#102540'); bg.addColorStop(1, '#060F18');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, CW, CH);
+
+  // Subtle dot texture
+  ctx.save(); ctx.globalAlpha = 0.04; ctx.fillStyle = C.teal;
+  for (let xi = 0; xi < CW; xi += PX(9))
+    for (let yi = 0; yi < CH; yi += PX(9)) {
+      ctx.beginPath(); ctx.arc(xi, yi, PX(0.4), 0, Math.PI * 2); ctx.fill();
     }
-    cx.closePath();cx.strokeStyle=f===1?P.border:P.border+'66';cx.lineWidth=mm(f===1?.35:.2);cx.stroke();
-    cx.restore();
-  });
-  // axes
-  for(let i=0;i<N;i++){
-    const a=off+i*step;
-    ln(cx,ocx,ocy,ocx+r*Math.cos(a),ocy+r*Math.sin(a),P.border+'88',.28);
-  }
-  // filled area
-  cx.save();cx.beginPath();
-  scores.forEach((s,i)=>{
-    const a=off+i*step,f=s/100,x2=mm(ocx)+mm(r)*f*Math.cos(a),y2=mm(ocy)+mm(r)*f*Math.sin(a);
-    i===0?cx.moveTo(x2,y2):cx.lineTo(x2,y2);
-  });
-  cx.closePath();cx.fillStyle=P.teal+'28';cx.fill();cx.strokeStyle=P.teal;cx.lineWidth=mm(.7);cx.stroke();cx.restore();
-  // dots
-  scores.forEach((s,i)=>{
-    const a=off+i*step,f=s/100,x2=mm(ocx)+mm(r)*f*Math.cos(a),y2=mm(ocy)+mm(r)*f*Math.sin(a);
-    const R2=mm(2);
-    cx.save();cx.beginPath();cx.arc(x2,y2,R2,0,Math.PI*2);cx.fillStyle=colors[i];cx.fill();
-    cx.strokeStyle=P.white;cx.lineWidth=mm(.4);cx.stroke();cx.restore();
-  });
-}
+  ctx.restore();
 
-/* MINI PROGRESS BAR */
-function minibar(cx,x,y,w,h,score,color){
-  rr(cx,x,y,w,h,P.light,P.border,h/2,.2);
-  if(score>0) rr(cx,x,y,Math.max((score/100)*w,h),h,color,null,h/2);
-}
+  // Color strip at top
+  domainStrip(ctx, -1);
 
-// ─── GALLUP-STYLE PROGRESS STRIP ─────────────────────────────────────────────
-// 6 coloured slots across the full width — one per domain
-// highlightIdx = which slot is the current domain (-1 = all filled for overview pages)
-function progressStrip(cx, domainScores, highlightIdx) {
-  const sY=0, sH=11, slotW=W/6;
-  DC.forEach((clr,i)=>{
-    const x=i*slotW;
-    // overview: all full colour; domain page: only current slot gets colour
-    const fill = (highlightIdx<0) ? clr : (i===highlightIdx ? clr : P.border);
-    rr(cx,x,sY,slotW,sH,fill,null,0);
-    if(i>0) ln(cx,x,sY,x,sY+sH,P.white,0.5);
-  });
-}
+  // Teal accent right column (subtle)
+  ctx.save(); ctx.globalAlpha = 0.04; rect(ctx, W - 48, 0, 48, H, C.teal); ctx.restore();
 
-// ─── CHROME ───────────────────────────────────────────────────────────────────
-function hdr(cx, rpt, title, pg, lang, highlightIdx=-1){
-  const rtl=lang==='ar';
-  const user=rpt.user||{};
-  // Gallup-style: coloured strip at top, then white header row
-  progressStrip(cx, rpt.domain_scores||{}, highlightIdx);
-  // White header row
-  rr(cx,0,11,W,7,P.white);
-  ln(cx,0,18,W,18,P.border,.3);
-  // Brand left
-  T(cx,'OPTIVANCE',rtl?W-14:14,14.5,{s:7.5,c:P.navy,b:true,a:rtl?'right':'left'});
-  // Name | Date right
-  const nameDate=`${user.name||''}  |  ${user.completion_date||''}`;
-  T(cx,nameDate,rtl?14:W-14,14.5,{s:7,c:P.sub,b:false,a:rtl?'left':'right'});
-}
-function ftr(cx, pg){
-  ln(cx,0,H-8,W,H-8,P.border,.3);
-  T(cx,'OPTIVANCE  ·  www.optivance.com  ·  © 2025 All rights reserved.',14,H-4,{s:6,c:P.muted});
-  T(cx,String(pg),W-14,H-4,{s:6.5,c:P.sub,b:true,a:'right'});
-}
-function secTitle(cx,title,x,y,rtl,c=P.blue){
-  T(cx,title,x,y,{s:10,c,b:true,a:rtl?'right':'left',rtl});
-  ln(cx,rtl?x:x,y+4.5,rtl?x-65:x+65,y+4.5,P.teal,1.1);
-}
-function badge(cx,text,x,y,w,h,bgC,txtC){
-  rr(cx,x,y,w,h,bgC,null,h/2);
-  T(cx,text,x+w/2,y+h/2,{s:6.5,c:txtC||P.white,b:true,a:'center'});
-}
-function pill(cx,text,x,y,band){
-  const bw=22,bh=7;
-  rr(cx,x,y,bw,bh,bbg(band),bbd(band),3.5,.3);
-  T(cx,bl(band,'ar'),x+bw/2,y+bh/2,{s:6,c:bc(band),b:true,a:'center'});
-}
-function pillEn(cx,text,x,y,band){
-  const bw=26,bh=7;
-  rr(cx,x,y,bw,bh,bbg(band),bbd(band),3.5,.3);
-  T(cx,bl(band,'en'),x+bw/2,y+bh/2,{s:6,c:bc(band),b:true,a:'center'});
-}
+  // ── BRAND ──
+  const bx = rtl ? W - 12 : 12, ba = rtl ? 'right' : 'left';
+  text(ctx, 'OPTIVANCE', bx, 14, { size: 10, color: C.teal, bold: true, align: ba });
+  text(ctx, tr('للاستشارات وتطوير المواهب', 'Consulting & Talent Development'),
+    bx, 21, { size: 7, color: C.white + '55', align: ba, rtl });
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// P1 — FRONT COVER
-// ═══════════════════════════════════════════════════════════════════════════════
-function p1_cover(rpt,lang){
-  const{cv,cx}=page();
-  const rtl=lang==='ar',tr=(ar,en)=>rtl?ar:en;
-  const user=rpt.user||{},ov=rpt.overall||{score:0,band:'Moderate'};
-  const band=ov.band||sb(ov.score);
-  const lv=LEVEL_LABELS[user.professional_level]?.[lang]||'—';
+  // ── MAIN TITLE ──
+  const ty = 50;
+  text(ctx, tr('تقرير', 'Competency'), bx, ty, { size: 36, color: C.white, bold: true, align: ba, rtl });
+  text(ctx, tr('الجدارات المهنية', '& Growth Report'), bx, ty + 21, { size: 30, color: C.teal, bold: true, align: ba, rtl });
+  text(ctx, tr('مقياس الكفاءات الأساسية للموظف', 'Employee Core Competency Assessment'),
+    bx, ty + 33, { size: 9, color: C.white + '55', align: ba, rtl });
 
-  // dark BG
-  const bg=cx.createLinearGradient(0,0,0,CH);
-  bg.addColorStop(0,'#0B1E30');bg.addColorStop(.6,'#0F2540');bg.addColorStop(1,'#081525');
-  cx.fillStyle=bg;cx.fillRect(0,0,CW,CH);
+  line(ctx, 12, ty + 40, W - 12, ty + 40, C.white + '18', 0.4);
 
-  // dot grid texture
-  cx.save();cx.globalAlpha=.035;cx.fillStyle=P.teal;
-  for(let xi=0;xi<CW;xi+=mm(8))for(let yi=0;yi<CH;yi+=mm(8)){cx.beginPath();cx.arc(xi,yi,mm(.35),0,Math.PI*2);cx.fill();}
-  cx.restore();
+  // ── SCORE CIRCLE ──
+  const gcx = rtl ? 32 : W - 32, gcy = 60;
+  circle(ctx, gcx, gcy, 18, C.white + '06', C.white + '12', 0.5);
+  scoreArc(ctx, gcx, gcy, 13, ov.score, bColor(band));
+  text(ctx, ov.score + '%', gcx, gcy - 1, { size: 14, color: C.white, bold: true, align: 'center' });
+  text(ctx, tr('نتيجتك', 'Score'), gcx, gcy + 8, { size: 6.5, color: C.white + '55', align: 'center' });
+  bandPill(ctx, band, lang, gcx - 13, gcy + 13);
 
-  // Gallup-style progress strip at top of cover
-  progressStrip(cx, rpt.domain_scores||{}, -1);
+  // ── PARTICIPANT CARD ──
+  const cardY = ty + 46;
+  rect(ctx, 12, cardY, W - 24, 82, C.white + '08', C.white + '14', 5);
+  text(ctx, tr('بيانات المشارك', 'Participant Profile'),
+    rtl ? W - 18 : 18, cardY + 9, { size: 9, color: C.teal, bold: true, align: rtl ? 'right' : 'left', rtl });
+  line(ctx, 16, cardY + 15, W - 16, cardY + 15, C.white + '15', 0.3);
 
-  // right accent column
-  cx.save();cx.globalAlpha=.055;rr(cx,W-52,0,52,H,P.teal);cx.restore();
-  ln(cx,W-52,0,W-52,H,P.teal+'18',.4);
-
-  // OPTIVANCE brand (below the strip which is 11mm)
-  const lx=rtl?W-60:12,lw=48;
-  rr(cx,lx,16,lw,11,P.teal+'1a',P.teal+'44',5.5);
-  T(cx,'OPTIVANCE',lx+lw/2,21.5,{s:9.5,c:P.teal,b:true,a:'center'});
-  T(cx,tr('للاستشارات وتطوير المواهب','Consulting & Talent Development'),lx+lw/2,29,{s:6,c:P.white+'55',a:'center',rtl});
-
-  // main title
-  const tx=rtl?W-13:13,ta=rtl?'right':'left';
-  T(cx,tr('تقرير','Competency'),  tx,58,{s:35,c:P.white,b:true,a:ta,rtl});
-  T(cx,tr('الجدارات المهنية','& Growth Report'),tx,78,{s:29,c:P.teal,b:true,a:ta,rtl});
-  T(cx,tr('مقياس الكفاءات الأساسية للموظف','Employee Core Competency Assessment'),
-    tx,89,{s:9,c:P.white+'66',a:ta,rtl});
-
-  ln(cx,13,96,W-13,96,P.teal+'33',.5);
-
-  // score gauge — corner
-  const gcx=rtl?36:W-36,gcy=67;
-  dot(cx,gcx,gcy,19,P.white+'07',P.white+'14',.5);
-  gauge(cx,gcx,gcy,13,ov.score,bc(band),P.white+'20');
-  T(cx,ov.score+'%',gcx,gcy,  {s:15,c:P.white,b:true,a:'center'});
-  T(cx,tr('نتيجتك','Score'),   gcx,gcy+9,{s:6,c:P.white+'66',a:'center'});
-  rr(cx,gcx-14,gcy+13,28,8,bc(band)+'30',bc(band)+'88',4);
-  T(cx,bl(band,lang),gcx,gcy+17,{s:7,c:bc(band),b:true,a:'center'});
-
-  // profile card
-  const cY=100;
-  rr(cx,13,cY,W-26,78,P.white+'0d',P.white+'1a',6);
-  T(cx,tr('بيانات المشارك','Participant Profile'),rtl?W-19:19,cY+8,{s:9,c:P.teal,b:true,a:rtl?'right':'left',rtl});
-  ln(cx,17,cY+14,W-17,cY+14,P.white+'1a',.3);
-
-  [
-    [tr('الاسم','Full Name'),          user.name||'—'],
-    [tr('الاسم المفضل','Preferred Name'),user.preferred_name||user.name||'—'],
-    [tr('المستوى المهني','Level'),     lv],
-    [tr('نسخة التقييم','Version'),    rpt.version==='full'?tr('كاملة','Full'):tr('سريعة','Quick')],
-    [tr('تاريخ الإكمال','Date'),       user.completion_date||'—'],
-    [tr('رقم التقرير','Report ID'),    rpt.report_id||'—'],
-  ].forEach(([lbl,val],i)=>{
-    const col=i%2,row=Math.floor(i/2);
-    const cw=(W-32)/2,fx=rtl?W-17-col*(cw+4):17+col*(cw+4);
-    const fy=cY+18+row*19;
-    rr(cx,rtl?fx-cw:fx,fy,cw,16,P.white+'09',P.white+'18',3.5);
-    T(cx,lbl,rtl?fx-6:fx+6,fy+5.5,{s:6.5,c:P.teal+'cc',a:rtl?'right':'left',rtl});
-    T(cx,val, rtl?fx-6:fx+6,fy+12, {s:8.5,c:P.white+'dd',b:true,a:rtl?'right':'left',rtl,mw:cw-12});
-  });
-
-  // tagline bottom
-  const bY=H-26;
-  ln(cx,13,bY,W-13,bY,P.teal+'22',.4);
-  T(cx,tr('من الوعي إلى النمو المهني المستدام','From awareness to sustainable professional growth.'),W/2,bY+6,{s:8,c:P.white+'55',a:'center',rtl});
-  T(cx,'Powered by Optivance – ROUTE™ Methodology',W/2,bY+13,{s:6.5,c:P.teal+'44',a:'center'});
-  T(cx,'www.optivance.com',W/2,bY+20,{s:6,c:P.white+'25',a:'center'});
-
-  return cv;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// P2 — WELCOME + PROFILE + HOW TO READ
-// ═══════════════════════════════════════════════════════════════════════════════
-function p2_welcome(rpt,lang){
-  const{cv,cx}=page(P.offwht);
-  const rtl=lang==='ar',tr=(ar,en)=>rtl?ar:en;
-  const user=rpt.user||{};
-  const lv=LEVEL_LABELS[user.professional_level]?.[lang]||'—';
-  const ta=rtl?'right':'left',tx=rtl?W-12:12;
-
-  hdr(cx,rpt,tr('مرحباً بك في تقريرك','Welcome to Your Report'),2,lang,-1);
-  ftr(cx,2);
-
-  let y=22;
-
-  // Welcome card
-  rr(cx,8,y,W-16,30,P.white,P.border,4);
-  rr(cx,rtl?W-11:8,y,3,30,P.teal,null,1.5);
-  T(cx,tr('مرحباً بك في تقرير Optivance للجدارات','Welcome to Your Optivance Competency Report'),
-    rtl?W-15:14,y+8,{s:10,c:P.blue,b:true,a:ta,rtl});
-  wrap(cx,
-    tr('شكراً لإكمالك مقياس الجدارات المهنية. هذا التقرير مُعدّ خصيصاً لك. يقدم لك نظرة شاملة على ملفك الكفاءاتي الحالي، ويُبرز نقاط قوتك الرئيسية، ويرسم فرص التطوير.',
-       'Thank you for completing the Optivance Employee Core Competency Assessment. This report is designed exclusively for you. It provides a clear overview of your competency profile, highlights your key strengths, and outlines focused development opportunities.'),
-    rtl?W-15:14,y+19,W-26,5,{s:8,c:P.sub,rtl});
-  y+=34;
-
-  // Profile summary card
-  rr(cx,8,y,W-16,28,P.white,P.border,4);
-  T(cx,tr('ملفك الشخصي','Your Profile'),rtl?W-14:14,y+7,{s:9,c:P.blue,b:true,a:ta,rtl});
-  ln(cx,12,y+13,W-12,y+13,P.border,.35);
-  const pf=[
-    [tr('الاسم','Name'),         user.name||'—'],
-    [tr('المستوى','Level'),      lv],
-    [tr('تاريخ التقييم','Assessment Date'),user.completion_date||'—'],
-    [tr('رقم التقرير','Report ID'),rpt.report_id||'—'],
+  const fields = [
+    [tr('الاسم الكامل', 'Full Name'), user.name || '—'],
+    [tr('الاسم المفضل', 'Preferred Name'), user.preferred_name || user.name || '—'],
+    [tr('المستوى المهني', 'Level'), lv],
+    [tr('نسخة التقييم', 'Version'), rpt.version === 'full' ? tr('كاملة', 'Full') : tr('سريعة', 'Quick')],
+    [tr('تاريخ الإكمال', 'Date'), user.completion_date || '—'],
+    [tr('رقم التقرير', 'Report ID'), rpt.report_id || '—'],
   ];
-  const pcw=(W-20)/4;
-  pf.forEach(([l,v],i)=>{
-    const px=8+i*(pcw+1.5);
-    T(cx,l,px+pcw/2,y+18,{s:6.5,c:P.muted,a:'center',rtl});
-    T(cx,v,px+pcw/2,y+24,{s:8,c:P.blue,b:true,a:'center',mw:pcw-4,rtl});
+  const cw = (W - 28) / 2;
+  fields.forEach(([label, val], i) => {
+    const col = i % 2, row = Math.floor(i / 2);
+    const fx = 14 + col * (cw + 4), fy = cardY + 19 + row * 20;
+    rect(ctx, fx, fy, cw, 17, C.white + '08', C.white + '15', 3);
+    text(ctx, label, rtl ? fx + cw - 5 : fx + 5, fy + 5.5, { size: 6.5, color: C.teal + 'AA', align: rtl ? 'right' : 'left', rtl });
+    text(ctx, val, rtl ? fx + cw - 5 : fx + 5, fy + 12, { size: 8.5, color: C.white + 'DD', bold: true, align: rtl ? 'right' : 'left', rtl, maxWidth: cw - 10 });
   });
-  y+=32;
 
-  // How to read this report
-  rr(cx,8,y,W-16,76,P.white,P.border,4);
-  secTitle(cx,tr('كيف تقرأ هذا التقرير','How to Read This Report'),rtl?W-14:14,y+8,rtl);
-  const steps=[
-    {n:'1',ar:'النظرة العامة',en:'Overall Snapshot',
-     da:'نتيجتك الإجمالية ومقارنتك عبر المجالات الستة',de:'Your total score and comparison across the six core domains.'},
-    {n:'2',ar:'تحليل المجالات',en:'Domain Insights',
-     da:'تحليل تفصيلي لكل مجال مع نقاط القوة والتطوير',de:'Detailed breakdown for each domain with strengths and development opportunities.'},
-    {n:'3',ar:'خطة التطوير الشخصية',en:'Personal Development Plan',
-     da:'خارطة طريق عملية بأهداف وإجراءات محددة',de:'A simple, practical roadmap with goals and concrete actions.'},
-    {n:'4',ar:'الخطوات التالية',en:'Next Steps with Optivance',
-     da:'كيف تواصل رحلة نموك مع أدوات إضافية',de:'How you can continue your growth journey with additional tools.'},
+  // ── TAGLINE ──
+  line(ctx, 14, H - 24, W - 14, H - 24, C.teal + '20', 0.4);
+  text(ctx, tr('من الوعي إلى النمو المهني المستدام', 'From awareness to sustainable professional growth.'),
+    W / 2, H - 16, { size: 8, color: C.white + '44', align: 'center', rtl });
+  text(ctx, 'www.optivance.com', W / 2, H - 9, { size: 6.5, color: C.teal + '44', align: 'center' });
+
+  return canvas;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PAGE 2 — WELCOME + PROFILE + HOW TO READ
+// ═══════════════════════════════════════════════════════════════════════════════
+function buildWelcome(rpt, lang) {
+  const { canvas, ctx } = newPage(C.bg);
+  const rtl = lang === 'ar', tr = (ar, en) => rtl ? ar : en;
+  const user = rpt.user || {};
+  const lv = LEVEL_LABELS[user.professional_level]?.[lang] || '—';
+  const ta = rtl ? 'right' : 'left', tx = rtl ? W - 12 : 12;
+
+  pageHeader(ctx, rpt, 2, lang, -1);
+  pageFooter(ctx, 2);
+
+  let y = 20;
+
+  // Welcome banner
+  gradientRect(ctx, 8, y, W - 16, 26, C.blue, C.navy, 'h', 5);
+  text(ctx, tr('مرحباً بك في تقرير الجدارات المهنية', 'Welcome to Your Competency Report'),
+    rtl ? W - 16 : 16, y + 9, { size: 10.5, color: C.white, bold: true, align: ta, rtl });
+  wrapText(ctx,
+    tr('هذا التقرير مُعدّ خصيصاً لك. يقدم نظرة شاملة على ملفك الكفاءاتي، ويُبرز نقاط قوتك، ويرسم فرص التطوير.',
+      'This report is prepared exclusively for you. It provides a clear overview of your competency profile, highlights your key strengths, and outlines focused development opportunities.'),
+    rtl ? W - 16 : 16, y + 19, W - 32, 4.8,
+    { size: 8, color: C.white + 'CC', rtl });
+  y += 30;
+
+  // Profile row
+  rect(ctx, 8, y, W - 16, 20, C.white, C.border, 4);
+  const pf = [
+    [tr('الاسم', 'Name'), user.name || '—'],
+    [tr('المستوى', 'Level'), lv],
+    [tr('تاريخ التقييم', 'Date'), user.completion_date || '—'],
+    [tr('رقم التقرير', 'Report ID'), rpt.report_id || '—'],
   ];
-  steps.forEach((s,si)=>{
-    const sy=y+20+si*13;
-    dot(cx,rtl?W-18:18,sy,6,DC[si]+'22',DC[si],.6);
-    T(cx,s.n,rtl?W-18:18,sy,{s:8,c:DC[si],b:true,a:'center'});
-    T(cx,rtl?s.ar:s.en,rtl?W-29:29,sy-3.5,{s:8.5,c:P.blue,b:true,a:ta,rtl});
-    T(cx,rtl?s.da:s.de,rtl?W-29:29,sy+3.5,{s:7.5,c:P.sub,a:ta,rtl,mw:W-42});
+  const pw = (W - 20) / 4;
+  pf.forEach(([lbl, val], i) => {
+    const px2 = 8 + i * (pw + 1.2);
+    if (i > 0) line(ctx, px2, y + 4, px2, y + 16, C.border, 0.25);
+    text(ctx, lbl, px2 + pw / 2, y + 7, { size: 6.5, color: C.muted, align: 'center' });
+    text(ctx, val, px2 + pw / 2, y + 14, { size: 8.5, color: C.blue, bold: true, align: 'center', maxWidth: pw - 4 });
   });
-  y+=80;
+  y += 25;
+
+  // How to read
+  rect(ctx, 8, y, W - 16, 80, C.white, C.border, 4);
+  sectionHeading(ctx, tr('كيف تقرأ هذا التقرير', 'How to Read This Report'), rtl ? W - 14 : 14, y + 9, rtl);
+  const steps = [
+    { n: '1', ar: 'النظرة العامة', en: 'Overall Snapshot', da: 'نتيجتك الإجمالية ومقارنة المجالات الستة', de: 'Your total score and comparison across six core domains.' },
+    { n: '2', ar: 'تحليل المجالات', en: 'Domain Insights', da: 'تحليل تفصيلي لكل مجال مع نقاط القوة والتوصيات', de: 'Detailed breakdown per domain with strengths and recommendations.' },
+    { n: '3', ar: 'خطة التطوير', en: 'Development Plan', da: 'خارطة طريق بأهداف قصيرة ومتوسطة وطويلة المدى', de: 'A practical roadmap with short, mid, and long-term goals.' },
+    { n: '4', ar: 'الخطوات القادمة', en: 'Next Steps', da: 'كيف تواصل رحلة نموك مع Optivance', de: 'How to continue your growth journey with Optivance.' },
+  ];
+  steps.forEach((s, i) => {
+    const sy = y + 22 + i * 14;
+    circle(ctx, rtl ? W - 20 : 20, sy, 5.5, DOMAIN_COLORS[i] + '20', DOMAIN_COLORS[i], 0.5);
+    text(ctx, s.n, rtl ? W - 20 : 20, sy, { size: 7.5, color: DOMAIN_COLORS[i], bold: true, align: 'center' });
+    text(ctx, rtl ? s.ar : s.en, rtl ? W - 30 : 30, sy - 3.5, { size: 9, color: C.blue, bold: true, align: ta, rtl });
+    text(ctx, rtl ? s.da : s.de, rtl ? W - 30 : 30, sy + 3.5, { size: 7.5, color: C.sub, align: ta, rtl, maxWidth: W - 44 });
+  });
+  y += 85;
 
   // Methodology note
-  rr(cx,8,y,W-16,20,P.navy,null,4);
-  T(cx,tr('المنهجية: ROUTE™ لتطوير القيادة والكفاءات من Optivance',
-          'Methodology: ROUTE™ Leadership & Competency Framework by Optivance'),
-    W/2,y+7,{s:8,c:P.teal,b:true,a:'center',rtl});
-  T(cx,tr('مبني على أفضل المعايير العالمية وواقع بيئات العمل الإقليمية',
-          'Built on global best practices and regional workplace realities.'),
-    W/2,y+14,{s:7,c:P.white+'77',a:'center',rtl});
+  rect(ctx, 8, y, W - 16, 18, C.navy, null, 4);
+  text(ctx, tr('المنهجية: إطار ROUTE™ للجدارات والقيادة من Optivance', 'Methodology: ROUTE™ Leadership & Competency Framework by Optivance'),
+    W / 2, y + 7, { size: 8, color: C.teal, bold: true, align: 'center', rtl });
+  text(ctx, tr('مبني على معايير عالمية وواقع بيئات العمل الإقليمية', 'Built on global standards and regional workplace realities.'),
+    W / 2, y + 13.5, { size: 7, color: C.white + '66', align: 'center', rtl });
 
-  return cv;
+  return canvas;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// P3 — ABOUT THE ASSESSMENT
+// PAGE 3 — ABOUT THE ASSESSMENT
 // ═══════════════════════════════════════════════════════════════════════════════
-function p3_about(rpt,lang){
-  const{cv,cx}=page(P.offwht);
-  const rtl=lang==='ar',tr=(ar,en)=>rtl?ar:en;
-  const ta=rtl?'right':'left',tx=rtl?W-12:12;
+function buildAbout(rpt, lang) {
+  const { canvas, ctx } = newPage(C.bg);
+  const rtl = lang === 'ar', tr = (ar, en) => rtl ? ar : en;
+  const ta = rtl ? 'right' : 'left';
 
-  hdr(cx,rpt,tr('عن المقياس','About This Assessment'),3,lang,-1);
-  ftr(cx,3);
+  pageHeader(ctx, rpt, 3, lang, -1);
+  pageFooter(ctx, 3);
 
-  let y=22;
+  let y = 20;
 
-  // what it measures
-  rr(cx,8,y,W-16,58,P.white,P.border,4);
-  rr(cx,rtl?W-11:8,y,3,58,P.teal,null,1.5);
-  secTitle(cx,tr('ما يقيسه المقياس','What This Assessment Measures'),rtl?W-14:14,y+8,rtl);
-  const items=lang==='ar'?[
-    'المسؤولية والمساءلة','التعاون ومهارات الأشخاص','التواصل الفعّال','الإنتاجية والتوجه نحو النتائج',
-    'إدارة الذات وعقلية النمو','التركيز على العميل وأصحاب المصلحة','الوعي الرقمي والامتثال'
-  ]:[
-    'Responsibility & Accountability','Collaboration & People Skills','Communication',
-    'Productivity & Results Orientation','Self-Management & Growth Mindset',
-    'Customer & Stakeholder Focus','Digital Awareness & Compliance'
-  ];
-  items.forEach((it,i)=>{
-    const iy=y+20+i*5.3;
-    dot(cx,rtl?W-16:16,iy,1.5,P.teal,null);
-    T(cx,it,rtl?W-20:20,iy,{s:8,c:P.text,a:ta,rtl});
+  // Intro card
+  rect(ctx, 8, y, W - 16, 28, C.white, C.border, 4);
+  rect(ctx, rtl ? W - 11 : 8, y, 3, 28, C.teal, null, 1.5);
+  text(ctx, tr('ما الذي يقيسه هذا المقياس؟', 'What Does This Assessment Measure?'),
+    rtl ? W - 16 : 14, y + 9, { size: 10, color: C.blue, bold: true, align: ta, rtl });
+  wrapText(ctx,
+    tr('يقيس هذا المقياس الجدارات الأساسية المرتبطة بالأداء الوظيفي الفعّال عبر ستة مجالات رئيسية. يعكس كل مجال مجموعة من السلوكيات والمهارات القابلة للتطوير.',
+      'This assessment measures core competencies linked to effective professional performance across six key domains. Each domain reflects a set of developable behaviors and skills.'),
+    rtl ? W - 16 : 14, y + 18, W - 30, 4.8,
+    { size: 8, color: C.sub, rtl });
+  y += 32;
+
+  // 6 Domains grid
+  rect(ctx, 8, y, W - 16, 94, C.white, C.border, 4);
+  sectionHeading(ctx, tr('المجالات الستة الرئيسية', 'The Six Core Domains'), rtl ? W - 14 : 14, y + 9, rtl);
+  const dw = (W - 22) / 3;
+  DOMAINS.forEach((d, i) => {
+    const col = i % 3, row = Math.floor(i / 3);
+    const dx = 9 + col * (dw + 2), dy = y + 19 + row * 36;
+    rect(ctx, dx, dy, dw - 2, 33, C.bg, C.border, 3);
+    // color top bar
+    rect(ctx, dx, dy, dw - 2, 7, DOMAIN_COLORS[i], null, 3);
+    text(ctx, d.name[lang], dx + (dw - 2) / 2, dy + 3.5, { size: 6.5, color: C.white, bold: true, align: 'center' });
+    wrapText(ctx, d.description[lang], rtl ? dx + dw - 5 : dx + 4, dy + 14, dw - 12, 4.2,
+      { size: 6.5, color: C.sub, rtl });
   });
-  y+=62;
+  y += 98;
 
-  // how score is calculated
-  rr(cx,8,y,W-16,42,P.white,P.border,4);
-  secTitle(cx,tr('كيف تُحسب نتيجتك','How Your Score Is Calculated'),rtl?W-14:14,y+8,rtl);
-  const calcs=lang==='ar'?[
+  // How scoring works
+  rect(ctx, 8, y, W - 16, 44, C.white, C.border, 4);
+  sectionHeading(ctx, tr('كيف تُحسب نتيجتك', 'How Your Score Is Calculated'), rtl ? W - 14 : 14, y + 9, rtl);
+  const calcs = lang === 'ar' ? [
     'يستخدم المقياس سيناريوهات سلوكية تعكس مواقف عمل حقيقية.',
-    'تُحوَّل إجاباتك إلى مؤشرات رقمية مرجّحة لكل كفاءة.',
-    'تُجمَّع النتائج في ستة مجالات رئيسية ودرجة إجمالية.',
+    'تُحوَّل إجاباتك إلى مؤشرات مرجَّحة لكل كفاءة.',
+    'تُجمَّع النتائج في مجالات ستة ودرجة إجمالية.',
     'تُعرَض الدرجات على أربعة مستويات ملونة.',
-  ]:[
-    'The assessment uses behavior-based scenarios reflecting real work situations.',
-    'Your responses are converted into weighted indicators for each competency.',
-    'Results are grouped into six key domains and a global overall score.',
-    'Scores are presented on four color-coded bands.',
+  ] : [
+    'Uses behavioral scenarios reflecting real work situations.',
+    'Responses are converted into weighted indicators per competency.',
+    'Results are grouped into six domains and an overall score.',
+    'Scores are presented on four color-coded performance bands.',
   ];
-  calcs.forEach((c,i)=>{
-    const cy=y+18+i*5.5;
-    T(cx,String(i+1),rtl?W-14:14,cy,{s:7.5,c:P.teal,b:true,a:'center'});
-    T(cx,c,rtl?W-19:19,cy,{s:8,c:P.sub,a:ta,rtl,mw:W-28});
+  calcs.forEach((c, i) => {
+    const cy2 = y + 19 + i * 5.8;
+    circle(ctx, rtl ? W - 16 : 16, cy2, 2.5, DOMAIN_COLORS[i], null);
+    text(ctx, c, rtl ? W - 22 : 22, cy2, { size: 8, color: C.sub, align: ta, rtl, maxWidth: W - 32 });
   });
-  y+=46;
+  y += 48;
 
-  // 6 domains grid
-  rr(cx,8,y,W-16,86,P.white,P.border,4);
-  secTitle(cx,tr('المجالات الستة الرئيسية','The Six Core Domains'),rtl?W-14:14,y+8,rtl);
-  const dw=(W-20)/3;
-  DOMAINS.forEach((d,i)=>{
-    const col=i%3,row=Math.floor(i/3);
-    const dx=8+col*(dw+2),dy=y+18+row*33;
-    rr(cx,dx,dy,dw-2,30,P.offwht,P.border,3);
-    rr(cx,rtl?dx+dw-5:dx,dy,5,30,DC[i],null,1.5);
-    dot(cx,rtl?dx+dw-11:dx+11,dy+10,5,DC[i]+'22',DC[i]+'66',.5);
-    T(cx,String(i+1),rtl?dx+dw-11:dx+11,dy+10,{s:7,c:DC[i],b:true,a:'center'});
-    T(cx,d.name[lang],rtl?dx+dw-20:dx+20,dy+7,{s:8,c:P.blue,b:true,a:ta,rtl,mw:dw-28});
-    wrap(cx,d.description[lang],rtl?dx+dw-20:dx+20,dy+17,dw-28,4.3,{s:6.5,c:P.muted,rtl});
+  // Band legend
+  rect(ctx, 8, y, W - 16, 26, C.white, C.border, 4);
+  text(ctx, tr('مستويات الأداء', 'Performance Bands'), rtl ? W - 14 : 14, y + 7, { size: 9, color: C.blue, bold: true, align: ta, rtl });
+  const bands = ['Strong', 'Proficient', 'Moderate', 'Critical'];
+  const bw2 = (W - 20) / 4;
+  bands.forEach((b, i) => {
+    const bx = 8 + i * (bw2 + 1.3);
+    rect(ctx, bx, y + 13, bw2, 10, bBg(b), bColor(b) + '66', 3, 0.3);
+    text(ctx, bLabel(b, lang), bx + bw2 / 2, y + 18, { size: 7, color: bColor(b), bold: true, align: 'center' });
   });
-  y+=90;
 
-  // confidentiality note
-  rr(cx,8,y,W-16,12,P.navy+'22',P.border,4);
-  T(cx,tr('🔒 سرية المعلومات: نتائجك سرية ومعدّة لتطويرك الشخصي فقط.',
-          '🔒 Confidentiality: Your results are confidential and intended for your personal development only.'),
-    W/2,y+6,{s:7.5,c:P.blue,b:true,a:'center',rtl});
-
-  return cv;
+  return canvas;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// P4 — OVERALL SNAPSHOT (score + radar + domain bars)
+// PAGE 4 — OVERALL SNAPSHOT
 // ═══════════════════════════════════════════════════════════════════════════════
-function p4_snapshot(rpt,lang){
-  const{cv,cx}=page(P.offwht);
-  const rtl=lang==='ar',tr=(ar,en)=>rtl?ar:en;
-  const ta=rtl?'right':'left';
-  const ds=rpt.domain_scores||{};
-  const ov=rpt.overall||{score:0,band:'Moderate'};
-  const band=ov.band||sb(ov.score);
-  const summary=OVERALL_SUMMARIES[band]?.[lang]||'';
+function buildSnapshot(rpt, lang) {
+  const { canvas, ctx } = newPage(C.bg);
+  const rtl = lang === 'ar', tr = (ar, en) => rtl ? ar : en;
+  const ta = rtl ? 'right' : 'left';
+  const ds = rpt.domain_scores || {};
+  const ov = rpt.overall || { score: 0, band: 'Moderate' };
+  const band = ov.band || scoreBand(ov.score);
+  const summary = OVERALL_SUMMARIES[band]?.[lang] || '';
 
-  hdr(cx,rpt,tr('النظرة العامة على نتائجك','Your Overall Competency Snapshot'),4,lang,-1);
-  ftr(cx,4);
+  pageHeader(ctx, rpt, 4, lang, -1);
+  pageFooter(ctx, 4);
 
-  let y=22;
+  let y = 20;
 
-  // score hero bar
-  seg(cx,0,y,W,24,P.navy,P.blue,'h');
-  // overall gauge
-  gauge(cx,rtl?W-25:25,y+12,11,ov.score,bc(band),P.white+'25');
-  T(cx,ov.score+'%',rtl?W-25:25,y+12,{s:13,c:P.white,b:true,a:'center'});
-  // band badge
-  rr(cx,rtl?16:36,y+7,36,9,bc(band)+'33',bc(band)+'88',4.5);
-  T(cx,bl(band,lang),rtl?34:54,y+11.5,{s:9,c:bc(band),b:true,a:'center'});
-  // label + summary
-  T(cx,tr('النتيجة الإجمالية','Overall Score'),rtl?W-26:26,y+3.5,{s:8,c:P.white+'88',a:rtl?'right':'left',rtl});
-  wrap(cx,summary,rtl?W-12:58,y+9,W-72,4.8,{s:7.5,c:P.white+'bb',rtl});
-  y+=28;
+  // Score hero
+  gradientRect(ctx, 8, y, W - 16, 28, C.navy, C.blue, 'h', 5);
+  scoreArc(ctx, rtl ? W - 28 : 28, y + 14, 11, ov.score, bColor(band));
+  text(ctx, ov.score + '%', rtl ? W - 28 : 28, y + 13, { size: 13, color: C.white, bold: true, align: 'center' });
+  const lbl_x = rtl ? W - 44 : 44, lbl_a = rtl ? 'right' : 'left';
+  text(ctx, tr('النتيجة الإجمالية', 'Overall Score'), lbl_x, y + 7, { size: 8, color: C.white + '88', align: lbl_a, rtl });
+  text(ctx, bLabel(band, lang), lbl_x, y + 14.5, { size: 11, color: bColor(band), bold: true, align: lbl_a, rtl });
+  wrapText(ctx, summary, lbl_x, y + 22, W - 60, 4.5, { size: 7.5, color: C.white + 'BB', rtl });
+  y += 33;
 
-  // left col: radar  |  right col: domain score cards
-  const col1W=82,col2W=W-col1W-20;
+  // Six domain cards
+  rect(ctx, 8, y, W - 16, 100, C.white, C.border, 4);
+  text(ctx, tr('نتائج المجالات الستة', 'Six Domain Results'), rtl ? W - 14 : 14, y + 8, { size: 9.5, color: C.blue, bold: true, align: ta, rtl });
+  line(ctx, 12, y + 13.5, W - 12, y + 13.5, C.border, 0.3);
 
-  // RADAR
-  rr(cx,8,y,col1W,col1W+4,P.white,P.border,4);
-  T(cx,tr('مخطط الكفاءات','Competency Wheel'),8+col1W/2,y+7,{s:8.5,c:P.blue,b:true,a:'center',rtl});
-  const scores6=DOMAINS.map(d=>ds[d.id]?.score||0);
-  radar(cx,8+col1W/2,y+14+36,32,scores6,DC);
-  // labels
-  DOMAINS.forEach((d,i)=>{
-    const N=6,step=(Math.PI*2)/N,off=-Math.PI/2;
-    const a=off+i*step,lx=(8+col1W/2)+(32+12)*Math.cos(a),ly=(y+14+36)+(32+12)*Math.sin(a);
-    T(cx,d.name[lang].split(' ')[0],lx,ly,{s:6,c:DC[i],b:true,a:'center',rtl:false});
-  });
+  DOMAINS.forEach((d, i) => {
+    const dd = ds[d.id] || { score: 0, band: 'Critical' };
+    const dband = dd.band || scoreBand(dd.score);
+    const dClr = DOMAIN_COLORS[i];
+    const row = Math.floor(i / 2), col = i % 2;
+    const cw = (W - 22) / 2, ch = 18;
+    const dx = 9 + col * (cw + 2), dy = y + 16 + row * (ch + 2);
 
-  // DOMAIN CARDS — right column
-  const rx=8+col1W+4;
-  DOMAINS.forEach((d,i)=>{
-    const dd=ds[d.id]||{score:0,band:'Critical'};
-    const dband=dd.band||sb(dd.score);
-    const dy=y+i*(col1W+4)/6;
-    const cardH=(col1W+4)/6-1.5;
-    rr(cx,rx,y+i*((col1W+4)/6),col2W,cardH,P.white,P.border,3);
-    rr(cx,rtl?rx+col2W-3:rx,y+i*((col1W+4)/6),3,cardH,DC[i],null,1.5);
+    rect(ctx, dx, dy, cw, ch, C.bg, C.border, 3);
+    // left accent
+    rect(ctx, rtl ? dx + cw - 3 : dx, dy, 3, ch, dClr, null, 1.5);
+    // domain name
+    text(ctx, d.name[lang], rtl ? dx + cw - 7 : dx + 7, dy + 6, { size: 8.5, color: C.blue, bold: true, align: ta, rtl, maxWidth: cw - 40 });
     // score
-    T(cx,dd.score+'%',rtl?rx+col2W-8:rx+8,y+i*((col1W+4)/6)+cardH/2-3,{s:9,c:bc(dband),b:true,a:rtl?'right':'left'});
-    // name
-    T(cx,d.name[lang],rtl?rx+col2W-15:rx+15,y+i*((col1W+4)/6)+cardH/2-3,{s:7.5,c:P.blue,b:true,a:ta,rtl,mw:col2W-42});
+    text(ctx, dd.score + '%', rtl ? dx + 12 : dx + cw - 12, dy + 6, { size: 10, color: dClr, bold: true, align: 'center' });
+    // band label
+    bandPill(ctx, dband, lang, rtl ? dx + 7 : dx + cw - (lang === 'ar' ? 31 : 35), dy + 10);
     // mini bar
-    minibar(cx,rtl?rx+5:rx+5,y+i*((col1W+4)/6)+cardH-5,col2W-10,3,dd.score,bc(dband));
-    // band pill
-    const pW=lang==='ar'?22:28,pX=rtl?rx+5:rx+col2W-pW-5;
-    rr(cx,pX,y+i*((col1W+4)/6)+3.5,pW,5.5,bbg(dband),bbd(dband),2.5,.25);
-    T(cx,bl(dband,lang),pX+pW/2,y+i*((col1W+4)/6)+6.2,{s:5.5,c:bc(dband),b:true,a:'center'});
+    hBar(ctx, rtl ? dx + (lang === 'ar' ? 34 : 38) : dx + 7, dy + 13, cw - 46, 2.8, dd.score, dClr);
   });
-  y+=col1W+8;
+  y += 104;
 
-  // commentary highlights
-  const ov_ds=Object.entries(ds).map(([id,v])=>({id,...v})).sort((a,b)=>b.score-a.score);
-  const top2=ov_ds.slice(0,2).map(d=>DOMAINS.find(x=>x.id===d.id)?.name[lang]).filter(Boolean);
-  const bot2=ov_ds.slice(-2).map(d=>DOMAINS.find(x=>x.id===d.id)?.name[lang]).filter(Boolean);
+  // Strengths + priorities summary
+  const half = (W - 20) / 2;
+  const sorted = DOMAINS.map((d, i) => ({ ...d, i, score: ds[d.id]?.score || 0, band: ds[d.id]?.band || 'Critical' }))
+    .sort((a, b) => b.score - a.score);
 
-  rr(cx,8,y,W-16,24,P.white,P.border,4);
-  T(cx,tr('أبرز ملاحظات النتائج','Commentary Highlights'),rtl?W-14:14,y+6,{s:9,c:P.blue,b:true,a:ta,rtl});
-  if(top2.length){
-    T(cx,tr('أبرز نقاط القوة: ','Strong capability in: ')+top2.join(tr(' و',', ')),
-      rtl?W-14:14,y+13.5,{s:7.5,c:BAND.Strong.c,a:ta,rtl,mw:W-28});
-  }
-  if(bot2.length){
-    T(cx,tr('أولويات التطوير: ','Development priorities: ')+bot2.join(tr(' و',', ')),
-      rtl?W-14:14,y+20,{s:7.5,c:BAND.Critical.c,a:ta,rtl,mw:W-28});
-  }
+  // Top 2
+  rect(ctx, 8, y, half, 30, C.white, C.border, 4);
+  rect(ctx, rtl ? 8 + half - 3 : 8, y, 3, 30, BAND.Strong.color, null, 1.5);
+  text(ctx, tr('أبرز نقاط القوة', 'Key Strengths'), rtl ? 8 + half - 7 : 12, y + 7, { size: 8.5, color: BAND.Strong.color, bold: true, align: ta, rtl });
+  sorted.slice(0, 2).forEach((d, i) => {
+    const iy = y + 15 + i * 9;
+    circle(ctx, rtl ? 8 + half - 10 : 12, iy, 2.5, DOMAIN_COLORS[d.i], null);
+    text(ctx, d.name[lang], rtl ? 8 + half - 15 : 17, iy, { size: 8, color: C.text, align: ta, rtl, maxWidth: half - 30 });
+    text(ctx, d.score + '%', rtl ? 13 : 8 + half - 6, iy, { size: 8.5, color: DOMAIN_COLORS[d.i], bold: true, align: 'center' });
+  });
 
-  return cv;
+  // Bottom 2
+  const rx2 = 10 + half + 2;
+  rect(ctx, rx2, y, half, 30, C.white, C.border, 4);
+  rect(ctx, rtl ? rx2 + half - 3 : rx2, y, 3, 30, BAND.Critical.color, null, 1.5);
+  text(ctx, tr('أولويات التطوير', 'Development Priorities'), rtl ? rx2 + half - 7 : rx2 + 4, y + 7, { size: 8.5, color: BAND.Critical.color, bold: true, align: ta, rtl });
+  sorted.slice(-2).reverse().forEach((d, i) => {
+    const iy = y + 15 + i * 9;
+    circle(ctx, rtl ? rx2 + half - 10 : rx2 + 6, iy, 2.5, DOMAIN_COLORS[d.i], null);
+    text(ctx, d.name[lang], rtl ? rx2 + half - 15 : rx2 + 11, iy, { size: 8, color: C.text, align: ta, rtl, maxWidth: half - 30 });
+    text(ctx, d.score + '%', rtl ? rx2 + 7 : rx2 + half - 6, iy, { size: 8.5, color: DOMAIN_COLORS[d.i], bold: true, align: 'center' });
+  });
+
+  return canvas;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// P5–10 — DOMAIN DEEP-DIVE (one page per domain)
+// PAGE 5–10 — DOMAIN DEEP-DIVE
 // ═══════════════════════════════════════════════════════════════════════════════
-function p_domain(rpt,lang,idx,pgNum){
-  const{cv,cx}=page(P.offwht);
-  const rtl=lang==='ar',tr=(ar,en)=>rtl?ar:en;
-  const ta=rtl?'right':'left';
-  const ds=rpt.domain_scores||{};
-  const subs=rpt.sub_competency_scores||{};
-  const domain=DOMAINS[idx];
-  const dd=ds[domain.id]||{score:0,band:'Critical'};
-  const band=dd.band||sb(dd.score);
-  const dClr=DC[idx]||P.blue;
-  const content=domain.content[band]?.[lang]||{};
+function buildDomain(rpt, lang, idx, pgNum) {
+  const { canvas, ctx } = newPage(C.bg);
+  const rtl = lang === 'ar', tr = (ar, en) => rtl ? ar : en;
+  const ta = rtl ? 'right' : 'left';
+  const domain = DOMAINS[idx];
+  const ds = rpt.domain_scores || {};
+  const dd = ds[domain.id] || { score: 0, band: 'Critical' };
+  const band = dd.band || scoreBand(dd.score);
+  const dClr = DOMAIN_COLORS[idx];
+  const content = domain.content[band]?.[lang] || {};
+  const subs = rpt.sub_competency_scores || {};
 
-  hdr(cx,rpt,domain.name[lang],pgNum,lang,idx);
-  ftr(cx,pgNum);
+  pageHeader(ctx, rpt, pgNum, lang, idx);
+  pageFooter(ctx, pgNum);
 
-  let y=22;
+  let y = 19;
 
-  // domain header band (Gallup: domain label badge + big name + description)
-  rr(cx,0,y,W,22,P.white,null);
-  ln(cx,0,y+22,W,y+22,P.border,.4);
-  dot(cx,rtl?W-21:21,y+11,9,dClr+'22',dClr,.7);
-  T(cx,String(idx+1),rtl?W-21:21,y+11,{s:10,c:dClr,b:true,a:'center'});
-  T(cx,domain.name[lang],   rtl?W-35:35,y+7,  {s:11,c:P.blue,b:true,a:ta,rtl});
-  T(cx,domain.description[lang],rtl?W-35:35,y+15,{s:7.5,c:P.muted,a:ta,rtl,mw:W-60});
-  y+=26;
+  // Domain header card
+  rect(ctx, 8, y, W - 16, 24, C.white, C.border, 4);
+  rect(ctx, rtl ? W - 11 : 8, y, 3, 24, dClr, null, 1.5);
+  circle(ctx, rtl ? W - 22 : 22, y + 12, 8, dClr + '18', dClr, 0.6);
+  text(ctx, String(idx + 1), rtl ? W - 22 : 22, y + 12, { size: 9.5, color: dClr, bold: true, align: 'center' });
+  text(ctx, domain.name[lang], rtl ? W - 34 : 34, y + 8, { size: 11.5, color: C.blue, bold: true, align: ta, rtl });
+  text(ctx, domain.description[lang], rtl ? W - 34 : 34, y + 17, { size: 7.5, color: C.muted, align: ta, rtl, maxWidth: W - 60 });
+  y += 28;
 
-  // score bar (Hogan)
-  rr(cx,8,y,W-16,20,P.white,P.border,4);
-  T(cx,tr('الدرجة المئوية','Percentile Score'),rtl?W-14:14,y+5,{s:7,c:P.muted,a:ta,rtl});
-  hbar(cx,14,y+10,W-28,7,dd.score);
-  const bbxW=lang==='ar'?38:44;
-  rr(cx,rtl?13:W-bbxW-7,y+3,bbxW,8,bc(band)+'22',bc(band),4);
-  T(cx,bl(band,lang)+' — '+dd.score+'%',rtl?13+bbxW/2:W-bbxW-7+bbxW/2,y+7,{s:7,c:bc(band),b:true,a:'center'});
-  y+=24;
+  // Score bar
+  rect(ctx, 8, y, W - 16, 18, C.white, C.border, 4);
+  text(ctx, tr('الدرجة المئوية', 'Percentile Score'), rtl ? W - 14 : 14, y + 5.5, { size: 7, color: C.muted, align: ta, rtl });
+  hBar(ctx, 14, y + 10, W - 28, 5, dd.score, dClr);
+  text(ctx, dd.score + '%', rtl ? 24 : W - 20, y + 12, { size: 9, color: dClr, bold: true, align: 'center' });
+  bandPill(ctx, band, lang, rtl ? W - 44 : 14, y + 5);
+  y += 22;
 
-  // what this domain covers (reference: "What This Domain Covers" in HTML)
-  rr(cx,8,y,W-16,20,P.white,P.border,4);
-  rr(cx,rtl?W-11:8,y,3,20,dClr,null,1.5);
-  T(cx,tr('ما يغطيه هذا المجال','What This Domain Covers'),rtl?W-15:14,y+6,{s:8.5,c:P.blue,b:true,a:ta,rtl});
-  wrap(cx,domain.description[lang],rtl?W-15:14,y+14,W-26,4.5,{s:8,c:P.sub,rtl});
-  y+=24;
+  // What your score means
+  rect(ctx, 8, y, W - 16, 22, C.white, C.border, 4);
+  rect(ctx, rtl ? W - 11 : 8, y, 3, 22, dClr, null, 1.5);
+  text(ctx, tr('ماذا تعني درجتك', 'What Your Score Means'), rtl ? W - 15 : 14, y + 7, { size: 9, color: C.blue, bold: true, align: ta, rtl });
+  wrapText(ctx, content.summary || '', rtl ? W - 15 : 14, y + 15, W - 26, 4.5, { size: 8, color: C.sub, rtl });
+  y += 26;
 
-  // score interpretation (reference: "What Your Score Suggests")
-  rr(cx,8,y,W-16,26,P.white,P.border,4);
-  rr(cx,rtl?W-11:8,y,3,26,dClr,null,1.5);
-  T(cx,tr('ماذا تعني درجتك','What Your Score Suggests'),rtl?W-15:14,y+7,{s:9,c:P.blue,b:true,a:ta,rtl});
-  wrap(cx,content.summary||'',rtl?W-15:14,y+16,W-26,4.8,{s:8.5,c:P.text,rtl});
-  y+=30;
-
-  // sub-competencies (reference: "Sub-Competencies" section in HTML)
-  const subC=domain.sub_competencies;
-  const subH=12+subC.length*18+4;
-  rr(cx,8,y,W-16,subH,P.white,P.border,4);
-  T(cx,tr('المقاييس الفرعية','Sub-Competencies'),rtl?W-14:14,y+7,{s:9,c:P.blue,b:true,a:ta,rtl});
-  ln(cx,12,y+12,W-12,y+12,P.border,.35);
-
-  subC.forEach((sc,si)=>{
-    const ky=`${domain.id}__${sc.id}`;
-    const sData=subs[ky]||{score:dd.score,band};
-    const sBand=sData.band||sb(sData.score);
-    const sy=y+15+si*18;
-    if(si%2===0)rr(cx,10,sy,W-20,17,P.light,null,2.5);
-
-    // sub name
-    T(cx,sc.name[lang],rtl?W-16:16,sy+5,{s:8.5,c:P.text,b:true,a:ta,rtl,mw:W-72});
-    // score %
-    T(cx,sData.score+'%',rtl?33:W-28,sy+5,{s:9,c:bc(sBand),b:true,a:'center'});
-    // mini bar
-    minibar(cx,rtl?38:W-75,sy+10,58,4.5,sData.score,bc(sBand));
-    // band pill
-    const pW=lang==='ar'?22:28;
-    rr(cx,rtl?12:W-pW-12,sy+1.5,pW,6,bbg(sBand),bbd(sBand),3,.25);
-    T(cx,bl(sBand,lang),rtl?12+pW/2:W-pW/2-12,sy+4.5,{s:5.5,c:bc(sBand),b:true,a:'center'});
+  // Sub-competencies
+  const subC = domain.sub_competencies || [];
+  const subH = 14 + subC.length * 15;
+  rect(ctx, 8, y, W - 16, subH, C.white, C.border, 4);
+  text(ctx, tr('المقاييس الفرعية', 'Sub-Competencies'), rtl ? W - 14 : 14, y + 7, { size: 9, color: C.blue, bold: true, align: ta, rtl });
+  line(ctx, 12, y + 12, W - 12, y + 12, C.border, 0.3);
+  subC.forEach((sc, si) => {
+    const ky = `${domain.id}__${sc.id}`;
+    const sData = subs[ky] || { score: dd.score, band };
+    const sBand = sData.band || scoreBand(sData.score);
+    const sy = y + 14.5 + si * 15;
+    if (si % 2 === 0) rect(ctx, 10, sy - 1, W - 20, 14, C.bg, null, 2);
+    text(ctx, sc.name[lang], rtl ? W - 16 : 16, sy + 3.5, { size: 8.5, color: C.text, bold: true, align: ta, rtl });
+    hBar(ctx, rtl ? 40 : W - 72, sy + 1, 58, 3.5, sData.score, bColor(sBand));
+    text(ctx, sData.score + '%', rtl ? 28 : W - 16, sy + 3, { size: 8, color: bColor(sBand), bold: true, align: 'center' });
   });
-  y+=subH+4;
+  y += subH + 4;
 
-  if(y>H-52)return cv; // no room for more
+  if (y > H - 62) return canvas;
 
-  // strengths + recommendations (2 cols, reference HTML)
-  const colW=(W-20)/2;
-  const itemsS=content.strengths||[];
-  const itemsR=content.recommendations||[];
-  const maxItems=Math.max(itemsS.length,itemsR.length,3);
-  const twoColH=12+Math.min(maxItems,4)*9+4;
+  // Strengths + Recommendations (2 cols)
+  const colW = (W - 20) / 2;
+  const str = content.strengths || [];
+  const rec = content.recommendations || [];
+  const maxRows = Math.min(Math.max(str.length, rec.length), 3);
+  const twoH = 13 + maxRows * 9 + 4;
 
-  // strengths
-  rr(cx,8,y,colW,twoColH,P.white,P.border,4);
-  rr(cx,rtl?8+colW-3:8,y,3,twoColH,BAND.Strong.c,null,1.5);
-  T(cx,tr('أنت على الأرجح تتميز في','You Are Likely Doing Well In'),
-    rtl?8+colW-7:12,y+7,{s:8,c:BAND.Strong.c,b:true,a:ta,rtl});
-  itemsS.slice(0,4).forEach((s,si)=>{
-    const sy=y+14+si*9;
-    dot(cx,rtl?8+colW-9:12,sy,2,BAND.Strong.c,null);
-    T(cx,s,rtl?8+colW-14:17,sy,{s:7.5,c:P.text,a:ta,rtl,mw:colW-22});
+  rect(ctx, 8, y, colW, twoH, C.white, C.border, 4);
+  rect(ctx, rtl ? 8 + colW - 3 : 8, y, 3, twoH, BAND.Strong.color, null, 1.5);
+  text(ctx, tr('نقاط القوة', 'Strengths'), rtl ? 8 + colW - 7 : 12, y + 7, { size: 8.5, color: BAND.Strong.color, bold: true, align: ta, rtl });
+  str.slice(0, 3).forEach((s, si) => {
+    const sy = y + 14.5 + si * 9;
+    circle(ctx, rtl ? 8 + colW - 10 : 12, sy, 2, BAND.Strong.color, null);
+    text(ctx, s, rtl ? 8 + colW - 15 : 17, sy, { size: 7.5, color: C.text, align: ta, rtl, maxWidth: colW - 22 });
   });
 
-  // recommendations
-  const rx=10+colW+2;
-  rr(cx,rx,y,colW,twoColH,P.white,P.border,4);
-  rr(cx,rtl?rx+colW-3:rx,y,3,twoColH,dClr,null,1.5);
-  T(cx,tr('للمضي أبعد — نصائح التطوير','Development Tips to Go Further'),
-    rtl?rx+colW-7:rx+4,y+7,{s:8,c:dClr,b:true,a:ta,rtl});
-  itemsR.slice(0,4).forEach((r,ri)=>{
-    const ry=y+14+ri*9;
-    rr(cx,rtl?rx+colW-11:rx+7,ry-2,2,4,dClr,null,1);
-    T(cx,r,rtl?rx+colW-15:rx+12,ry,{s:7.5,c:P.text,a:ta,rtl,mw:colW-20});
+  const rx3 = 10 + colW + 2;
+  rect(ctx, rx3, y, colW, twoH, C.white, C.border, 4);
+  rect(ctx, rtl ? rx3 + colW - 3 : rx3, y, 3, twoH, dClr, null, 1.5);
+  text(ctx, tr('التوصيات', 'Recommendations'), rtl ? rx3 + colW - 7 : rx3 + 4, y + 7, { size: 8.5, color: dClr, bold: true, align: ta, rtl });
+  rec.slice(0, 3).forEach((r, ri) => {
+    const ry = y + 14.5 + ri * 9;
+    circle(ctx, rtl ? rx3 + colW - 10 : rx3 + 6, ry, 2, dClr, null);
+    text(ctx, r, rtl ? rx3 + colW - 15 : rx3 + 11, ry, { size: 7.5, color: C.text, align: ta, rtl, maxWidth: colW - 22 });
   });
-  y+=twoColH+5;
+  y += twoH + 5;
 
-  // development goals 3-phase
-  if(content.goals&&y<H-40){
-    const phases=[
-      {k:'short',ar:'الهدف القصير • ٠–٣٠ يوم',en:'Short-Term • 0–30 Days',c:'#B52020',bg:'#FDEAEA'},
-      {k:'mid',  ar:'الهدف المتوسط • ٣٠–٩٠ يوم',en:'Mid-Term • 30–90 Days',c:'#B87000',bg:'#FDF3E0'},
-      {k:'long', ar:'الهدف الطويل • ٩٠+ يوم',  en:'Long-Term • 90+ Days', c:'#1A7A4A',bg:'#E8F8EF'},
+  // 3-phase goals
+  if (content.goals && y < H - 40) {
+    const phases = [
+      { k: 'short', ar: '٠–٣٠ يوم', en: '0–30 Days', c: '#B52020', bg: '#FEF2F2' },
+      { k: 'mid', ar: '٣٠–٩٠ يوم', en: '30–90 Days', c: '#B87000', bg: '#FFFBEB' },
+      { k: 'long', ar: '٩٠+ يوم', en: '90+ Days', c: '#1A7A4A', bg: '#ECFDF5' },
     ];
-    const pw=(W-20)/3;
-    phases.forEach((ph,pi)=>{
-      const px=8+pi*(pw+2),pH=32;
-      rr(cx,px,y,pw,pH,ph.bg,ph.c+'44',3);
-      seg(cx,px,y,pw,9,ph.c,ph.c+'cc','h',3);
-      T(cx,rtl?ph.ar:ph.en,px+pw/2,y+4.5,{s:6.5,c:P.white,b:true,a:'center',rtl});
-      wrap(cx,content.goals[ph.k]||'',rtl?px+pw-4:px+4,y+16,pw-8,4.5,{s:7.5,c:P.text,rtl});
+    const pw2 = (W - 20) / 3;
+    phases.forEach((ph, pi) => {
+      const px2 = 8 + pi * (pw2 + 2), pH = 34;
+      rect(ctx, px2, y, pw2, pH, ph.bg, ph.c + '55', 4, 0.35);
+      rect(ctx, px2, y, pw2, 8.5, ph.c, null, 4);
+      text(ctx, rtl ? ph.ar : ph.en, px2 + pw2 / 2, y + 4.5, { size: 7, color: C.white, bold: true, align: 'center' });
+      wrapText(ctx, content.goals[ph.k] || '', rtl ? px2 + pw2 - 5 : px2 + 5, y + 16, pw2 - 10, 4.5, { size: 7.5, color: C.text, rtl });
     });
   }
 
-  return cv;
+  return canvas;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// P11 — PERSONAL DEVELOPMENT PLAN
+// PAGE 11 — PERSONAL DEVELOPMENT PLAN
 // ═══════════════════════════════════════════════════════════════════════════════
-function p11_devplan(rpt,lang){
-  const{cv,cx}=page(P.offwht);
-  const rtl=lang==='ar',tr=(ar,en)=>rtl?ar:en;
-  const ta=rtl?'right':'left',tx=rtl?W-12:12;
-  const ds=rpt.domain_scores||{};
-  const ov=rpt.overall||{score:0,band:'Moderate'};
-  const band=ov.band||sb(ov.score);
+function buildDevPlan(rpt, lang) {
+  const { canvas, ctx } = newPage(C.bg);
+  const rtl = lang === 'ar', tr = (ar, en) => rtl ? ar : en;
+  const ta = rtl ? 'right' : 'left', tx = rtl ? W - 12 : 12;
+  const ds = rpt.domain_scores || {};
+  const ov = rpt.overall || { score: 0, band: 'Moderate' };
+  const band = ov.band || scoreBand(ov.score);
 
-  hdr(cx,rpt,tr('خطة التطوير الشخصية','Personal Development Plan'),11,lang,-1);
-  ftr(cx,11);
+  pageHeader(ctx, rpt, 11, lang, -1);
+  pageFooter(ctx, 11);
 
-  let y=22;
+  let y = 20;
 
-  // profile + overall mini
-  rr(cx,8,y,W-16,18,P.white,P.border,4);
-  gauge(cx,rtl?W-21:21,y+9,8,ov.score,bc(band),P.border);
-  T(cx,ov.score+'%',rtl?W-21:21,y+9,{s:9,c:bc(band),b:true,a:'center'});
-  T(cx,tr(`أُعدّت لـ: ${rpt.user?.preferred_name||rpt.user?.name||'—'}`,
-          `Prepared for: ${rpt.user?.preferred_name||rpt.user?.name||'—'}`),
-    rtl?W-34:34,y+8,{s:9,c:P.blue,b:true,a:ta,rtl});
-  T(cx,tr(`النتيجة الإجمالية: ${bl(band,lang)} (${ov.score}%)`,
-          `Overall: ${bl(band,lang)} (${ov.score}%)`),
-    rtl?W-34:34,y+15,{s:7.5,c:bc(band),a:ta,rtl});
-  y+=22;
+  // Top summary bar
+  rect(ctx, 8, y, W - 16, 16, C.white, C.border, 4);
+  scoreArc(ctx, rtl ? W - 20 : 20, y + 8, 6.5, ov.score, bColor(band));
+  text(ctx, ov.score + '%', rtl ? W - 20 : 20, y + 7.5, { size: 8, color: bColor(band), bold: true, align: 'center' });
+  text(ctx, tr(`أُعدّت لـ: ${rpt.user?.preferred_name || rpt.user?.name || '—'}`, `Prepared for: ${rpt.user?.preferred_name || rpt.user?.name || '—'}`),
+    rtl ? W - 32 : 32, y + 7, { size: 9, color: C.blue, bold: true, align: ta, rtl });
+  text(ctx, tr(`النتيجة: ${bLabel(band, lang)} (${ov.score}%)`, `Score: ${bLabel(band, lang)} (${ov.score}%)`),
+    rtl ? W - 32 : 32, y + 13.5, { size: 7.5, color: bColor(band), align: ta, rtl });
+  y += 20;
 
-  // top 3 priorities
-  secTitle(cx,tr('أولويات التطوير المقترحة','Suggested Development Priorities'),tx,y+4,rtl);
-  y+=13;
+  sectionHeading(ctx, tr('أولويات التطوير المقترحة', 'Suggested Development Priorities'), tx, y + 5, rtl);
+  y += 14;
 
-  const sorted=DOMAINS.map((d,i)=>({...d,idx:i,score:ds[d.id]?.score||0,band:ds[d.id]?.band||'Critical'}))
-    .sort((a,b)=>a.score-b.score).slice(0,3);
+  const sorted = DOMAINS.map((d, i) => ({ ...d, i, score: ds[d.id]?.score || 0, band: ds[d.id]?.band || 'Critical' }))
+    .sort((a, b) => a.score - b.score).slice(0, 3);
 
-  sorted.forEach((d,pi)=>{
-    const dClr=DC[d.idx]||P.blue;
-    const content=d.content[d.band]?.[lang]||{};
-    const goals=content.goals||{};
-    const rH=50;
-
-    rr(cx,8,y,W-16,rH,P.white,P.border,4);
-    rr(cx,rtl?W-11:8,y,3,rH,dClr,null,1.5);
-    dot(cx,rtl?W-21:21,y+rH/2,9,dClr+'22',dClr,.7);
-    T(cx,String(pi+1),rtl?W-21:21,y+rH/2,{s:10,c:dClr,b:true,a:'center'});
-    T(cx,d.name[lang],rtl?W-35:35,y+9,{s:9.5,c:P.blue,b:true,a:ta,rtl,mw:W-76});
-    // score bar
-    hbar(cx,34,y+16,W-46,5,d.score);
+  sorted.forEach((d, pi) => {
+    const dClr = DOMAIN_COLORS[d.i];
+    const content = d.content[d.band]?.[lang] || {};
+    const goals = content.goals || {};
+    const rH = 52;
+    rect(ctx, 8, y, W - 16, rH, C.white, C.border, 4);
+    rect(ctx, rtl ? W - 11 : 8, y, 3, rH, dClr, null, 1.5);
+    // Priority badge
+    rect(ctx, rtl ? 14 : W - 24, y + 3, 18, 7, dClr + '22', dClr, 3.5, 0.4);
+    text(ctx, tr(`أولوية ${pi + 1}`, `Priority ${pi + 1}`), rtl ? 23 : W - 15, y + 6.5, { size: 6.5, color: dClr, bold: true, align: 'center' });
+    // Name + score
+    text(ctx, d.name[lang], rtl ? W - 35 : 35, y + 8, { size: 9.5, color: C.blue, bold: true, align: ta, rtl });
+    text(ctx, d.score + '%', rtl ? W - 35 : 35, y + 15, { size: 8, color: dClr, align: ta, rtl });
+    // Score bar
+    hBar(ctx, 34, y + 18, W - 48, 4, d.score, dClr);
     // 3 goals
-    const gw=(W-56)/3;
-    [{k:'short',l:tr('٠–٣٠','0–30'),c:'#B52020'},{k:'mid',l:tr('٣٠–٩٠','30–90'),c:'#B87000'},{k:'long',l:tr('٩٠+','90+'),c:'#1A7A4A'}]
-    .forEach((ph,gi)=>{
-      const gx=34+gi*(gw+3);
-      rr(cx,gx,y+24,gw,24,P.light,P.border,3);
-      rr(cx,gx,y+24,gw,7,ph.c+'cc',null,3);
-      T(cx,ph.l,gx+gw/2,y+27.5,{s:6,c:P.white,b:true,a:'center'});
-      wrap(cx,goals[ph.k]||'',gx+3,y+35,gw-6,4,{s:7,c:P.text,rtl});
-    });
-    y+=rH+4;
+    const gw = (W - 52) / 3;
+    [{ k: 'short', l: tr('٠–٣٠', '0–30'), c: '#B52020' }, { k: 'mid', l: tr('٣٠–٩٠', '30–90'), c: '#B87000' }, { k: 'long', l: tr('٩٠+', '90+'), c: '#1A7A4A' }]
+      .forEach((ph, gi) => {
+        const gx = 34 + gi * (gw + 3);
+        rect(ctx, gx, y + 25, gw, 24, C.bg, C.border, 3);
+        rect(ctx, gx, y + 25, gw, 7, ph.c, null, 3);
+        text(ctx, ph.l, gx + gw / 2, y + 28.5, { size: 6, color: C.white, bold: true, align: 'center' });
+        wrapText(ctx, goals[ph.k] || '', gx + 3, y + 37, gw - 6, 4, { size: 7, color: C.text, rtl });
+      });
+    y += rH + 4;
   });
 
-  // monthly reflection
-  if(y<H-55){
-    secTitle(cx,tr('قالب التأمل الشهري','Monthly Reflection Template'),tx,y+4,rtl);
-    y+=13;
-    const qW=(W-20)/2;
-    [tr('ما الذي تحسّن هذا الشهر؟','What improved this month?'),
-     tr('ما التحديات التي واجهتني؟','What challenges did I face?'),
-     tr('ما الذي سأعدّل في خطتي؟','What will I adjust in my plan?'),
-     tr('ما ركيزتي للشهر القادم؟','What is my next month focus?'),
-    ].forEach((q,qi)=>{
-      const qx=8+(qi%2)*(qW+4),qy=y+Math.floor(qi/2)*22;
-      rr(cx,qx,qy,qW,20,P.white,P.border,3);
-      T(cx,q,rtl?qx+qW-5:qx+5,qy+6,{s:7.5,c:P.blue,b:true,a:ta,rtl,mw:qW-10});
-      ln(cx,qx+5,qy+13,qx+qW-5,qy+13,P.border,.3);
-      ln(cx,qx+5,qy+17,qx+qW-5,qy+17,P.border,.3);
+  // Monthly reflection
+  if (y < H - 52) {
+    sectionHeading(ctx, tr('قالب التأمل الشهري', 'Monthly Reflection Template'), tx, y + 5, rtl);
+    y += 14;
+    const qw = (W - 20) / 2;
+    [tr('ما الذي تحسّن هذا الشهر؟', 'What improved this month?'),
+      tr('ما التحديات التي واجهتها؟', 'What challenges did I face?'),
+      tr('ما الذي سأعدّل في خطتي؟', 'What will I adjust?'),
+      tr('ما تركيزي للشهر القادم؟', 'What is my next month focus?'),
+    ].forEach((q, qi) => {
+      const qx = 8 + (qi % 2) * (qw + 4), qy = y + Math.floor(qi / 2) * 22;
+      rect(ctx, qx, qy, qw, 20, C.white, C.border, 3);
+      text(ctx, q, rtl ? qx + qw - 5 : qx + 5, qy + 6, { size: 7.5, color: C.blue, bold: true, align: ta, rtl, maxWidth: qw - 10 });
+      line(ctx, qx + 5, qy + 13, qx + qw - 5, qy + 13, C.border, 0.3);
+      line(ctx, qx + 5, qy + 17, qx + qw - 5, qy + 17, C.border, 0.3);
     });
   }
 
-  return cv;
+  return canvas;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// P12 — BACK COVER (Next Steps + About Optivance)
+// PAGE 12 — BACK COVER
 // ═══════════════════════════════════════════════════════════════════════════════
-function p12_back(rpt,lang){
-  const{cv,cx}=page();
-  const rtl=lang==='ar',tr=(ar,en)=>rtl?ar:en;
-  const ov=rpt.overall||{score:0,band:'Moderate'};
-  const band=ov.band||sb(ov.score);
-  const user=rpt.user||{};
+function buildBackCover(rpt, lang) {
+  const { canvas, ctx } = newPage();
+  const rtl = lang === 'ar', tr = (ar, en) => rtl ? ar : en;
+  const ov = rpt.overall || { score: 0, band: 'Moderate' };
+  const band = ov.band || scoreBand(ov.score);
 
-  // full dark bg
-  const bg=cx.createLinearGradient(0,0,0,CH);
-  bg.addColorStop(0,'#0B1E30');bg.addColorStop(1,'#081525');
-  cx.fillStyle=bg;cx.fillRect(0,0,CW,CH);
-  cx.save();cx.globalAlpha=.035;cx.fillStyle=P.teal;
-  for(let xi=0;xi<CW;xi+=mm(8))for(let yi=0;yi<CH;yi+=mm(8)){cx.beginPath();cx.arc(xi,yi,mm(.35),0,Math.PI*2);cx.fill();}
-  cx.restore();
-  rr(cx,0,H-2,W,2,P.teal);
+  // Dark gradient BG
+  const bg = ctx.createLinearGradient(0, 0, 0, CH);
+  bg.addColorStop(0, '#0B1E30'); bg.addColorStop(1, '#060F18');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, CW, CH);
+  ctx.save(); ctx.globalAlpha = 0.04; ctx.fillStyle = C.teal;
+  for (let xi = 0; xi < CW; xi += PX(9))
+    for (let yi = 0; yi < CH; yi += PX(9)) {
+      ctx.beginPath(); ctx.arc(xi, yi, PX(0.4), 0, Math.PI * 2); ctx.fill();
+    }
+  ctx.restore();
 
-  // next steps
-  T(cx,tr('خطواتك القادمة مع Optivance','Your Next Steps with Optivance'),
-    W/2,18,{s:13,c:P.teal,b:true,a:'center',rtl});
-  T(cx,tr('كيف تواصل رحلة نموك','How you can continue your growth journey'),
-    W/2,26,{s:8,c:P.white+'66',a:'center',rtl});
-  ln(cx,20,30,W-20,30,P.teal+'33',.4);
+  // Color strip top
+  domainStrip(ctx, -1);
 
-  const steps=[
-    {n:'01',c:'#1558A0',ar:'راجع تقريرك بعمق',    en:'Deep-Review Your Report',
-     da:'اقرأ تحليل كل مجال وافهم ما تعنيه نتيجتك', de:'Read each domain and understand what your score means'},
-    {n:'02',c:'#1A7A4A',ar:'حدد هدفين فوريين',    en:'Set Two Immediate Goals',
-     da:'اختر هدفين من قسم ٠–٣٠ يومًا وابدأ بهما',   de:'Pick two 0–30 day goals and start today'},
-    {n:'03',c:'#B87000',ar:'شاركه مع مشرفك',      en:'Share With Your Manager',
-     da:'ناقش التقرير مع مشرفك أو مرشدك المهني',     de:'Discuss with your direct manager or mentor'},
-    {n:'04',c:'#6B21A8',ar:'تابع تقدمك شهريًا',    en:'Track Progress Monthly',
-     da:'استخدم قالب التأمل مرة كل ٣٠ يومًا',        de:'Use the reflection template every 30 days'},
-    {n:'05',c:P.teal,   ar:'استكشف حلول Optivance',en:'Explore Optivance Solutions',
-     da:'تصفح متجرنا للأدوات والتدريبات التي تدعم نموك',de:'Browse tools and training that support your growth'},
+  text(ctx, tr('خطواتك القادمة', 'Your Next Steps'), W / 2, 18, { size: 14, color: C.teal, bold: true, align: 'center', rtl });
+  text(ctx, tr('كيف تواصل رحلة نموك مع Optivance', 'How to continue your growth journey with Optivance'),
+    W / 2, 26, { size: 8, color: C.white + '55', align: 'center', rtl });
+  line(ctx, 20, 31, W - 20, 31, C.white + '15', 0.35);
+
+  const steps = [
+    { n: '01', c: '#1558A0', ar: 'راجع تقريرك بعمق', en: 'Deep-Review Your Report', da: 'اقرأ تحليل كل مجال وافهم ما تعنيه نتيجتك', de: 'Read each domain and understand your score.' },
+    { n: '02', c: '#1A7A4A', ar: 'حدد هدفين فوريين', en: 'Set Two Immediate Goals', da: 'اختر هدفين من قسم ٠–٣٠ يومًا وابدأ بهما', de: 'Pick two 0–30 day goals and start today.' },
+    { n: '03', c: '#B87000', ar: 'شاركه مع مشرفك', en: 'Share With Your Manager', da: 'ناقش التقرير مع مشرفك أو مرشدك المهني', de: 'Discuss with your direct manager or mentor.' },
+    { n: '04', c: '#6B21A8', ar: 'تابع تقدمك شهريًا', en: 'Track Progress Monthly', da: 'استخدم قالب التأمل مرة كل ٣٠ يومًا', de: 'Use the reflection template every 30 days.' },
+    { n: '05', c: C.teal, ar: 'استكشف حلول Optivance', en: 'Explore Optivance Solutions', da: 'تصفح متجرنا للأدوات والتدريبات', de: 'Browse our store for tools and training.' },
   ];
-  let sy=35;
-  steps.forEach((s,si)=>{
-    rr(cx,8,sy,W-16,17,P.white+'0d',P.white+'1e',4);
-    dot(cx,rtl?W-19:19,sy+8.5,7.5,s.c+'28',s.c,.7);
-    T(cx,s.n,rtl?W-19:19,sy+8.5,{s:7.5,c:s.c,b:true,a:'center'});
-    T(cx,rtl?s.ar:s.en, rtl?W-31:31,sy+5.5, {s:9,c:P.white,b:true,a:rtl?'right':'left',rtl});
-    T(cx,rtl?s.da:s.de, rtl?W-31:31,sy+12.5,{s:7.5,c:P.white+'77',a:rtl?'right':'left',rtl,mw:W-43});
-    sy+=19;
+  let sy = 36;
+  steps.forEach((s) => {
+    rect(ctx, 8, sy, W - 16, 17, C.white + '08', C.white + '14', 4);
+    circle(ctx, rtl ? W - 20 : 20, sy + 8.5, 7, s.c + '25', s.c, 0.6);
+    text(ctx, s.n, rtl ? W - 20 : 20, sy + 8.5, { size: 7.5, color: s.c, bold: true, align: 'center' });
+    text(ctx, rtl ? s.ar : s.en, rtl ? W - 31 : 31, sy + 5.5, { size: 9, color: C.white, bold: true, align: rtl ? 'right' : 'left', rtl });
+    text(ctx, rtl ? s.da : s.de, rtl ? W - 31 : 31, sy + 12, { size: 7.5, color: C.white + '66', align: rtl ? 'right' : 'left', rtl, maxWidth: W - 44 });
+    sy += 19;
   });
 
-  ln(cx,16,sy+4,W-16,sy+4,P.white+'18',.4);
-  sy+=9;
+  line(ctx, 16, sy + 5, W - 16, sy + 5, C.white + '15', 0.35);
+  sy += 12;
 
-  // About Optivance
-  T(cx,tr('عن Optivance','About Optivance'),W/2,sy,{s:12,c:P.teal,b:true,a:'center',rtl});
-  sy+=8;
-  wrap(cx,
-    tr('Optivance شركة استشارية متخصصة في تطوير المواهب وبناء القدرات المؤسسية. نساعد الأفراد والمنظمات على تحويل نتائج التقييم إلى نمو مهني حقيقي وقابل للقياس.',
-       'Optivance is a specialized consultancy in talent development and organizational capability building. We help individuals and organizations transform assessment results into real, measurable professional growth.'),
-    18,sy,W-36,5.5,{s:8,c:P.white+'88',rtl});
-  sy+=17;
-  T(cx,'www.optivance.com  ·  info@optivance.com',W/2,sy,{s:8,c:P.teal+'88',a:'center'});
-  sy+=10;
+  // About
+  text(ctx, tr('عن Optivance', 'About Optivance'), W / 2, sy, { size: 12, color: C.teal, bold: true, align: 'center', rtl });
+  sy += 8;
+  wrapText(ctx,
+    tr('Optivance شركة استشارية متخصصة في تطوير المواهب وبناء القدرات. نساعد الأفراد والمنظمات على تحويل نتائج التقييم إلى نمو حقيقي وقابل للقياس.',
+      'Optivance is a specialized consultancy in talent development and organizational capability. We help individuals and organizations transform assessment results into real, measurable professional growth.'),
+    18, sy, W - 36, 5.5, { size: 8, color: C.white + '88', rtl });
+  sy += 16;
 
-  // large score gauge
-  gauge(cx,W/2,sy+22,22,ov.score,bc(band),P.white+'20');
-  T(cx,ov.score+'%', W/2,sy+22,{s:22,c:bc(band),b:true,a:'center'});
-  T(cx,bl(band,lang),W/2,sy+36,{s:9,c:bc(band),b:true,a:'center',rtl});
-  T(cx,user.name||'',W/2,sy+45,{s:12,c:P.white,b:true,a:'center',rtl});
-  sy+=52;
+  text(ctx, 'www.optivance.com  ·  info@optivance.com', W / 2, sy, { size: 8, color: C.teal + '88', align: 'center' });
+  sy += 12;
 
-  ln(cx,30,sy,W-30,sy,P.white+'15',.4);
-  T(cx,'OPTIVANCE',W/2,sy+8,{s:19,c:P.teal,b:true,a:'center'});
-  T(cx,tr('بناء المهنيين المتميزين','Building Distinguished Professionals'),W/2,sy+16,{s:8,c:P.white+'55',a:'center',rtl});
-  T(cx,tr(`رقم التقرير: ${rpt.report_id||'—'}`,`Report ID: ${rpt.report_id||'—'}`),
-    W/2,H-14,{s:7,c:P.white+'33',a:'center',rtl});
-  T(cx,'© 2025 OPTIVANCE — All Rights Reserved',W/2,H-9,{s:6,c:P.white+'25',a:'center'});
+  // Big score
+  scoreArc(ctx, W / 2, sy + 18, 20, ov.score, bColor(band));
+  text(ctx, ov.score + '%', W / 2, sy + 17, { size: 20, color: bColor(band), bold: true, align: 'center' });
+  text(ctx, bLabel(band, lang), W / 2, sy + 32, { size: 9, color: bColor(band), bold: true, align: 'center', rtl });
+  text(ctx, rpt.user?.name || '', W / 2, sy + 40, { size: 11, color: C.white, bold: true, align: 'center', rtl });
+  sy += 48;
 
-  return cv;
+  line(ctx, 30, sy, W - 30, sy, C.white + '12', 0.35);
+  text(ctx, 'OPTIVANCE', W / 2, sy + 9, { size: 18, color: C.teal, bold: true, align: 'center' });
+  text(ctx, tr('بناء المهنيين المتميزين', 'Building Distinguished Professionals'), W / 2, sy + 17, { size: 8, color: C.white + '44', align: 'center', rtl });
+  text(ctx, tr(`رقم التقرير: ${rpt.report_id || '—'}`, `Report ID: ${rpt.report_id || '—'}`), W / 2, H - 12, { size: 7, color: C.white + '30', align: 'center' });
+  text(ctx, '© 2025 OPTIVANCE — All Rights Reserved', W / 2, H - 7, { size: 6, color: C.white + '20', align: 'center' });
+
+  return canvas;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -880,15 +803,15 @@ function p12_back(rpt,lang){
 export async function generateCompetencyPDF(reportData, attemptId) {
   const lang = reportData.language || 'ar';
   const pages = [
-    p1_cover(reportData, lang),
-    p2_welcome(reportData, lang),
-    p3_about(reportData, lang),
-    p4_snapshot(reportData, lang),
-    ...DOMAINS.map((_, i) => p_domain(reportData, lang, i, i+5)),
-    p11_devplan(reportData, lang),
-    p12_back(reportData, lang),
+    buildCover(reportData, lang),
+    buildWelcome(reportData, lang),
+    buildAbout(reportData, lang),
+    buildSnapshot(reportData, lang),
+    ...DOMAINS.map((_, i) => buildDomain(reportData, lang, i, i + 5)),
+    buildDevPlan(reportData, lang),
+    buildBackCover(reportData, lang),
   ];
-  const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   pages.forEach((cv, i) => {
     if (i > 0) pdf.addPage();
     pdf.addImage(cv.toDataURL('image/png', 1.0), 'PNG', 0, 0, W, H, '', 'FAST');
