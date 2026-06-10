@@ -3,15 +3,14 @@
  * Pulls report_data from AssessmentAttempt entity (or localStorage fallback).
  * All content sourced from competencyContent.js content library.
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   Download, ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle,
   TrendingUp, Users, Brain, Target, BarChart2, Zap, Home,
   ChevronRight, BookOpen, Star, Award, Compass
 } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import { generateCompetencyPDF } from '@/lib/generateCompetencyPDF';
 import StoreNavbar from '@/components/store/StoreNavbar';
 import StoreFooter from '@/components/store/StoreFooter';
 import { base44 } from '@/api/base44Client';
@@ -151,8 +150,6 @@ export default function CompetencyReport() {
   const [attempt, setAttempt]   = useState(null);
   const [loading, setLoading]   = useState(true);
   const [activeSection, setActiveSection] = useState('snapshot');
-  const reportRef = useRef(null);
-  const sectionRefs = useRef({});
 
   const [pdfLoading, setPdfLoading] = useState(false);
 
@@ -200,23 +197,8 @@ export default function CompetencyReport() {
 
   const downloadPDF = async () => {
     setPdfLoading(true);
-    const el = reportRef.current;
     try {
-      const canvas = await html2canvas(el, { scale: 1.5, backgroundColor: '#ffffff', useCORS: true });
-      const pdf   = new jsPDF('p', 'mm', 'a4');
-      const iw    = 210;
-      const ih    = (canvas.height * iw) / canvas.width;
-      let left    = ih;
-      let pos     = 0;
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, pos, iw, ih);
-      left -= 297;
-      while (left > 0) {
-        pos = left - ih;
-        pdf.addPage();
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, pos, iw, ih);
-        left -= 297;
-      }
-      pdf.save(`optivance-report-${rpt.report_id || attemptId}.pdf`);
+      await generateCompetencyPDF(rpt, attemptId);
     } catch (err) { console.error(err); }
     setPdfLoading(false);
   };
@@ -295,7 +277,7 @@ export default function CompetencyReport() {
           </aside>
 
           {/* Report content */}
-          <main className="flex-1 min-w-0" ref={reportRef} id="report-content">
+          <main className="flex-1 min-w-0">
 
             {/* ══ SNAPSHOT ══ */}
             {activeSection === 'snapshot' && (
