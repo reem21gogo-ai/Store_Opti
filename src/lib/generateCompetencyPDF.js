@@ -1,896 +1,971 @@
 /**
- * generateCompetencyPDF — canvas-based multi-page PDF generator
- * Produces a visually rich, bilingual (AR RTL / EN LTR) infographic report.
+ * generateCompetencyPDF — high-resolution canvas PDF generator
+ * Premium infographic-style bilingual report (AR/RTL + EN/LTR)
  */
 import jsPDF from 'jspdf';
 import { DOMAINS, BAND_CONFIG, getBand, OVERALL_SUMMARIES, LEVEL_LABELS } from './competencyContent';
 
-// ─── brand tokens ─────────────────────────────────────────────────────────────
+// ─── Brand tokens ──────────────────────────────────────────────────────────────
 const C = {
-  primary:   '#1A3A5C',
-  accent:    '#05E1AE',
-  dark:      '#0D1F33',
-  surface:   '#162F4A',
-  white:     '#FFFFFF',
-  slate50:   '#F8FAFC',
-  slate100:  '#F1F5F9',
-  slate300:  '#CBD5E1',
-  slate400:  '#94A3B8',
-  slate500:  '#64748B',
-  slate600:  '#475569',
-  slate700:  '#334155',
-  slate900:  '#0F172A',
-  strong:    '#05E1AE',
-  proficient:'#3a9abf',
-  moderate:  '#F59E0B',
-  critical:  '#EF4444',
+  primary:    '#1A3A5C',
+  accent:     '#05E1AE',
+  dark:       '#0D1F33',
+  surface:    '#162F4A',
+  white:      '#FFFFFF',
+  slate50:    '#F8FAFC',
+  slate100:   '#F1F5F9',
+  slate200:   '#E2E8F0',
+  slate300:   '#CBD5E1',
+  slate400:   '#94A3B8',
+  slate500:   '#64748B',
+  slate600:   '#475569',
+  slate700:   '#334155',
+  strong:     '#05E1AE',
+  proficient: '#2E9DB8',
+  moderate:   '#F59E0B',
+  critical:   '#EF4444',
 };
 
-const BAND_COLORS = {
-  Strong:     C.strong,
-  Proficient: C.proficient,
-  Moderate:   C.moderate,
-  Critical:   C.critical,
-};
-const BAND_BG = {
-  Strong:     '#05e1ae18',
-  Proficient: '#3a9abf18',
-  Moderate:   '#f59e0b18',
-  Critical:   '#ef444418',
-};
+const BAND_COLORS = { Strong: C.strong, Proficient: C.proficient, Moderate: C.moderate, Critical: C.critical };
+const bandColor   = (b) => BAND_COLORS[b] || C.slate500;
+const bandLabel   = (b, lang) => BAND_CONFIG[b]?.label?.[lang] || b;
 
-const bandColor = (band) => BAND_COLORS[band] || C.slate500;
-const bandLabel = (band, lang) => BAND_CONFIG[band]?.label?.[lang] || band;
+// ─── Canvas / dimension helpers ────────────────────────────────────────────────
+const W_MM  = 210;
+const H_MM  = 297;
+const SCALE = 3;           // 3× for crisp PDF
+const PX_MM = 3.7795;      // 1 mm → px at 96 dpi
 
-// ─── canvas helpers ────────────────────────────────────────────────────────────
-const W = 210; // A4 mm width
-const H = 297; // A4 mm height
-const PX = 3.7795; // 1 mm in px at 96dpi
+const mm = (v) => v * PX_MM * SCALE;
 
-function mm(v) { return v * PX; }
-
+// ─── Page class ────────────────────────────────────────────────────────────────
 class Page {
-  constructor(isRTL) {
-    this.isRTL = isRTL;
-    this.canvas = document.createElement('canvas');
-    this.canvas.width  = Math.round(mm(W));
-    this.canvas.height = Math.round(mm(H));
-    this.ctx = this.canvas.getContext('2d');
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+  constructor() {
+    this.canvas        = document.createElement('canvas');
+    this.canvas.width  = Math.round(mm(W_MM));
+    this.canvas.height = Math.round(mm(H_MM));
+    this.ctx           = this.canvas.getContext('2d');
+    this._fill('#FFFFFF');
   }
 
-  get c() { return this.ctx; }
+  get c()  { return this.ctx; }
   get cw() { return this.canvas.width; }
   get ch() { return this.canvas.height; }
 
-  // convert mm coords
-  x(mmVal) { return Math.round(mm(mmVal)); }
-  y(mmVal) { return Math.round(mm(mmVal)); }
-  w(mmVal) { return Math.round(mm(mmVal)); }
-  h(mmVal) { return Math.round(mm(mmVal)); }
+  px(v)  { return Math.round(mm(v)); }        // mm → canvas px
+  pxw(v) { return Math.round(mm(v)); }
 
-  // RTL-aware x: from right edge
-  rx(mmVal) { return this.cw - Math.round(mm(mmVal)); }
+  _fill(color) {
+    this.c.fillStyle = color;
+    this.c.fillRect(0, 0, this.cw, this.ch);
+  }
 
-  // text helpers
-  text(txt, mmX, mmY, opts = {}) {
-    const { size = 10, color = C.slate700, weight = 'normal', align = 'start', maxWidth } = opts;
-    const c = this.ctx;
+  // ── primitives ──────────────────────────────────────────────────────────────
+  rect(x, y, w, h, fill, stroke, r = 0, strokeW = 0.5) {
+    const c = this.c;
     c.save();
-    c.fillStyle = color;
-    c.font = `${weight} ${Math.round(size * PX * 0.4)}px Arial, sans-serif`;
-    c.textAlign = align;
-    if (maxWidth) c.fillText(String(txt), this.x(mmX), this.y(mmY), this.w(maxWidth));
-    else c.fillText(String(txt), this.x(mmX), this.y(mmY));
+    const [px, py, pw, ph] = [this.px(x), this.px(y), this.px(w), this.px(h)];
+    const pr = r ? this.px(r) : 0;
+    c.beginPath();
+    if (pr) {
+      c.moveTo(px + pr, py);
+      c.lineTo(px + pw - pr, py);
+      c.quadraticCurveTo(px + pw, py, px + pw, py + pr);
+      c.lineTo(px + pw, py + ph - pr);
+      c.quadraticCurveTo(px + pw, py + ph, px + pw - pr, py + ph);
+      c.lineTo(px + pr, py + ph);
+      c.quadraticCurveTo(px, py + ph, px, py + ph - pr);
+      c.lineTo(px, py + pr);
+      c.quadraticCurveTo(px, py, px + pr, py);
+      c.closePath();
+    } else {
+      c.rect(px, py, pw, ph);
+    }
+    if (fill)   { c.fillStyle   = fill;   c.fill();   }
+    if (stroke) { c.strokeStyle = stroke; c.lineWidth = this.px(strokeW); c.stroke(); }
     c.restore();
   }
 
-  wrapText(txt, mmX, mmY, mmMaxW, mmLineH, opts = {}) {
-    const { size = 9, color = C.slate600, weight = 'normal' } = opts;
-    const c = this.ctx;
+  gradRect(x, y, w, h, c1, c2, dir = 'h', r = 0) {
+    const c  = this.c;
+    const px = this.px(x), py = this.px(y), pw = this.px(w), ph = this.px(h);
+    const g  = dir === 'h' ? c.createLinearGradient(px, py, px + pw, py)
+                            : c.createLinearGradient(px, py, px, py + ph);
+    g.addColorStop(0, c1);
+    g.addColorStop(1, c2);
+    this.rect(x, y, w, h, g, null, r);
+  }
+
+  circle(cx, cy, r, fill, stroke, sw = 0.5) {
+    const c = this.c;
     c.save();
-    c.fillStyle = color;
-    c.font = `${weight} ${Math.round(size * PX * 0.4)}px Arial, sans-serif`;
-    const words = String(txt).split(' ');
-    let line = '';
-    let y = this.y(mmY);
-    const maxW = this.w(mmMaxW);
+    c.beginPath();
+    c.arc(this.px(cx), this.px(cy), this.px(r), 0, Math.PI * 2);
+    if (fill)   { c.fillStyle   = fill;   c.fill();   }
+    if (stroke) { c.strokeStyle = stroke; c.lineWidth = this.px(sw); c.stroke(); }
+    c.restore();
+  }
+
+  scoreArc(cx, cy, r, pct, trackColor, arcColor, sw = 4) {
+    const c   = this.c;
+    const pcx = this.px(cx), pcy = this.px(cy), pr = this.px(r);
+    const lw  = this.px(sw);
+    // track
+    c.save();
+    c.beginPath();
+    c.arc(pcx, pcy, pr, 0, Math.PI * 2);
+    c.strokeStyle = trackColor;
+    c.lineWidth   = lw;
+    c.stroke();
+    c.restore();
+    // arc
+    if (pct > 0) {
+      const end = -Math.PI / 2 + (pct / 100) * Math.PI * 2;
+      const g   = c.createLinearGradient(pcx - pr, pcy, pcx + pr, pcy);
+      g.addColorStop(0, arcColor);
+      g.addColorStop(1, C.proficient);
+      c.save();
+      c.beginPath();
+      c.arc(pcx, pcy, pr, -Math.PI / 2, end);
+      c.strokeStyle = g;
+      c.lineWidth   = lw;
+      c.lineCap     = 'round';
+      c.stroke();
+      c.restore();
+    }
+  }
+
+  bar(x, y, w, h, pct, fg, bg = C.slate200, r = 1) {
+    this.rect(x, y, w, h, bg, null, r);
+    if (pct > 0) {
+      const filled = Math.max(w * (pct / 100), r * 2);
+      this.rect(x, y, filled, h, fg, null, r);
+    }
+  }
+
+  gradBar(x, y, w, h, pct, c1, c2, bg = C.slate200, r = 1) {
+    this.rect(x, y, w, h, bg, null, r);
+    if (pct > 0) {
+      const filled = Math.max(w * (pct / 100), r * 2);
+      this.gradRect(x, y, filled, h, c1, c2, 'h', r);
+    }
+  }
+
+  line(x1, y1, x2, y2, color, w = 0.3) {
+    const c = this.c;
+    c.save();
+    c.beginPath();
+    c.moveTo(this.px(x1), this.px(y1));
+    c.lineTo(this.px(x2), this.px(y2));
+    c.strokeStyle = color;
+    c.lineWidth   = this.px(w);
+    c.stroke();
+    c.restore();
+  }
+
+  // ── text ────────────────────────────────────────────────────────────────────
+  // Proper RTL Arabic text rendering using canvas direction
+  txt(text, x, y, { size = 10, color = C.slate700, weight = 'normal', align = 'left', maxW, isRTL = false } = {}) {
+    const c  = this.c;
+    const fs = Math.round(size * PX_MM * SCALE * 0.38);
+    c.save();
+    c.fillStyle    = color;
+    c.font         = `${weight === 'bold' ? '700' : '400'} ${fs}px Arial, sans-serif`;
+    c.textAlign    = align;
+    c.direction    = isRTL ? 'rtl' : 'ltr';
+    c.textBaseline = 'middle';
+    const px = this.px(x), py = this.px(y);
+    if (maxW) c.fillText(String(text), px, py, this.px(maxW));
+    else      c.fillText(String(text), px, py);
+    c.restore();
+  }
+
+  // Word-wrap with proper direction
+  wrap(text, x, y, maxW, lineH, { size = 9, color = C.slate600, weight = 'normal', isRTL = false } = {}) {
+    const c  = this.c;
+    const fs = Math.round(size * PX_MM * SCALE * 0.38);
+    c.save();
+    c.fillStyle    = color;
+    c.font         = `${weight === 'bold' ? '700' : '400'} ${fs}px Arial, sans-serif`;
+    c.textBaseline = 'middle';
+    c.direction    = isRTL ? 'rtl' : 'ltr';
+
+    const words  = String(text).split(' ');
+    const maxPx  = this.px(maxW);
+    let line     = '';
+    let curY     = this.px(y);
+    const lineHpx = this.px(lineH);
+
     words.forEach((word, i) => {
       const test = line ? line + ' ' + word : word;
-      if (c.measureText(test).width > maxW && i > 0) {
-        c.fillText(line, this.x(mmX), y);
-        line = word;
-        y += this.h(mmLineH);
+      if (c.measureText(test).width > maxPx && i > 0) {
+        c.fillText(line, this.px(x), curY);
+        line  = word;
+        curY += lineHpx;
       } else {
         line = test;
       }
     });
-    if (line) c.fillText(line, this.x(mmX), y);
+    if (line) c.fillText(line, this.px(x), curY);
     c.restore();
-    return (y - this.y(mmY)) / this.h(mmLineH) + 1; // lines used
+    const linesUsed = (curY - this.px(y)) / lineHpx + 1;
+    return linesUsed * lineH; // mm height used
   }
 
-  rect(mmX, mmY, mmW, mmH, fill, stroke, radius = 0) {
-    const c = this.ctx;
-    c.save();
-    const x = this.x(mmX), y = this.y(mmY), w = this.w(mmW), h = this.h(mmH);
-    c.beginPath();
-    if (radius) {
-      const r = this.w(radius);
-      c.moveTo(x + r, y);
-      c.lineTo(x + w - r, y);
-      c.quadraticCurveTo(x + w, y, x + w, y + r);
-      c.lineTo(x + w, y + h - r);
-      c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-      c.lineTo(x + r, y + h);
-      c.quadraticCurveTo(x, y + h, x, y + h - r);
-      c.lineTo(x, y + r);
-      c.quadraticCurveTo(x, y, x + r, y);
-      c.closePath();
-    } else {
-      c.rect(x, y, w, h);
-    }
-    if (fill) { c.fillStyle = fill; c.fill(); }
-    if (stroke) { c.strokeStyle = stroke; c.lineWidth = 1; c.stroke(); }
-    c.restore();
+  // ── shared header / footer ──────────────────────────────────────────────────
+  pageHeader(title, pageNum, lang) {
+    const isRTL = lang === 'ar';
+    const t     = (ar, en) => lang === 'ar' ? ar : en;
+    // Gradient header bar
+    this.gradRect(0, 0, W_MM, 18, C.dark, C.primary, 'h');
+    this.rect(0, 18, W_MM, 1.5, C.accent);
+
+    // Brand pill
+    this.rect(isRTL ? W_MM - 38 : 5, 4, 33, 9, C.accent + '22', C.accent + '66', 4.5);
+    this.txt('OPTIVANCE', isRTL ? W_MM - 21 : 21.5, 8.5, { size: 7.5, color: C.accent, weight: 'bold', align: 'center', isRTL });
+
+    // Page title
+    this.txt(title, isRTL ? W_MM - 43 : 43, 9, { size: 10, color: C.white, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
+
+    // Page number badge
+    const badge = `${pageNum} / 10`;
+    this.rect(isRTL ? 4 : W_MM - 20, 5, 16, 8, C.accent, null, 4);
+    this.txt(badge, isRTL ? 12 : W_MM - 12, 9, { size: 7, color: C.dark, weight: 'bold', align: 'center', isRTL });
   }
 
-  circle(mmCX, mmCY, mmR, fill, stroke, strokeW = 1) {
-    const c = this.ctx;
-    c.save();
-    c.beginPath();
-    c.arc(this.x(mmCX), this.y(mmCY), this.w(mmR), 0, Math.PI * 2);
-    if (fill) { c.fillStyle = fill; c.fill(); }
-    if (stroke) { c.strokeStyle = stroke; c.lineWidth = strokeW * PX * 0.3; c.stroke(); }
-    c.restore();
-  }
-
-  arc(mmCX, mmCY, mmR, startAngle, endAngle, color, strokeW = 3) {
-    const c = this.ctx;
-    c.save();
-    c.beginPath();
-    c.arc(this.x(mmCX), this.y(mmCY), this.w(mmR), startAngle, endAngle);
-    c.strokeStyle = color;
-    c.lineWidth = strokeW * PX * 0.3;
-    c.lineCap = 'round';
-    c.stroke();
-    c.restore();
-  }
-
-  line(mmX1, mmY1, mmX2, mmY2, color, width = 0.3) {
-    const c = this.ctx;
-    c.save();
-    c.beginPath();
-    c.moveTo(this.x(mmX1), this.y(mmY1));
-    c.lineTo(this.x(mmX2), this.y(mmY2));
-    c.strokeStyle = color;
-    c.lineWidth = width * PX * 0.3;
-    c.stroke();
-    c.restore();
-  }
-
-  progressBar(mmX, mmY, mmW, mmH, pct, fg, bg = C.slate100, radius = 1) {
-    this.rect(mmX, mmY, mmW, mmH, bg, null, radius);
-    if (pct > 0) this.rect(mmX, mmY, mmW * (pct / 100), mmH, fg, null, radius);
-  }
-
-  // header / footer shared
-  pageFooter(lang, pageNum, total) {
+  pageFooter(lang) {
     const t = (ar, en) => lang === 'ar' ? ar : en;
-    this.rect(0, H - 8, W, 8, C.primary);
-    const leftTxt  = t('مقياس الكفاءات الأساسية | تقرير سري', 'Core Competency Assessment | Confidential Report');
-    const rightTxt = t(`صفحة ${pageNum} من ${total}`, `Page ${pageNum} of ${total}`);
-    this.text('OPTIVANCE', 8, H - 3, { size: 7, color: C.accent, weight: 'bold' });
-    this.text(leftTxt, 28, H - 3, { size: 6, color: C.white + 'aa' });
-    this.text(rightTxt, W - 8, H - 3, { size: 6, color: C.white + 'aa', align: 'end' });
+    this.rect(0, H_MM - 7, W_MM, 7, C.dark);
+    this.line(0, H_MM - 7, W_MM, H_MM - 7, C.accent + '55', 0.4);
+    this.txt('OPTIVANCE  •  www.optivance.com  •  info@optivance.com',
+      W_MM / 2, H_MM - 3.5, { size: 6, color: C.white + '66', align: 'center', isRTL: false });
+    this.txt(t('تقرير الكفاءات المهنية — سري وشخصي', 'Professional Competency Report — Confidential'),
+      W_MM / 2, H_MM - 3.5, { size: 6, color: C.white + '00', align: 'center' }); // invisible spacer
+  }
+
+  dotPattern(alpha = 0.035) {
+    const c = this.c;
+    c.save();
+    c.globalAlpha = alpha;
+    c.fillStyle   = C.accent;
+    for (let xi = 0; xi < this.cw; xi += this.px(8)) {
+      for (let yi = 0; yi < this.ch; yi += this.px(8)) {
+        c.beginPath();
+        c.arc(xi, yi, this.px(0.5), 0, Math.PI * 2);
+        c.fill();
+      }
+    }
+    c.restore();
   }
 
   toDataURL() { return this.canvas.toDataURL('image/png', 1.0); }
 }
 
-// ─── page builders ─────────────────────────────────────────────────────────────
-
+// ─── Page 1: Cover ─────────────────────────────────────────────────────────────
 function buildCover(rpt, lang) {
-  const p = new Page(lang === 'ar');
-  const t = (ar, en) => lang === 'ar' ? ar : en;
-  const isRTL = lang === 'ar';
-  const user = rpt.user || {};
+  const p      = new Page();
+  const isRTL  = lang === 'ar';
+  const t      = (ar, en) => isRTL ? ar : en;
+  const user   = rpt.user || {};
   const overall = rpt.overall || { score: 0, band: 'Moderate' };
-  const levelLabel = LEVEL_LABELS[user.professional_level]?.[lang] || user.professional_level || '';
+  const bc      = bandColor(overall.band);
+  const lbl     = LEVEL_LABELS[user.professional_level]?.[lang] || user.professional_level || '—';
 
-  // Dark gradient bg
-  const grd = p.c.createLinearGradient(0, 0, p.cw, p.ch);
-  grd.addColorStop(0, C.dark);
-  grd.addColorStop(0.6, C.primary);
-  grd.addColorStop(1, C.surface);
-  p.c.fillStyle = grd;
-  p.c.fillRect(0, 0, p.cw, p.ch);
+  // BG gradient — dark to brand
+  p.gradRect(0, 0, W_MM, H_MM, C.dark, C.surface, 'v');
+  p.dotPattern(0.04);
 
-  // Grid overlay
-  p.c.save();
-  p.c.globalAlpha = 0.04;
-  p.c.strokeStyle = C.accent;
-  p.c.lineWidth = 0.5;
-  for (let i = 0; i < p.cw; i += mm(10)) { p.c.beginPath(); p.c.moveTo(i, 0); p.c.lineTo(i, p.ch); p.c.stroke(); }
-  for (let j = 0; j < p.ch; j += mm(10)) { p.c.beginPath(); p.c.moveTo(0, j); p.c.lineTo(p.cw, j); p.c.stroke(); }
-  p.c.restore();
+  // Accent top bar
+  p.gradRect(0, 0, W_MM, 2.5, C.accent, C.proficient, 'h');
 
-  // Accent bars at top
-  p.rect(0, 0, W, 2, C.accent);
-  p.rect(0, 2, 20, 2, C.primary + 'cc');
+  // Decorative right panel (light strip)
+  p.gradRect(W_MM - 65, 0, 65, H_MM, '#ffffff06', '#ffffff00', 'h');
+  p.line(W_MM - 65, 0, W_MM - 65, H_MM, C.accent + '18', 0.4);
 
-  // Logo pill
-  p.rect(isRTL ? W - 55 : 8, 12, 48, 10, C.accent + '22', C.accent + '55', 5);
-  p.text('OPTIVANCE', isRTL ? W - 52 : 11, 18.5, { size: 9, color: C.accent, weight: 'bold' });
+  // Large score circle — right side
+  const circX = isRTL ? 45 : W_MM - 35;
+  const circY = 75;
+  p.circle(circX, circY, 28, C.white + '08');
+  p.circle(circX, circY, 24, C.white + '06');
+  p.scoreArc(circX, circY, 20, overall.score, C.white + '15', bc, 4.5);
+  p.txt(overall.score + '%', circX, circY - 1.5, { size: 18, color: C.white, weight: 'bold', align: 'center', isRTL });
+  p.txt(t('النتيجة', 'Score'), circX, circY + 6, { size: 7, color: C.white + '77', align: 'center', isRTL });
+  p.rect(circX - 14, circY + 12, 28, 7, bc + '33', bc, 3.5);
+  p.txt(bandLabel(overall.band, lang), circX, circY + 15.5, { size: 7, color: bc, weight: 'bold', align: 'center', isRTL });
 
-  // Report type badge
+  // OPTIVANCE logo
+  p.rect(isRTL ? W_MM - 52 : 8, 12, 44, 11, C.accent + '1a', C.accent + '55', 5.5);
+  p.txt('OPTIVANCE', isRTL ? W_MM - 30 : 30, 17.5, { size: 9, color: C.accent, weight: 'bold', align: 'center', isRTL });
+
+  // Badge
   const badgeTxt = t('تقرير الكفاءات المهنية', 'Professional Competency Report');
-  p.rect(isRTL ? W - 100 : 8, 28, 92, 8, C.white + '14', C.white + '30', 4);
-  p.text(badgeTxt, isRTL ? W - 52 : 12, 33.5, { size: 7, color: C.white + 'bb', align: isRTL ? 'end' : 'start' });
+  p.rect(isRTL ? W_MM - 8 - 90 : 8, 30, 90, 8, C.white + '10', C.white + '25', 4);
+  p.txt(badgeTxt, isRTL ? W_MM - 53 : 53, 34, { size: 7, color: C.white + 'bb', align: 'center', isRTL });
 
   // Main title
-  const title1 = t('تقرير الجدارات', 'Competency');
-  const title2 = t('والنمو المهني', 'Growth Report');
-  p.text(title1, isRTL ? W - 8 : 8, 60, { size: 24, color: C.white, weight: 'bold', align: isRTL ? 'end' : 'start' });
-  p.text(title2, isRTL ? W - 8 : 8, 76, { size: 24, color: C.accent, weight: 'bold', align: isRTL ? 'end' : 'start' });
+  const ta = t('تقرير', 'Competency');
+  const tb = t('الجدارات المهنية', 'Growth Report');
+  p.txt(ta, isRTL ? W_MM - 8 : 8, 55, { size: 26, color: C.white, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
+  p.txt(tb, isRTL ? W_MM - 8 : 8, 70, { size: 26, color: C.accent, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
 
-  const tagline = t('تقييم علمي معمّق يقيس جداراتك في ٦ مجالات رئيسية', 'A deep scientific assessment measuring your competencies across 6 key domains');
-  p.wrapText(tagline, isRTL ? 8 : 8, 86, 130, 5, { size: 8, color: C.white + '88' });
+  // Tagline
+  const tag = t('تقييم علمي معمّق لجداراتك المهنية في ٦ مجالات رئيسية', 'A science-backed assessment of your professional competencies across 6 key domains');
+  p.wrap(tag, isRTL ? W_MM - 8 : 8, 83, isRTL ? W_MM - 16 : W_MM - 75, 5,
+    { size: 8, color: C.white + '77', isRTL });
 
   // Divider
-  p.line(8, 96, W - 8, 96, C.accent + '44', 0.5);
+  p.gradRect(8, 96, W_MM - 16, 0.7, C.accent + '66', C.primary + '22', 'h');
 
-  // Score circle
-  const cx = isRTL ? 45 : W - 45, cy = 130, r = 22;
-  p.c.save();
-  p.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2, C.white + '18', 5);
-  const pct = overall.score / 100;
-  const endA = -Math.PI / 2 + pct * Math.PI * 2;
-  // gradient arc
-  const g2 = p.c.createLinearGradient(p.x(cx) - p.w(r), p.y(cy), p.x(cx) + p.w(r), p.y(cy));
-  g2.addColorStop(0, C.accent);
-  g2.addColorStop(1, C.proficient);
-  p.c.save();
-  p.c.beginPath();
-  p.c.arc(p.x(cx), p.y(cy), p.w(r), -Math.PI / 2, endA);
-  p.c.strokeStyle = g2;
-  p.c.lineWidth = mm(4);
-  p.c.lineCap = 'round';
-  p.c.stroke();
-  p.c.restore();
+  // Profile info grid
+  const fields = [
+    [t('الاسم', 'Name'),             user.name || '—'],
+    [t('المستوى المهني', 'Level'),   lbl],
+    [t('نسخة المقياس', 'Version'),   rpt.version === 'full' ? t('الكاملة', 'Full') : t('السريعة', 'Quick')],
+    [t('تاريخ الإكمال', 'Date'),     user.completion_date || '—'],
+    [t('رقم التقرير', 'Report ID'),  rpt.report_id || '—'],
+    [t('اللغة', 'Language'),         lang === 'ar' ? 'العربية' : 'English'],
+  ];
 
-  p.text(overall.score + '%', cx, cy + 1.5, { size: 16, color: C.white, weight: 'bold', align: 'center' });
-  p.text(t('النتيجة الإجمالية', 'Overall Score'), cx, cy + 7, { size: 6, color: C.white + '88', align: 'center' });
-
-  // Band badge
-  const bColor = bandColor(overall.band);
-  p.rect(cx - 15, cy + 11, 30, 7, bColor + '33', bColor + '66', 3.5);
-  p.text(bandLabel(overall.band, lang), cx, cy + 16, { size: 7, color: bColor, weight: 'bold', align: 'center' });
-  p.c.restore();
-
-  // Profile info block
-  const infoX = isRTL ? W - 8 : 8;
-  const infoAlign = isRTL ? 'end' : 'start';
-  let iy = 108;
-  [
-    { label: t('الاسم', 'Name'), value: user.name || '—' },
-    { label: t('المستوى المهني', 'Professional Level'), value: levelLabel || '—' },
-    { label: t('نسخة المقياس', 'Assessment Version'), value: rpt.version === 'full' ? t('الكاملة', 'Full') : t('السريعة', 'Quick') },
-    { label: t('تاريخ الإكمال', 'Completion Date'), value: user.completion_date || '—' },
-    { label: t('رقم التقرير', 'Report ID'), value: rpt.report_id || '—' },
-    { label: t('لغة التقرير', 'Report Language'), value: lang === 'ar' ? 'العربية' : 'English' },
-  ].forEach(row => {
-    p.text(row.label + ': ', infoX, iy, { size: 7, color: C.accent + 'bb', weight: 'bold', align: infoAlign });
-    const labelW = lang === 'ar' ? 0 : 35;
-    p.text(row.value, isRTL ? infoX - 40 : 8 + labelW, iy, { size: 7, color: C.white + 'cc', align: infoAlign });
-    iy += 7;
+  const colW = (W_MM - 24) / 2;
+  fields.forEach(([lbl2, val], i) => {
+    const col = isRTL ? 1 - (i % 2) : i % 2;
+    const row = Math.floor(i / 2);
+    const fx  = 8 + col * (colW + 4);
+    const fy  = 101 + row * 20;
+    p.rect(fx, fy, colW, 17, C.white + '0c', C.white + '18', 3);
+    p.txt(lbl2, isRTL ? fx + colW - 4 : fx + 4, fy + 6, { size: 6.5, color: C.accent + 'bb', align: isRTL ? 'right' : 'left', isRTL });
+    p.txt(val, isRTL ? fx + colW - 4 : fx + 4, fy + 12.5, { size: 8, color: C.white + 'dd', weight: 'bold', align: isRTL ? 'right' : 'left', isRTL, maxW: colW - 8 });
   });
 
-  // Decorative bottom section
-  p.rect(0, H - 50, W, 50, C.dark + 'cc');
-  p.line(8, H - 48, W - 8, H - 48, C.accent + '33', 0.3);
+  // Bottom section
+  p.gradRect(0, H_MM - 45, W_MM, 45, C.dark + 'cc', C.dark, 'v');
+  p.line(8, H_MM - 43, W_MM - 8, H_MM - 43, C.accent + '22', 0.4);
 
-  const taglineBottom = t(
-    'بناء المهنيين المتميزين عبر التقييم الدقيق والتطوير المستهدف',
-    'Building distinguished professionals through precise assessment and targeted development'
-  );
-  p.wrapText(taglineBottom, 8, H - 40, W - 16, 6, { size: 8, color: C.white + '55' });
-  p.text('www.optivance.com', W / 2, H - 20, { size: 8, color: C.accent + '99', align: 'center' });
-  p.text(t('جميع الحقوق محفوظة © OPTIVANCE', '© OPTIVANCE All Rights Reserved'), W / 2, H - 14, { size: 6.5, color: C.white + '44', align: 'center' });
+  // 3 stat pills
+  const stats = [
+    t('٢٠ جدارة أساسية', '20 Core Competencies'),
+    t('٦ مجالات رئيسية', '6 Key Domains'),
+    t('نتائج فورية', 'Instant Results'),
+  ];
+  const pillW = (W_MM - 32) / 3;
+  stats.forEach((s, i) => {
+    const px2 = 8 + i * (pillW + 4);
+    p.rect(px2, H_MM - 38, pillW, 10, C.white + '0a', C.white + '20', 5);
+    p.txt(s, px2 + pillW / 2, H_MM - 33, { size: 7, color: C.white + 'cc', align: 'center', isRTL });
+  });
+
+  p.txt(t('بناء المهنيين المتميزين عبر التقييم الدقيق والتطوير المستهدف',
+          'Building distinguished professionals through precise assessment and targeted development'),
+    W_MM / 2, H_MM - 18, { size: 7.5, color: C.white + '55', align: 'center', isRTL });
+  p.txt('www.optivance.com  •  © 2025 OPTIVANCE',
+    W_MM / 2, H_MM - 11, { size: 6.5, color: C.accent + '66', align: 'center', isRTL });
 
   return p;
 }
 
+// ─── Page 2: Profile & Summary ──────────────────────────────────────────────────
 function buildProfileSummary(rpt, lang) {
-  const p = new Page(lang === 'ar');
-  const t = (ar, en) => lang === 'ar' ? ar : en;
+  const p     = new Page();
   const isRTL = lang === 'ar';
-  const user = rpt.user || {};
-  const overall = rpt.overall || { score: 0, band: 'Moderate' };
-  const levelLabel = LEVEL_LABELS[user.professional_level]?.[lang] || user.professional_level || '';
+  const t     = (ar, en) => isRTL ? ar : en;
+  const user  = rpt.user || {};
+  const lbl   = LEVEL_LABELS[user.professional_level]?.[lang] || user.professional_level || '—';
 
-  p.rect(0, 0, W, 20, C.primary);
-  p.rect(0, 20, W, 2, C.accent);
-  p.text(t('ملف المستخدم وملخص التقرير', 'User Profile & Report Summary'), isRTL ? W - 8 : 8, 13, { size: 12, color: C.white, weight: 'bold', align: isRTL ? 'end' : 'start' });
+  p.pageHeader(t('ملف المستخدم وملخص التقرير', 'User Profile & Report Summary'), 2, lang);
 
-  // profile info cards
-  let y = 28;
+  let y = 24;
+
+  // Profile cards
   const cards = [
-    { label: t('الاسم الكامل', 'Full Name'), value: user.name },
-    { label: t('الاسم المفضل', 'Preferred Name'), value: user.preferred_name || user.name?.split(' ')[0] },
-    { label: t('المستوى المهني', 'Professional Level'), value: levelLabel },
-    { label: t('الدور / المسمى الوظيفي', 'Role / Job Title'), value: user.role || '—' },
-    { label: t('تاريخ الإكمال', 'Completion Date'), value: user.completion_date },
-    { label: t('رقم التقرير', 'Report ID'), value: rpt.report_id },
+    { label: t('الاسم الكامل', 'Full Name'),           value: user.name || '—' },
+    { label: t('الاسم المفضل', 'Preferred Name'),      value: user.preferred_name || user.name?.split(' ')[0] || '—' },
+    { label: t('المستوى المهني', 'Professional Level'), value: lbl },
+    { label: t('المسمى الوظيفي', 'Job Title'),         value: user.role || '—' },
+    { label: t('تاريخ الإكمال', 'Completion Date'),    value: user.completion_date || '—' },
+    { label: t('رقم التقرير', 'Report ID'),            value: rpt.report_id || '—' },
   ];
 
-  const halfW = (W - 24) / 2;
+  const cw = (W_MM - 24) / 2;
   cards.forEach((card, i) => {
-    const col = i % 2;
+    const col = isRTL ? 1 - (i % 2) : i % 2;
     const row = Math.floor(i / 2);
-    const cx = 8 + col * (halfW + 4);
-    const cy = y + row * 18;
-    p.rect(cx, cy, halfW, 15, C.slate50, C.slate100, 2);
-    p.text(card.label, isRTL ? cx + halfW - 3 : cx + 3, cy + 6, { size: 7, color: C.slate400, align: isRTL ? 'end' : 'start' });
-    p.text(card.value || '—', isRTL ? cx + halfW - 3 : cx + 3, cy + 12, { size: 8.5, color: C.primary, weight: 'bold', align: isRTL ? 'end' : 'start' });
+    const cx2 = 8 + col * (cw + 4);
+    const cy2 = y + row * 20;
+    p.rect(cx2, cy2, cw, 17, C.slate50, C.slate200, 3);
+    p.rect(cx2, cy2, 2.5, 17, C.primary + 'cc', null, 1.5);
+    p.txt(card.label, isRTL ? cx2 + cw - 5 : cx2 + 6, cy2 + 5.5, { size: 6.5, color: C.slate400, align: isRTL ? 'right' : 'left', isRTL });
+    p.txt(card.value, isRTL ? cx2 + cw - 5 : cx2 + 6, cy2 + 12, { size: 8.5, color: C.primary, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL, maxW: cw - 10 });
   });
 
-  y += 60;
+  y += 66;
 
-  // Motivation
-  if (user.motivation || user.customMotivation) {
-    p.rect(8, y, W - 16, 18, C.primary + '0d', C.primary + '33', 3);
-    p.text(t('دافع التطوير', 'Development Motivation'), isRTL ? W - 12 : 12, y + 7, { size: 7, color: C.primary, weight: 'bold', align: isRTL ? 'end' : 'start' });
-    p.wrapText(user.customMotivation || user.motivation, isRTL ? W - 12 : 12, y + 13, W - 24, 5, { size: 8, color: C.slate600 });
-    y += 22;
+  // Motivation box
+  const motiv = user.customMotivation || user.motivation;
+  if (motiv) {
+    p.gradRect(8, y, W_MM - 16, 20, C.primary + '15', C.accent + '08', 'h', 3);
+    p.rect(isRTL ? W_MM - 10.5 : 8, y, 2.5, 20, C.accent, null, 1.5);
+    p.txt(t('دافع التطوير', 'Development Motivation'), isRTL ? W_MM - 14 : 14, y + 6.5, { size: 7, color: C.primary, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
+    p.wrap(motiv, isRTL ? W_MM - 14 : 14, y + 14, W_MM - 26, 4.5, { size: 7.5, color: C.slate600, isRTL });
+    y += 25;
   }
 
-  y += 4;
-  // Report sections overview
-  p.text(t('ما يتضمنه هذا التقرير', 'What This Report Includes'), isRTL ? W - 8 : 8, y, { size: 11, color: C.primary, weight: 'bold', align: isRTL ? 'end' : 'start' });
-  y += 7;
-  p.line(8, y, W - 8, y, C.slate100);
+  y += 3;
+  // Section title
+  p.txt(t('محتويات التقرير', 'Report Contents'), isRTL ? W_MM - 8 : 8, y + 3, { size: 11, color: C.primary, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
+  y += 8;
+  p.gradRect(8, y, W_MM - 16, 1, C.accent, C.primary, 'h');
   y += 5;
 
   const sections = [
-    { n: '01', label: t('لمحة النتائج العامة', 'Overall Results Snapshot'),  desc: t('النتيجة الإجمالية، المستوى، ونقاط القوة الرئيسية', 'Overall score, band, and key strengths') },
-    { n: '02', label: t('نظرة عامة على الدرجات', 'Competency Scores Overview'), desc: t('تصنيف المجالات الستة بالدرجات والمستويات', 'All six domains ranked by score and level') },
-    { n: '03', label: t('تحليل نقاط القوة', 'Strengths Analysis'),            desc: t('أعلى مجالين وكيفية الاستفادة منهما', 'Top two domains and how to leverage them') },
-    { n: '04', label: t('أولويات التطوير', 'Development Priorities'),         desc: t('أدنى مجالين وخطوات التحسين العملية', 'Lowest two domains and practical improvement steps') },
-    { n: '05', label: t('التفصيل التام للمجالات', 'Full Domain Breakdown'),   desc: t('تفاصيل كل مجال والجدارات الفرعية', 'Each domain with sub-competency details') },
-    { n: '06', label: t('خطة التطوير الشخصية', 'Personalized Dev Plan'),      desc: t('أهداف ٠–٣٠ / ٣٠–٩٠ / ٩٠+ يوم', 'Goals for 0–30 / 30–90 / 90+ days') },
-    { n: '07', label: t('الموارد والخطوات القادمة', 'Resources & Next Steps'), desc: t('موارد مقترحة وإجراءات فورية', 'Recommended resources and immediate actions') },
+    { n: '01', lbl: t('لمحة النتائج العامة', 'Overall Results Snapshot'),    desc: t('النتيجة الإجمالية والمستوى ونقاط القوة الرئيسية', 'Overall score, band, and key strengths')       , color: C.accent      },
+    { n: '02', lbl: t('نظرة عامة على الدرجات', 'Scores Overview'),           desc: t('تصنيف المجالات الستة بالدرجات والمستويات', 'Six domains ranked by score and level')               , color: C.proficient  },
+    { n: '03', lbl: t('تحليل نقاط القوة', 'Strengths Analysis'),             desc: t('أعلى المجالات وكيفية الاستفادة منها', 'Top domains and how to leverage them')                    , color: C.accent      },
+    { n: '04', lbl: t('أولويات التطوير', 'Development Priorities'),          desc: t('المجالات التي تحتاج اهتمامًا وخطوات التحسين', 'Domains needing attention and improvement steps')   , color: C.moderate    },
+    { n: '05', lbl: t('التفصيل الكامل للمجالات', 'Full Domain Breakdown'),  desc: t('تفاصيل كل مجال والجدارات الفرعية', 'Each domain with sub-competency details')                    , color: C.proficient  },
+    { n: '06', lbl: t('خطة التطوير الشخصية', 'Development Plan'),           desc: t('أهداف ٠–٣٠ و٣٠–٩٠ و٩٠+ يوم', 'Goals for 0–30 / 30–90 / 90+ days')                               , color: C.accent      },
+    { n: '07', lbl: t('الموارد والخطوات القادمة', 'Resources & Next Steps'), desc: t('موارد مقترحة وإجراءات فورية للتطوير', 'Recommended resources and immediate actions')              , color: C.moderate    },
   ];
 
   sections.forEach((s, i) => {
-    const sx = 8, sy = y + i * 14;
-    p.rect(sx, sy, W - 16, 12, C.white, C.slate100, 2);
-    p.circle(sx + 8, sy + 6, 4, C.primary, null);
-    p.text(s.n, sx + 8, sy + 7.5, { size: 6, color: C.white, weight: 'bold', align: 'center' });
-    p.text(s.label, isRTL ? W - sx - 16 : sx + 16, sy + 5, { size: 8, color: C.primary, weight: 'bold', align: isRTL ? 'end' : 'start' });
-    p.text(s.desc, isRTL ? W - sx - 16 : sx + 16, sy + 10, { size: 7, color: C.slate400, align: isRTL ? 'end' : 'start' });
+    const sy = y + i * 15;
+    const isEven = i % 2 === 0;
+    p.rect(8, sy, W_MM - 16, 13, isEven ? C.slate50 : C.white, C.slate200, 2.5);
+    p.circle(isRTL ? W_MM - 16 : 16, sy + 6.5, 5, s.color + '33', s.color, 0.5);
+    p.txt(s.n, isRTL ? W_MM - 16 : 16, sy + 6.5, { size: 6, color: s.color, weight: 'bold', align: 'center', isRTL });
+    p.txt(s.lbl, isRTL ? W_MM - 25 : 25, sy + 5, { size: 8, color: C.primary, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
+    p.txt(s.desc, isRTL ? W_MM - 25 : 25, sy + 10.5, { size: 6.5, color: C.slate400, align: isRTL ? 'right' : 'left', isRTL, maxW: W_MM - 36 });
   });
 
-  p.pageFooter(lang, 2, 10);
+  p.pageFooter(lang);
   return p;
 }
 
+// ─── Page 3: Overall Snapshot ──────────────────────────────────────────────────
 function buildOverallSnapshot(rpt, lang) {
-  const p = new Page(lang === 'ar');
-  const t = (ar, en) => lang === 'ar' ? ar : en;
-  const isRTL = lang === 'ar';
+  const p       = new Page();
+  const isRTL   = lang === 'ar';
+  const t       = (ar, en) => isRTL ? ar : en;
   const overall = rpt.overall || { score: 0, band: 'Moderate' };
-  const domainScores = rpt.domain_scores || {};
-  const overallSummary = OVERALL_SUMMARIES[overall.band]?.[lang] || '';
+  const ds      = rpt.domain_scores || {};
+  const bc      = bandColor(overall.band);
+  const lk      = lang;
+  const summary = OVERALL_SUMMARIES[overall.band]?.[lang] || '';
 
-  p.rect(0, 0, W, 20, C.primary);
-  p.rect(0, 20, W, 2, C.accent);
-  p.text(t('لمحة النتائج العامة', 'Overall Results Snapshot'), isRTL ? W - 8 : 8, 13, { size: 12, color: C.white, weight: 'bold', align: isRTL ? 'end' : 'start' });
+  p.pageHeader(t('لمحة النتائج العامة', 'Overall Results Snapshot'), 3, lang);
 
-  // Score arc center
-  const cx = W / 2, cy = 58, r = 22;
-  p.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2, C.slate100, 6);
-  const endA = -Math.PI / 2 + (overall.score / 100) * Math.PI * 2;
-  p.c.save();
-  p.c.beginPath();
-  p.c.arc(p.x(cx), p.y(cy), p.w(r), -Math.PI / 2, endA);
-  const g = p.c.createLinearGradient(0, 0, p.cw, p.ch);
-  g.addColorStop(0, C.accent);
-  g.addColorStop(1, C.proficient);
-  p.c.strokeStyle = g;
-  p.c.lineWidth = mm(5);
-  p.c.lineCap = 'round';
-  p.c.stroke();
-  p.c.restore();
-  p.text(overall.score + '%', cx, cy + 2, { size: 18, color: C.primary, weight: 'bold', align: 'center' });
-  p.text(t('النتيجة الإجمالية', 'Overall Score'), cx, cy + 8, { size: 7, color: C.slate400, align: 'center' });
+  // Score hero section
+  p.rect(0, 19.5, W_MM, 68, C.slate50);
+  p.line(0, 87.5, W_MM, 87.5, C.slate200, 0.4);
 
-  const bColor = bandColor(overall.band);
-  p.rect(cx - 18, cy + 12, 36, 8, bColor + '22', bColor + '66', 4);
-  p.text(bandLabel(overall.band, lang), cx, cy + 17.5, { size: 8, color: bColor, weight: 'bold', align: 'center' });
+  // Large arc
+  const cx = W_MM / 2, cy = 55;
+  p.circle(cx, cy, 26, C.white, C.slate200, 0.5);
+  p.scoreArc(cx, cy, 22, overall.score, C.slate200, bc, 5);
+  p.txt(overall.score + '%', cx, cy - 1, { size: 20, color: C.primary, weight: 'bold', align: 'center', isRTL });
+  p.txt(t('النتيجة الإجمالية', 'Overall Score'), cx, cy + 7, { size: 7, color: C.slate400, align: 'center', isRTL });
+  // Band badge
+  p.rect(cx - 20, cy + 14, 40, 9, bc + '22', bc, 4.5);
+  p.txt(bandLabel(overall.band, lang), cx, cy + 18.5, { size: 8, color: bc, weight: 'bold', align: 'center', isRTL });
 
   // Summary box
-  let y = 90;
-  p.rect(8, y, W - 16, 26, C.slate50, C.slate100, 3);
-  p.text(t('تفسير نتيجتك', 'Your Score Interpretation'), isRTL ? W - 12 : 12, y + 7, { size: 9, color: C.primary, weight: 'bold', align: isRTL ? 'end' : 'start' });
-  p.wrapText(overallSummary, isRTL ? W - 12 : 12, y + 14, W - 24, 5, { size: 8, color: C.slate600 });
-  y += 32;
+  let y = 93;
+  p.rect(8, y, W_MM - 16, 28, C.white, C.slate200, 3);
+  p.gradRect(8, y, 3, 28, bc, bc + '44', 'v', 1.5);
+  p.txt(t('تفسير نتيجتك', 'Your Score Interpretation'), isRTL ? W_MM - 14 : 14, y + 7, { size: 9, color: C.primary, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
+  p.wrap(summary, isRTL ? W_MM - 14 : 14, y + 16, W_MM - 26, 5, { size: 8, color: C.slate600, isRTL });
+  y += 34;
 
-  // Sorted domains
+  // Top & Bottom 3 domains
   const sorted = DOMAINS.map(d => ({
-    ...d,
-    score: domainScores[d.id]?.score || 0,
-    band: domainScores[d.id]?.band || 'Critical',
+    ...d, score: ds[d.id]?.score || 0, band: ds[d.id]?.band || 'Critical',
   }));
-  const topD = [...sorted].sort((a, b) => b.score - a.score).slice(0, 3);
-  const botD = [...sorted].sort((a, b) => a.score - b.score).slice(0, 3);
-  const lk = lang === 'ar' ? 'ar' : 'en';
+  const top3 = [...sorted].sort((a, b) => b.score - a.score).slice(0, 3);
+  const bot3 = [...sorted].sort((a, b) => a.score - b.score).slice(0, 3);
+  const colW = (W_MM - 24) / 2;
 
-  // Two columns: strengths & priorities
-  const colW = (W - 24) / 2;
-  const heads = [
-    { txt: t('أبرز نقاط القوة', 'Top Strengths'), items: topD, icon: '✦' },
-    { txt: t('أولويات التطوير', 'Dev Priorities'), items: botD, icon: '▲' },
+  const cols = [
+    { title: t('نقاط القوة الرئيسية', 'Key Strengths'),    items: top3, headerBg: C.accent },
+    { title: t('أولويات التطوير', 'Development Priorities'), items: bot3, headerBg: C.critical },
   ];
 
-  heads.forEach((col, ci) => {
-    const cx2 = 8 + ci * (colW + 4);
-    p.rect(cx2, y, colW, 8, C.primary, null, 2);
-    p.text(col.txt, isRTL ? cx2 + colW - 3 : cx2 + 3, y + 5.5, { size: 8, color: C.white, weight: 'bold', align: isRTL ? 'end' : 'start' });
+  cols.forEach((col, ci) => {
+    const cx2 = isRTL ? (ci === 0 ? W_MM - 8 - colW : 8) : 8 + ci * (colW + 4);
+    // Fix column positions for RTL
+    const actualX = ci === 0 ? 8 : 8 + colW + 4;
+
+    p.gradRect(actualX, y, colW, 10, col.headerBg, col.headerBg + 'bb', 'h', 2);
+    p.txt(col.title, isRTL ? actualX + colW - 4 : actualX + 4, y + 5, { size: 8, color: C.white, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
+
     col.items.forEach((d, di) => {
-      const ry = y + 10 + di * 16;
-      const bc = bandColor(d.band);
-      p.rect(cx2, ry, colW, 13, bc + '12', bc + '33', 2);
-      p.text(d.name[lk], isRTL ? cx2 + colW - 3 : cx2 + 3, ry + 6, { size: 7.5, color: C.primary, weight: 'bold', align: isRTL ? 'end' : 'start', maxWidth: colW - 20 });
-      p.text(d.score + '%', isRTL ? cx2 + 3 : cx2 + colW - 3, ry + 6, { size: 9, color: bc, weight: 'bold', align: isRTL ? 'start' : 'end' });
-      p.progressBar(cx2 + 2, ry + 9, colW - 4, 2.5, d.score, bc);
+      const iy = y + 12 + di * 19;
+      const bc2 = bandColor(d.band);
+      p.rect(actualX, iy, colW, 16, C.white, C.slate200, 2);
+      p.rect(isRTL ? actualX + colW - 2.5 : actualX, iy, 2.5, 16, bc2, null, 1.5);
+      p.txt(d.name[lk], isRTL ? actualX + colW - 6 : actualX + 5, iy + 5.5, { size: 7.5, color: C.primary, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL, maxW: colW - 20 });
+      p.txt(d.score + '%', isRTL ? actualX + 4 : actualX + colW - 4, iy + 5.5, { size: 9, color: bc2, weight: 'bold', align: isRTL ? 'left' : 'right', isRTL });
+      p.gradBar(actualX + 3, iy + 11, colW - 6, 3, d.score, bc2, bc2 + '44', C.slate100, 1.5);
     });
   });
 
-  p.pageFooter(lang, 3, 10);
+  p.pageFooter(lang);
   return p;
 }
 
+// ─── Page 4: Scores Overview ───────────────────────────────────────────────────
 function buildScoresOverview(rpt, lang) {
-  const p = new Page(lang === 'ar');
-  const t = (ar, en) => lang === 'ar' ? ar : en;
+  const p     = new Page();
   const isRTL = lang === 'ar';
-  const domainScores = rpt.domain_scores || {};
-  const lk = lang === 'ar' ? 'ar' : 'en';
+  const t     = (ar, en) => isRTL ? ar : en;
+  const ds    = rpt.domain_scores || {};
+  const lk    = lang;
 
-  p.rect(0, 0, W, 20, C.primary);
-  p.rect(0, 20, W, 2, C.accent);
-  p.text(t('نظرة عامة على درجات الكفاءات', 'Competency Scores Overview'), isRTL ? W - 8 : 8, 13, { size: 12, color: C.white, weight: 'bold', align: isRTL ? 'end' : 'start' });
+  p.pageHeader(t('نظرة عامة على درجات الكفاءات', 'Competency Scores Overview'), 4, lang);
 
-  const sorted = DOMAINS.map(d => ({
-    ...d,
-    score: domainScores[d.id]?.score || 0,
-    band: domainScores[d.id]?.band || 'Critical',
-  })).sort((a, b) => b.score - a.score);
+  const sorted = DOMAINS
+    .map(d => ({ ...d, score: ds[d.id]?.score || 0, band: ds[d.id]?.band || 'Critical' }))
+    .sort((a, b) => b.score - a.score);
 
-  let y = 28;
+  let y = 24;
+
   sorted.forEach((d, i) => {
     const bc = bandColor(d.band);
-    const rankColor = i === 0 ? C.accent : i === 1 ? C.proficient : i < 4 ? C.slate400 : C.critical;
+    const isTop = i < 2;
 
-    p.rect(8, y, W - 16, 28, C.white, C.slate100, 3);
+    // Card background
+    p.rect(8, y, W_MM - 16, 34, isTop ? bc + '0a' : C.white, C.slate200, 3);
 
-    // Rank badge
-    p.circle(17, y + 14, 6, i < 3 ? bc : C.slate100, null);
-    p.text(String(i + 1), 17, y + 16, { size: 8, color: i < 3 ? C.white : C.slate500, weight: 'bold', align: 'center' });
+    // Rank badge (left for LTR, right for RTL)
+    const rankX = isRTL ? W_MM - 18 : 18;
+    p.circle(rankX, y + 17, 8, isTop ? bc : C.slate100, C.slate200, 0.5);
+    p.txt(String(i + 1), rankX, y + 17, { size: 9, color: isTop ? C.white : C.slate500, weight: 'bold', align: 'center', isRTL });
 
-    // Domain name
-    p.text(d.name[lk], isRTL ? W - 28 : 28, y + 9, { size: 9, color: C.primary, weight: 'bold', align: isRTL ? 'end' : 'start', maxWidth: W - 70 });
-    p.text(d.description[lk], isRTL ? W - 28 : 28, y + 15.5, { size: 6.5, color: C.slate400, align: isRTL ? 'end' : 'start', maxWidth: W - 70 });
+    // Domain name & description
+    const textX = isRTL ? W_MM - 30 : 30;
+    const textA = isRTL ? 'right' : 'left';
+    p.txt(d.name[lk], textX, y + 9, { size: 9.5, color: C.primary, weight: 'bold', align: textA, isRTL, maxW: W_MM - 70 });
+    p.txt(d.description[lk], textX, y + 16, { size: 6.5, color: C.slate400, align: textA, isRTL, maxW: W_MM - 70 });
 
-    // Score
-    p.text(d.score + '%', isRTL ? 28 : W - 28, y + 12, { size: 13, color: bc, weight: 'bold', align: isRTL ? 'start' : 'end' });
+    // Score number
+    const scoreX = isRTL ? 28 : W_MM - 28;
+    p.txt(d.score + '%', scoreX, y + 11, { size: 14, color: bc, weight: 'bold', align: isRTL ? 'left' : 'right', isRTL });
 
     // Band badge
-    p.rect(isRTL ? 8 : W - 45, y + 19, 37, 6, bc + '22', bc + '55', 3);
-    p.text(bandLabel(d.band, lang), isRTL ? 26.5 : W - 26.5, y + 23, { size: 6.5, color: bc, weight: 'bold', align: 'center' });
+    const badgeX = isRTL ? 8 : W_MM - 46;
+    p.rect(badgeX, y + 20, 38, 7, bc + '22', bc + '66', 3.5);
+    p.txt(bandLabel(d.band, lang), badgeX + 19, y + 23.5, { size: 6.5, color: bc, weight: 'bold', align: 'center', isRTL });
 
     // Progress bar
-    p.progressBar(28, y + 23, W - 70, 3, d.score, bc, C.slate100, 1.5);
+    p.gradBar(30, y + 27, W_MM - 60, 4.5, d.score, bc, bc + '55', C.slate100, 2.5);
 
-    y += 32;
+    y += 38;
   });
 
-  p.pageFooter(lang, 4, 10);
+  p.pageFooter(lang);
   return p;
 }
 
+// ─── Page 5: Strengths ────────────────────────────────────────────────────────
 function buildStrengthsAnalysis(rpt, lang) {
-  const p = new Page(lang === 'ar');
-  const t = (ar, en) => lang === 'ar' ? ar : en;
+  const p     = new Page();
   const isRTL = lang === 'ar';
-  const domainScores = rpt.domain_scores || {};
-  const lk = lang === 'ar' ? 'ar' : 'en';
+  const t     = (ar, en) => isRTL ? ar : en;
+  const ds    = rpt.domain_scores || {};
+  const lk    = lang;
 
-  p.rect(0, 0, W, 20, C.primary);
-  p.rect(0, 20, W, 2, C.accent);
-  p.text(t('تحليل نقاط القوة', 'Strengths Analysis'), isRTL ? W - 8 : 8, 13, { size: 12, color: C.white, weight: 'bold', align: isRTL ? 'end' : 'start' });
+  p.pageHeader(t('تحليل نقاط القوة', 'Strengths Analysis'), 5, lang);
 
-  const topDomains = DOMAINS
-    .map(d => ({ ...d, score: domainScores[d.id]?.score || 0, band: domainScores[d.id]?.band || 'Moderate' }))
+  const top = DOMAINS
+    .map(d => ({ ...d, score: ds[d.id]?.score || 0, band: ds[d.id]?.band || 'Moderate' }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
 
-  let y = 28;
-  topDomains.forEach((d, i) => {
-    const bc = bandColor(d.band);
+  let y = 24;
+
+  top.forEach((d, i) => {
+    const bc      = bandColor(d.band);
     const content = d.content[d.band]?.[lk];
     if (!content) return;
 
-    // Card
-    p.rect(8, y, W - 16, 74, bc + '08', bc + '33', 3);
-    p.rect(8, y, W - 16, 10, bc, null, 3);
+    const cardH = 80;
+    // Card base
+    p.rect(8, y, W_MM - 16, cardH, C.white, C.slate200, 3);
 
-    // Header
-    p.text(d.name[lk], isRTL ? W - 12 : 12, y + 7, { size: 9, color: C.white, weight: 'bold', align: isRTL ? 'end' : 'start' });
-    p.text(d.score + '%', isRTL ? 24 : W - 24, y + 7, { size: 9, color: C.white + 'cc', weight: 'bold', align: isRTL ? 'start' : 'end' });
+    // Colored header bar
+    p.gradRect(8, y, W_MM - 16, 12, bc, C.primary, 'h', 3);
+    p.rect(8, y + 9, W_MM - 16, 3, C.primary, null); // bottom of header
+
+    p.txt(d.name[lk], isRTL ? W_MM - 14 : 14, y + 6, { size: 9, color: C.white, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
+    p.txt(d.score + '%', isRTL ? 22 : W_MM - 22, y + 6, { size: 10, color: C.white + 'dd', weight: 'bold', align: isRTL ? 'left' : 'right', isRTL });
 
     // Summary
-    p.wrapText(content.summary, isRTL ? W - 12 : 12, y + 17, W - 24, 4.5, { size: 7.5, color: C.slate600 });
+    p.wrap(content.summary, isRTL ? W_MM - 14 : 14, y + 19, W_MM - 28, 4.5, { size: 8, color: C.slate600, isRTL });
 
-    // Strengths
-    const strengths = content.strengths || [];
-    p.text(t('نقاط القوة', 'Strengths'), isRTL ? W - 12 : 12, y + 35, { size: 7.5, color: bc, weight: 'bold', align: isRTL ? 'end' : 'start' });
-    strengths.slice(0, 2).forEach((s, j) => {
-      const sy = y + 40 + j * 6;
-      p.circle(isRTL ? W - 15 : 15, sy - 1.5, 1.5, bc, null);
-      p.text(s, isRTL ? W - 18 : 18, sy, { size: 7, color: C.slate600, align: isRTL ? 'end' : 'start', maxWidth: W - 28 });
+    // Strengths list
+    p.txt(t('نقاط القوة', 'Strengths'), isRTL ? W_MM - 14 : 14, y + 38, { size: 7.5, color: bc, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
+    (content.strengths || []).slice(0, 2).forEach((s, j) => {
+      const sy = y + 44 + j * 7;
+      p.circle(isRTL ? W_MM - 17 : 17, sy, 2, bc, null);
+      p.txt(s, isRTL ? W_MM - 21 : 21, sy, { size: 7, color: C.slate600, align: isRTL ? 'right' : 'left', isRTL, maxW: W_MM - 32 });
     });
 
-    // Recommendations
-    const recs = content.recommendations || [];
-    p.text(t('التوصيات المتقدمة', 'Advanced Recommendations'), isRTL ? W - 12 : 12, y + 54, { size: 7.5, color: C.primary, weight: 'bold', align: isRTL ? 'end' : 'start' });
-    recs.slice(0, 2).forEach((r, j) => {
-      const ry2 = y + 59 + j * 6;
-      p.rect(isRTL ? W - 14 : 12, ry2 - 3, 2, 5, C.primary, null, 1);
-      p.text(r, isRTL ? W - 18 : 16, ry2, { size: 7, color: C.slate600, align: isRTL ? 'end' : 'start', maxWidth: W - 28 });
+    // Recs
+    p.txt(t('التوصيات', 'Recommendations'), isRTL ? W_MM - 14 : 14, y + 58, { size: 7.5, color: C.primary, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
+    (content.recommendations || []).slice(0, 2).forEach((r, j) => {
+      const ry = y + 64 + j * 7;
+      p.rect(isRTL ? W_MM - 13 : 13, ry - 2.5, 2, 5, C.primary, null, 1);
+      p.txt(r, isRTL ? W_MM - 17 : 17, ry, { size: 7, color: C.slate600, align: isRTL ? 'right' : 'left', isRTL, maxW: W_MM - 28 });
     });
 
-    y += 78;
+    y += cardH + 5;
   });
 
-  p.pageFooter(lang, 5, 10);
+  p.pageFooter(lang);
   return p;
 }
 
+// ─── Page 6: Development Priorities ───────────────────────────────────────────
 function buildDevelopmentPriorities(rpt, lang) {
-  const p = new Page(lang === 'ar');
-  const t = (ar, en) => lang === 'ar' ? ar : en;
+  const p     = new Page();
   const isRTL = lang === 'ar';
-  const domainScores = rpt.domain_scores || {};
-  const lk = lang === 'ar' ? 'ar' : 'en';
+  const t     = (ar, en) => isRTL ? ar : en;
+  const ds    = rpt.domain_scores || {};
+  const lk    = lang;
 
-  p.rect(0, 0, W, 20, C.primary);
-  p.rect(0, 20, W, 2, C.accent);
-  p.text(t('أولويات التطوير', 'Development Priorities'), isRTL ? W - 8 : 8, 13, { size: 12, color: C.white, weight: 'bold', align: isRTL ? 'end' : 'start' });
+  p.pageHeader(t('أولويات التطوير', 'Development Priorities'), 6, lang);
 
   const priority = DOMAINS
-    .map(d => ({ ...d, score: domainScores[d.id]?.score || 0, band: domainScores[d.id]?.band || 'Critical' }))
+    .map(d => ({ ...d, score: ds[d.id]?.score || 0, band: ds[d.id]?.band || 'Critical' }))
     .sort((a, b) => a.score - b.score)
     .slice(0, 3);
 
-  let y = 28;
+  let y = 24;
+
   priority.forEach((d, i) => {
-    const bc = bandColor(d.band);
+    const bc      = bandColor(d.band);
     const content = d.content[d.band]?.[lk];
     if (!content) return;
 
-    p.rect(8, y, W - 16, 74, bc + '08', bc + '33', 3);
+    const cardH = 80;
+    p.rect(8, y, W_MM - 16, cardH, C.white, bc + '66', 3);
 
-    // Red/warn header strip
-    const grd = p.c.createLinearGradient(p.x(8), 0, p.x(W - 8), 0);
-    grd.addColorStop(0, bc);
-    grd.addColorStop(1, C.primary);
-    p.c.save();
-    const rx = p.x(8), ry = p.y(y), rw = p.w(W - 16), rh2 = p.h(10);
-    p.c.beginPath();
-    p.c.moveTo(rx + p.w(3), ry);
-    p.c.lineTo(rx + rw - p.w(3), ry);
-    p.c.quadraticCurveTo(rx + rw, ry, rx + rw, ry + p.h(3));
-    p.c.lineTo(rx + rw, ry + rh2);
-    p.c.lineTo(rx, ry + rh2);
-    p.c.lineTo(rx, ry + p.h(3));
-    p.c.quadraticCurveTo(rx, ry, rx + p.w(3), ry);
-    p.c.closePath();
-    p.c.fillStyle = grd;
-    p.c.fill();
-    p.c.restore();
+    // Gradient header
+    p.gradRect(8, y, W_MM - 16, 12, C.primary, bc, 'h', 3);
+    p.rect(8, y + 9, W_MM - 16, 3, bc + 'bb', null);
 
-    p.text(t(`أولوية ${i + 1}: `, `Priority ${i + 1}: `) + d.name[lk], isRTL ? W - 12 : 12, y + 7, { size: 8.5, color: C.white, weight: 'bold', align: isRTL ? 'end' : 'start' });
-    p.text(d.score + '%', isRTL ? 24 : W - 24, y + 7, { size: 9, color: C.white + 'cc', weight: 'bold', align: isRTL ? 'start' : 'end' });
+    // Priority badge
+    const badgeTxt = t(`أولوية ${i + 1}`, `Priority ${i + 1}`);
+    p.rect(isRTL ? 14 : W_MM - 38, y + 2, 24, 8, C.white + '22', C.white + '44', 4);
+    p.txt(badgeTxt, isRTL ? 26 : W_MM - 26, y + 6, { size: 6, color: C.white, weight: 'bold', align: 'center', isRTL });
 
-    p.wrapText(content.summary, isRTL ? W - 12 : 12, y + 17, W - 24, 4.5, { size: 7.5, color: C.slate600 });
+    p.txt(d.name[lk], isRTL ? W_MM - 14 : 14, y + 6, { size: 9, color: C.white, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL, maxW: W_MM - 55 });
+    p.txt(d.score + '%', isRTL ? 50 : W_MM - 50, y + 6, { size: 10, color: C.white + 'cc', weight: 'bold', align: isRTL ? 'left' : 'right', isRTL });
 
-    p.progressBar(12, y + 32, W - 24, 3.5, d.score, bc, C.slate100, 1.5);
-    p.text(d.score + '%', isRTL ? W - 12 : W - 12, y + 32, { size: 6, color: bc, align: 'end' });
+    // Summary
+    p.wrap(content.summary, isRTL ? W_MM - 14 : 14, y + 19, W_MM - 28, 4.5, { size: 8, color: C.slate600, isRTL });
 
-    p.text(t('التوصيات العملية', 'Practical Recommendations'), isRTL ? W - 12 : 12, y + 42, { size: 7.5, color: C.primary, weight: 'bold', align: isRTL ? 'end' : 'start' });
-    const recs = content.recommendations || [];
-    recs.slice(0, 3).forEach((r, j) => {
-      const ry3 = y + 48 + j * 6;
-      p.rect(isRTL ? W - 12 : 12, ry3 - 3, 3, 5, bc, null, 1.5);
-      p.text(r, isRTL ? W - 18 : 17, ry3, { size: 7, color: C.slate600, align: isRTL ? 'end' : 'start', maxWidth: W - 28 });
+    // Progress bar with score
+    p.txt(t('مستوى الأداء الحالي', 'Current Performance Level'), isRTL ? W_MM - 14 : 14, y + 36, { size: 6.5, color: C.slate400, align: isRTL ? 'right' : 'left', isRTL });
+    p.gradBar(14, y + 40, W_MM - 28, 5, d.score, bc, bc + '44', C.slate100, 2.5);
+    p.txt(d.score + '%', isRTL ? 14 : W_MM - 14, y + 42, { size: 6.5, color: bc, weight: 'bold', align: isRTL ? 'left' : 'right', isRTL });
+
+    // Recs
+    p.txt(t('التوصيات العملية', 'Practical Recommendations'), isRTL ? W_MM - 14 : 14, y + 51, { size: 7.5, color: C.primary, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
+    (content.recommendations || []).slice(0, 3).forEach((r, j) => {
+      const ry = y + 57 + j * 7;
+      p.circle(isRTL ? W_MM - 17 : 17, ry, 2, bc + 'aa', null);
+      p.txt(r, isRTL ? W_MM - 21 : 21, ry, { size: 7, color: C.slate600, align: isRTL ? 'right' : 'left', isRTL, maxW: W_MM - 32 });
     });
 
-    y += 78;
+    y += cardH + 5;
   });
 
-  p.pageFooter(lang, 6, 10);
+  p.pageFooter(lang);
   return p;
 }
 
+// ─── Page 7: Domain Breakdown ─────────────────────────────────────────────────
 function buildDomainBreakdown(rpt, lang) {
-  const p = new Page(lang === 'ar');
-  const t = (ar, en) => lang === 'ar' ? ar : en;
+  const p     = new Page();
   const isRTL = lang === 'ar';
-  const domainScores = rpt.domain_scores || {};
-  const subScores = rpt.sub_competency_scores || {};
-  const lk = lang === 'ar' ? 'ar' : 'en';
+  const t     = (ar, en) => isRTL ? ar : en;
+  const ds    = rpt.domain_scores || {};
+  const subs  = rpt.sub_competency_scores || {};
+  const lk    = lang;
 
-  p.rect(0, 0, W, 20, C.primary);
-  p.rect(0, 20, W, 2, C.accent);
-  p.text(t('التفصيل الكامل للمجالات', 'Full Domain Breakdown'), isRTL ? W - 8 : 8, 13, { size: 12, color: C.white, weight: 'bold', align: isRTL ? 'end' : 'start' });
+  p.pageHeader(t('التفصيل الكامل للمجالات', 'Full Domain Breakdown'), 7, lang);
 
-  let y = 28;
+  let y = 24;
+
   DOMAINS.forEach((d, di) => {
-    if (y > H - 50) return; // safety
-    const domData = domainScores[d.id] || { score: 0, band: 'Critical' };
-    const bc = bandColor(domData.band);
+    if (y > H_MM - 15) return;
+    const domData = ds[d.id] || { score: 0, band: 'Critical' };
+    const bc      = bandColor(domData.band);
 
     // Domain header
-    p.rect(8, y, W - 16, 11, C.primary, null, 3);
-    p.text(d.name[lk], isRTL ? W - 12 : 12, y + 7.5, { size: 8.5, color: C.white, weight: 'bold', align: isRTL ? 'end' : 'start' });
-    p.text(domData.score + '%', isRTL ? 24 : W - 24, y + 7.5, { size: 9, color: C.accent, weight: 'bold', align: isRTL ? 'start' : 'end' });
-    y += 13;
+    p.gradRect(8, y, W_MM - 16, 12, C.primary, bc + 'cc', 'h', 3);
+    p.txt(d.name[lk], isRTL ? W_MM - 14 : 14, y + 6, { size: 9, color: C.white, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
+    p.txt(domData.score + '%', isRTL ? 22 : W_MM - 22, y + 6, { size: 10, color: C.accent, weight: 'bold', align: isRTL ? 'left' : 'right', isRTL });
+    y += 14;
 
     // Sub-competencies
-    d.sub_competencies.forEach((sc, sci) => {
-      const key = `${d.id}__${sc.id}`;
-      const scData = subScores[key] || { score: 0, band: 'Critical' };
-      const sbc = bandColor(scData.band);
+    d.sub_competencies.forEach((sc) => {
+      if (y > H_MM - 15) return;
+      const key   = `${d.id}__${sc.id}`;
+      const scData = subs[key] || { score: 0, band: 'Critical' };
+      const sbc   = bandColor(scData.band);
 
-      p.rect(8, y, W - 16, 12, C.white, C.slate100, 2);
-      p.text(sc.name[lk], isRTL ? W - 14 : 14, y + 5, { size: 7.5, color: C.primary, weight: 'bold', align: isRTL ? 'end' : 'start' });
-      p.text(scData.score + '%', isRTL ? 24 : W - 24, y + 5, { size: 7.5, color: sbc, weight: 'bold', align: isRTL ? 'start' : 'end' });
-      p.progressBar(14, y + 8, W - 28, 2.5, scData.score, sbc, C.slate100, 1);
+      p.rect(8, y, W_MM - 16, 14, C.white, C.slate200, 2);
+      p.rect(isRTL ? W_MM - 10.5 : 8, y, 2.5, 14, sbc + 'aa', null, 1.5);
 
-      // Band label inline
-      p.text(bandLabel(scData.band, lang), isRTL ? W - 14 : W - 14, y + 5, { size: 6, color: sbc, align: isRTL ? 'end' : 'end' });
+      p.txt(sc.name[lk], isRTL ? W_MM - 14 : 14, y + 5.5, { size: 8, color: C.primary, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL, maxW: W_MM - 55 });
+      p.txt(scData.score + '%', isRTL ? 28 : W_MM - 28, y + 5.5, { size: 8.5, color: sbc, weight: 'bold', align: isRTL ? 'left' : 'right', isRTL });
 
-      y += 14;
+      // Band badge small
+      const bandBadgeX = isRTL ? 14 : W_MM - 42;
+      p.rect(bandBadgeX, y + 1.5, 28, 6, sbc + '1a', sbc + '55', 3);
+      p.txt(bandLabel(scData.band, lang), bandBadgeX + 14, y + 4.5, { size: 6, color: sbc, weight: 'bold', align: 'center', isRTL });
+
+      p.gradBar(14, y + 10, W_MM - 28, 2.5, scData.score, sbc, sbc + '44', C.slate100, 1.5);
+      y += 16;
     });
-    y += 4;
+    y += 5;
   });
 
-  p.pageFooter(lang, 7, 10);
+  p.pageFooter(lang);
   return p;
 }
 
+// ─── Page 8: Development Plan ─────────────────────────────────────────────────
 function buildDevPlan(rpt, lang) {
-  const p = new Page(lang === 'ar');
-  const t = (ar, en) => lang === 'ar' ? ar : en;
+  const p     = new Page();
   const isRTL = lang === 'ar';
-  const domainScores = rpt.domain_scores || {};
-  const lk = lang === 'ar' ? 'ar' : 'en';
+  const t     = (ar, en) => isRTL ? ar : en;
+  const ds    = rpt.domain_scores || {};
+  const lk    = lang;
 
-  p.rect(0, 0, W, 20, C.primary);
-  p.rect(0, 20, W, 2, C.accent);
-  p.text(t('خطة التطوير الشخصية', 'Personalized Development Plan'), isRTL ? W - 8 : 8, 13, { size: 12, color: C.white, weight: 'bold', align: isRTL ? 'end' : 'start' });
+  p.pageHeader(t('خطة التطوير الشخصية', 'Personalized Development Plan'), 8, lang);
 
   const priority = DOMAINS
-    .map(d => ({ ...d, score: domainScores[d.id]?.score || 0, band: domainScores[d.id]?.band || 'Critical' }))
+    .map(d => ({ ...d, score: ds[d.id]?.score || 0, band: ds[d.id]?.band || 'Critical' }))
     .sort((a, b) => a.score - b.score)
     .slice(0, 3);
 
   const phases = [
-    { key: 'short', label: { ar: '٠ – ٣٠ يوم', en: '0 – 30 Days' }, color: C.critical,   bg: '#ef444415', desc: { ar: 'البداية الفورية', en: 'Immediate Start' } },
-    { key: 'mid',   label: { ar: '٣٠ – ٩٠ يوم', en: '30 – 90 Days' }, color: C.moderate, bg: '#f59e0b15', desc: { ar: 'البناء المتوسط',  en: 'Building Phase' } },
-    { key: 'long',  label: { ar: '٩٠+ يوم', en: '90+ Days' },         color: C.accent,   bg: '#05e1ae15', desc: { ar: 'النمو المستدام',  en: 'Sustained Growth' } },
+    { key: 'short', label: t('٠ – ٣٠ يوم', '0 – 30 Days'),   desc: t('ابدأ الآن', 'Start Now'),        c1: C.critical,   c2: '#ff6b6b' },
+    { key: 'mid',   label: t('٣٠ – ٩٠ يوم', '30 – 90 Days'), desc: t('ابنِ المهارة', 'Build Skills'),  c1: C.moderate,   c2: '#fbbf24' },
+    { key: 'long',  label: t('٩٠+ يوم', '90+ Days'),          desc: t('النمو المستدام', 'Sustained Growth'), c1: C.accent, c2: C.proficient },
   ];
 
-  let y = 28;
+  // Timeline line
+  const lineX = isRTL ? W_MM - 18 : 18;
+  p.line(lineX, 26, lineX, H_MM - 25, C.slate200, 0.7);
 
-  // Timeline connector
-  const timelineX = isRTL ? W - 20 : 20;
-  p.line(timelineX, y, timelineX, H - 20, C.slate200, 0.5);
+  let y = 24;
 
   phases.forEach((phase, pi) => {
-    // Phase node
-    p.circle(timelineX, y + 6, 5, phase.color, null);
-    p.text(String(pi + 1), timelineX, y + 7.5, { size: 7, color: C.white, weight: 'bold', align: 'center' });
+    // Node on timeline
+    p.circle(lineX, y + 6, 6, phase.c1, C.white, 0.7);
+    p.txt(String(pi + 1), lineX, y + 6, { size: 7.5, color: C.white, weight: 'bold', align: 'center', isRTL });
 
-    // Phase header
-    const hx = isRTL ? W - 28 : 28;
-    p.rect(hx, y, W - hx - 8, 11, phase.color, null, 3);
-    p.text(phase.label[lang === 'ar' ? 'ar' : 'en'], isRTL ? W - 32 : 32, y + 7, { size: 9, color: C.white, weight: 'bold', align: isRTL ? 'end' : 'start' });
-    p.text(phase.desc[lang === 'ar' ? 'ar' : 'en'], isRTL ? 16 : W - 16, y + 7, { size: 7, color: C.white + 'bb', align: isRTL ? 'start' : 'end' });
+    // Phase header bar
+    const barX = isRTL ? 8 : 28;
+    const barW = W_MM - barX - 8;
+    p.gradRect(barX, y, barW, 11, phase.c1, phase.c2, 'h', 3);
+    p.txt(phase.label, isRTL ? barX + barW - 4 : barX + 4, y + 5.5, { size: 9.5, color: C.white, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
+    p.txt(phase.desc, isRTL ? barX + 4 : barX + barW - 4, y + 5.5, { size: 7, color: C.white + 'cc', align: isRTL ? 'left' : 'right', isRTL });
     y += 13;
 
-    // Goals per priority domain
-    priority.forEach((d, di) => {
-      const content = d.content[d.band]?.[lk];
-      const goalTxt = content?.goals?.[phase.key];
+    // Goals for each priority domain
+    priority.forEach((d) => {
+      const content  = d.content[d.band]?.[lk];
+      const goalTxt  = content?.goals?.[phase.key];
       if (!goalTxt) return;
 
       const bc = bandColor(d.band);
-      p.rect(isRTL ? 12 : 28, y, W - 42, 16, phase.bg, phase.color + '44', 2);
-      p.text(d.name[lk], isRTL ? W - 32 : 32, y + 6, { size: 7, color: bc, weight: 'bold', align: isRTL ? 'end' : 'start', maxWidth: W - 50 });
-      p.wrapText(goalTxt, isRTL ? W - 32 : 32, y + 12, W - 50, 4, { size: 7, color: C.slate600 });
-      y += 20;
+      const cardX = isRTL ? 12 : 30;
+      const cardW = W_MM - cardX - 8;
+
+      p.rect(cardX, y, cardW, 18, phase.c1 + '08', phase.c1 + '33', 2.5);
+      p.txt(d.name[lk], isRTL ? cardX + cardW - 4 : cardX + 4, y + 6, { size: 7.5, color: bc, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL, maxW: cardW - 20 });
+      p.txt(d.score + '%', isRTL ? cardX + 4 : cardX + cardW - 4, y + 6, { size: 7, color: bc, align: isRTL ? 'left' : 'right', isRTL });
+      p.wrap(goalTxt, isRTL ? cardX + cardW - 4 : cardX + 4, y + 13, cardW - 8, 4, { size: 7, color: C.slate600, isRTL });
+      y += 22;
     });
-    y += 6;
+    y += 5;
   });
 
-  // Monthly reflection reminder
-  p.rect(8, H - 28, W - 16, 18, C.primary + '0d', C.primary + '33', 3);
-  p.text(t('تذكير: راجع خطتك كل ٣٠ يومًا', 'Reminder: Review your plan every 30 days'), W / 2, H - 19, { size: 8, color: C.primary, weight: 'bold', align: 'center' });
-  p.text(t('التطوير المستمر هو مفتاح النجاح المهني', 'Continuous development is the key to professional success'), W / 2, H - 14, { size: 7, color: C.slate400, align: 'center' });
+  // Reminder box
+  p.gradRect(8, H_MM - 24, W_MM - 16, 15, C.primary, C.accent, 'h', 4);
+  p.txt(t('تذكير: راجع خطتك كل ٣٠ يومًا وتعقّب تقدمك باستمرار', 'Reminder: Review your plan every 30 days and consistently track your progress'),
+    W_MM / 2, H_MM - 17, { size: 8, color: C.white, weight: 'bold', align: 'center', isRTL });
+  p.txt(t('التطوير المستمر هو مفتاح النجاح المهني', 'Continuous development is the key to professional success'),
+    W_MM / 2, H_MM - 11, { size: 7, color: C.white + 'aa', align: 'center', isRTL });
 
-  p.pageFooter(lang, 8, 10);
+  p.pageFooter(lang);
   return p;
 }
 
+// ─── Page 9: Resources ────────────────────────────────────────────────────────
 function buildResources(rpt, lang) {
-  const p = new Page(lang === 'ar');
-  const t = (ar, en) => lang === 'ar' ? ar : en;
+  const p     = new Page();
   const isRTL = lang === 'ar';
-  const domainScores = rpt.domain_scores || {};
-  const lk = lang === 'ar' ? 'ar' : 'en';
+  const t     = (ar, en) => isRTL ? ar : en;
+  const ds    = rpt.domain_scores || {};
+  const lk    = lang;
 
-  p.rect(0, 0, W, 20, C.primary);
-  p.rect(0, 20, W, 2, C.accent);
-  p.text(t('الموارد والمحتوى المقترح', 'Recommended Resources'), isRTL ? W - 8 : 8, 13, { size: 12, color: C.white, weight: 'bold', align: isRTL ? 'end' : 'start' });
+  p.pageHeader(t('الموارد والمحتوى المقترح', 'Recommended Resources'), 9, lang);
 
   const priority = DOMAINS
-    .map(d => ({ ...d, score: domainScores[d.id]?.score || 0, band: domainScores[d.id]?.band || 'Critical' }))
+    .map(d => ({ ...d, score: ds[d.id]?.score || 0, band: ds[d.id]?.band || 'Critical' }))
     .sort((a, b) => a.score - b.score)
     .slice(0, 3);
 
-  let y = 28;
+  let y = 24;
 
   // Intro
-  p.rect(8, y, W - 16, 12, C.slate50, C.slate100, 3);
-  p.wrapText(
-    t('تم اختيار الموارد أدناه بناءً على أدنى مجالاتك في المقياس لدعم تطورك المهني المستهدف.',
-      'The resources below were selected based on your lowest-scoring domains to support targeted professional growth.'),
-    isRTL ? W - 12 : 12, y + 8, W - 24, 5, { size: 7.5, color: C.slate600 }
+  p.rect(8, y, W_MM - 16, 14, C.slate50, C.slate200, 3);
+  p.gradRect(8, y, 3, 14, C.accent, C.proficient, 'v', 1.5);
+  p.wrap(
+    t('اختيار الموارد التالية بناءً على أدنى مجالاتك لدعم تطورك المهني المستهدف بشكل فعّال.',
+      'The following resources were selected based on your lowest-scoring domains to effectively support your targeted professional growth.'),
+    isRTL ? W_MM - 14 : 14, y + 8, W_MM - 26, 5, { size: 8, color: C.slate600, isRTL }
   );
-  y += 16;
+  y += 18;
 
-  const resourceTypes = {
+  const resTypes = {
     Strong:     t('دليل متقدم', 'Advanced Guide'),
     Proficient: t('ورقة عمل', 'Worksheet'),
     Moderate:   t('برنامج تدريبي', 'Training Program'),
-    Critical:   t('جلسة تدريب', 'Coaching Session'),
+    Critical:   t('جلسة تدريب فردي', 'Coaching Session'),
   };
 
   priority.forEach((d, i) => {
-    const bc = bandColor(d.band);
+    const bc      = bandColor(d.band);
     const content = d.content[d.band]?.[lk];
-    const recs = content?.recommendations || [];
-    const resType = resourceTypes[d.band] || t('مورد', 'Resource');
+    const recs    = content?.recommendations || [];
+    const rType   = resTypes[d.band] || t('مورد', 'Resource');
 
-    // Card
-    p.rect(8, y, W - 16, 52, C.white, C.slate100, 3);
+    const cardH = 58;
+    p.rect(8, y, W_MM - 16, cardH, C.white, C.slate200, 3);
 
-    // Left colored strip
-    p.rect(8, y, 3, 52, bc, null, 1.5);
+    // Left/right color strip
+    p.gradRect(isRTL ? W_MM - 10.5 : 8, y, 2.5, cardH, bc, bc + '55', 'v', 1.5);
 
-    // Type badge
-    p.rect(isRTL ? 14 : W - 45, y + 3, 37, 7, bc + '22', bc + '55', 3.5);
-    p.text(resType, isRTL ? 32.5 : W - 26.5, y + 8, { size: 6.5, color: bc, weight: 'bold', align: 'center' });
+    // Tag
+    p.rect(isRTL ? 14 : W_MM - 44, y + 3, 30, 7, bc + '22', bc + '66', 3.5);
+    p.txt(rType, isRTL ? 29 : W_MM - 29, y + 6.5, { size: 6.5, color: bc, weight: 'bold', align: 'center', isRTL });
 
     // Domain name
-    p.text(d.name[lk], isRTL ? W - 14 : 14, y + 8, { size: 9, color: C.primary, weight: 'bold', align: isRTL ? 'end' : 'start', maxWidth: W - 65 });
-    p.text(d.score + '%  •  ' + bandLabel(d.band, lang), isRTL ? W - 14 : 14, y + 15, { size: 7, color: bc, align: isRTL ? 'end' : 'start' });
+    p.txt(d.name[lk], isRTL ? W_MM - 14 : 14, y + 8, { size: 9.5, color: C.primary, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL, maxW: W_MM - 65 });
 
-    p.line(14, y + 18, W - 14, y + 18, C.slate100, 0.3);
+    // Score + band
+    p.txt(d.score + '%  •  ' + bandLabel(d.band, lang), isRTL ? W_MM - 14 : 14, y + 15.5, { size: 7, color: bc, align: isRTL ? 'right' : 'left', isRTL });
 
-    p.text(t('خطوات التحسين المقترحة', 'Suggested Improvement Steps'), isRTL ? W - 14 : 14, y + 24, { size: 7.5, color: C.slate500, weight: 'bold', align: isRTL ? 'end' : 'start' });
+    p.line(14, y + 20, W_MM - 14, y + 20, C.slate200, 0.4);
+
+    // Steps
+    p.txt(t('خطوات التحسين المقترحة', 'Suggested Improvement Steps'), isRTL ? W_MM - 14 : 14, y + 26, { size: 7.5, color: C.slate500, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
     recs.slice(0, 3).forEach((rec, ri) => {
-      p.circle(isRTL ? W - 17 : 17, y + 29 + ri * 7 - 2, 1.5, bc, null);
-      p.text(rec, isRTL ? W - 20 : 20, y + 29 + ri * 7, { size: 7, color: C.slate600, align: isRTL ? 'end' : 'start', maxWidth: W - 32 });
+      const ry = y + 32 + ri * 7;
+      p.circle(isRTL ? W_MM - 18 : 18, ry, 2, bc + '99', null);
+      p.txt(rec, isRTL ? W_MM - 22 : 22, ry, { size: 7, color: C.slate600, align: isRTL ? 'right' : 'left', isRTL, maxW: W_MM - 34 });
     });
 
-    // CTA row
-    p.rect(14, y + 44, (W - 30) / 2, 6, C.primary, null, 3);
-    p.text(t('تصفح المتجر', 'Browse Store'), isRTL ? 14 + (W - 30) / 2 - 3 : 14 + 3, y + 48, { size: 6.5, color: C.white, weight: 'bold', align: isRTL ? 'end' : 'start' });
+    // CTA button
+    const btnW = 48;
+    const btnX = isRTL ? 14 : W_MM - 14 - btnW;
+    p.gradRect(btnX, y + cardH - 11, btnW, 8, C.primary, C.accent, 'h', 4);
+    p.txt(t('تصفح المتجر ←', '→ Browse Store'), btnX + btnW / 2, y + cardH - 7, { size: 6.5, color: C.white, weight: 'bold', align: 'center', isRTL });
 
-    y += 56;
+    y += cardH + 6;
   });
 
-  p.pageFooter(lang, 9, 10);
+  p.pageFooter(lang);
   return p;
 }
 
+// ─── Page 10: Next Steps ──────────────────────────────────────────────────────
 function buildNextSteps(rpt, lang) {
-  const p = new Page(lang === 'ar');
-  const t = (ar, en) => lang === 'ar' ? ar : en;
-  const isRTL = lang === 'ar';
-  const user = rpt.user || {};
+  const p       = new Page();
+  const isRTL   = lang === 'ar';
+  const t       = (ar, en) => isRTL ? ar : en;
+  const user    = rpt.user || {};
   const overall = rpt.overall || { score: 0, band: 'Moderate' };
+  const bc      = bandColor(overall.band);
 
-  // Dark closing bg
-  const grd = p.c.createLinearGradient(0, 0, 0, p.ch);
-  grd.addColorStop(0, C.dark);
-  grd.addColorStop(0.5, C.primary);
-  grd.addColorStop(1, C.surface);
-  p.c.fillStyle = grd;
-  p.c.fillRect(0, 0, p.cw, p.ch);
+  // Full dark gradient bg
+  p.gradRect(0, 0, W_MM, H_MM, C.dark, C.surface, 'v');
+  p.dotPattern(0.035);
 
-  // Grid
-  p.c.save();
-  p.c.globalAlpha = 0.03;
-  p.c.strokeStyle = C.accent;
-  p.c.lineWidth = 0.5;
-  for (let i = 0; i < p.cw; i += mm(12)) { p.c.beginPath(); p.c.moveTo(i, 0); p.c.lineTo(i, p.ch); p.c.stroke(); }
-  for (let j = 0; j < p.ch; j += mm(12)) { p.c.beginPath(); p.c.moveTo(0, j); p.c.lineTo(p.cw, j); p.c.stroke(); }
-  p.c.restore();
+  // Top bar
+  p.gradRect(0, 0, W_MM, 2, C.accent, C.proficient, 'h');
 
-  p.rect(0, 0, W, 2, C.accent);
+  // Header
+  p.gradRect(0, 2, W_MM, 22, C.primary, C.dark, 'h');
+  p.txt(t('الخطوات القادمة', 'Your Next Steps'), W_MM / 2, 13, { size: 14, color: C.white, weight: 'bold', align: 'center', isRTL });
+  const greeting = t(
+    `مرحبًا ${user.preferred_name || user.name || ''}، هذه خارطة طريقك نحو التميز`,
+    `Welcome ${user.preferred_name || user.name || ''}, here is your roadmap to excellence`
+  );
+  p.txt(greeting, W_MM / 2, 20, { size: 7.5, color: C.white + '88', align: 'center', isRTL });
 
-  let y = 18;
-  p.text(t('الخطوات القادمة', 'Your Next Steps'), W / 2, y, { size: 16, color: C.white, weight: 'bold', align: 'center' });
-  y += 8;
-  p.text(t(`مرحبًا ${user.preferred_name || user.name || ''}، هذه خارطة طريقك نحو التميز`, `Welcome ${user.preferred_name || user.name || ''}, here is your roadmap to excellence`), W / 2, y, { size: 8, color: C.white + '88', align: 'center' });
-  y += 10;
+  let y = 28;
 
   const steps = [
-    { n: '01', label: t('راجع تقريرك بعمق', 'Review Your Report Deeply'), desc: t('اقرأ تحليل كل مجال وفهم ما تعنيه نتيجتك', 'Read each domain analysis and understand what your score means') },
-    { n: '02', label: t('حدد هدفين فوريين', 'Set 2 Immediate Goals'), desc: t('اختر هدفين من قسم ٠–٣٠ يوم وابدأ اليوم', 'Choose two goals from the 0–30 day section and start today') },
-    { n: '03', label: t('شارك نتائجك', 'Share Your Results'), desc: t('ناقش التقرير مع مشرفك أو مرشدك المهني', 'Discuss the report with your supervisor or professional mentor') },
-    { n: '04', label: t('ضع تذكير شهري', 'Set a Monthly Reminder'), desc: t('راجع تقدمك في خطة التطوير كل ٣٠ يومًا', 'Review your development plan progress every 30 days') },
-    { n: '05', label: t('استكشف الموارد', 'Explore Resources'), desc: t('تصفح متجر Optivance للأدوات والبرامج المخصصة لك', 'Browse Optivance store for personalized tools and programs') },
+    { n: '01', c: C.accent,     lbl: t('راجع تقريرك بعمق',  'Review Your Report Deeply'),  desc: t('اقرأ تحليل كل مجال وفهم ما تعنيه نتيجتك', 'Read each domain analysis and understand what your score means') },
+    { n: '02', c: C.proficient, lbl: t('حدد هدفين فوريين', 'Set 2 Immediate Goals'),        desc: t('اختر هدفين من قسم ٠–٣٠ يوم وابدأ اليوم', 'Choose two goals from the 0–30 day section and start today') },
+    { n: '03', c: C.moderate,   lbl: t('شارك نتائجك',       'Share Your Results'),          desc: t('ناقش التقرير مع مشرفك أو مرشدك المهني', 'Discuss the report with your supervisor or professional mentor') },
+    { n: '04', c: C.accent,     lbl: t('ضع تذكير شهري',     'Set a Monthly Reminder'),      desc: t('راجع تقدمك في خطة التطوير كل ٣٠ يومًا', 'Review your development plan progress every 30 days') },
+    { n: '05', c: C.proficient, lbl: t('استكشف الموارد',    'Explore Resources'),           desc: t('تصفح متجر Optivance للأدوات والبرامج المخصصة', 'Browse Optivance store for personalized tools and programs') },
   ];
 
   steps.forEach((step, i) => {
-    p.rect(8, y, W - 16, 18, C.white + '0a', C.white + '18', 3);
-    p.circle(18, y + 9, 6, C.accent, null);
-    p.text(step.n, 18, y + 11, { size: 7, color: C.dark, weight: 'bold', align: 'center' });
-    p.text(step.label, isRTL ? W - 28 : 28, y + 7, { size: 8.5, color: C.white, weight: 'bold', align: isRTL ? 'end' : 'start' });
-    p.text(step.desc, isRTL ? W - 28 : 28, y + 13, { size: 7, color: C.white + '88', align: isRTL ? 'end' : 'start', maxWidth: W - 40 });
-    y += 22;
+    p.rect(8, y, W_MM - 16, 20, C.white + '0a', C.white + '1a', 3);
+    // Numbered node
+    p.circle(isRTL ? W_MM - 18 : 18, y + 10, 7, step.c + '33', step.c, 0.5);
+    p.txt(step.n, isRTL ? W_MM - 18 : 18, y + 10, { size: 7, color: step.c, weight: 'bold', align: 'center', isRTL });
+    const tx = isRTL ? W_MM - 29 : 29;
+    p.txt(step.lbl, tx, y + 7.5, { size: 8.5, color: C.white, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL, maxW: W_MM - 40 });
+    p.txt(step.desc, tx, y + 14, { size: 7, color: C.white + '77', align: isRTL ? 'right' : 'left', isRTL, maxW: W_MM - 40 });
+    y += 23;
   });
 
+  y += 4;
+  p.gradRect(8, y, W_MM - 16, 0.7, C.accent + '55', C.primary + '22', 'h');
   y += 6;
-  p.line(8, y, W - 8, y, C.white + '22', 0.5);
+
+  // Contact
+  p.txt(t('للتواصل والاستشارات', 'Contact & Consulting'), W_MM / 2, y, { size: 9, color: C.accent, weight: 'bold', align: 'center', isRTL });
+  y += 6;
+  p.txt('info@optivance.com  •  www.optivance.com', W_MM / 2, y, { size: 8, color: C.white + 'aa', align: 'center', isRTL });
   y += 8;
 
-  // Contact info
-  p.text(t('للتواصل والاستشارات', 'For Contact & Consulting'), W / 2, y, { size: 9, color: C.accent, weight: 'bold', align: 'center' });
-  y += 7;
-  p.text('info@optivance.com', W / 2, y, { size: 8, color: C.white + 'bb', align: 'center' });
-  y += 6;
-  p.text('www.optivance.com', W / 2, y, { size: 8, color: C.white + 'bb', align: 'center' });
-  y += 10;
+  // Overall score mini card
+  p.rect(8, y, W_MM - 16, 22, bc + '18', bc + '55', 4);
+  p.scoreArc(W_MM / 2 + (isRTL ? 25 : -25), y + 11, 9, overall.score, C.white + '22', bc, 2.5);
+  p.txt(overall.score + '%', W_MM / 2 + (isRTL ? 25 : -25), y + 11, { size: 10, color: bc, weight: 'bold', align: 'center', isRTL });
+  p.txt(t('نتيجتك الإجمالية', 'Your Overall Score'), isRTL ? W_MM - 14 : 14, y + 8, { size: 7, color: bc, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
+  p.txt(bandLabel(overall.band, lang), isRTL ? W_MM - 14 : 14, y + 16, { size: 9, color: bc, weight: 'bold', align: isRTL ? 'right' : 'left', isRTL });
+  y += 28;
 
-  // Overall reminder card
-  const bColor = bandColor(overall.band);
-  p.rect(8, y, W - 16, 20, bColor + '18', bColor + '55', 4);
-  p.text(t('نتيجتك الإجمالية', 'Your Overall Score'), isRTL ? W - 14 : 14, y + 8, { size: 8, color: bColor, weight: 'bold', align: isRTL ? 'end' : 'start' });
-  p.text(overall.score + '%  •  ' + bandLabel(overall.band, lang), isRTL ? W - 14 : 14, y + 15, { size: 9, color: bColor, weight: 'bold', align: isRTL ? 'end' : 'start' });
-  y += 26;
+  // CTA button
+  p.gradRect(8, y, W_MM - 16, 14, C.accent, C.proficient, 'h', 4);
+  p.txt(t('ابدأ رحلة تطورك مع Optivance اليوم', 'Start Your Growth Journey with Optivance Today'),
+    W_MM / 2, y + 7, { size: 9, color: C.dark, weight: 'bold', align: 'center', isRTL });
 
-  p.rect(8, y, W - 16, 14, C.accent, null, 4);
-  p.text(t('ابدأ رحلة تطورك مع Optivance', 'Start Your Growth Journey with Optivance'), W / 2, y + 9, { size: 9, color: C.dark, weight: 'bold', align: 'center' });
+  // Brand watermark
+  p.txt('OPTIVANCE', W_MM / 2, H_MM - 18, { size: 20, color: C.accent + '18', weight: 'bold', align: 'center', isRTL });
+  p.txt(t('بناء المهنيين المتميزين', 'Building Distinguished Professionals'),
+    W_MM / 2, H_MM - 11, { size: 7, color: C.white + '33', align: 'center', isRTL });
 
-  // Bottom branding
-  p.text('OPTIVANCE', W / 2, H - 20, { size: 16, color: C.accent + '44', weight: 'bold', align: 'center' });
-  p.text(t('بناء المهنيين المتميزين', 'Building Distinguished Professionals'), W / 2, H - 14, { size: 7, color: C.white + '44', align: 'center' });
-  p.rect(0, H - 8, W, 8, C.dark + 'cc');
-  p.text('© OPTIVANCE  •  www.optivance.com', W / 2, H - 3, { size: 6, color: C.white + '55', align: 'center' });
+  p.rect(0, H_MM - 7, W_MM, 7, C.dark);
+  p.txt('© 2025 OPTIVANCE  •  www.optivance.com  •  All Rights Reserved',
+    W_MM / 2, H_MM - 3.5, { size: 6, color: C.white + '55', align: 'center', isRTL: false });
 
   return p;
 }
 
-// ─── main export ───────────────────────────────────────────────────────────────
+// ─── Main export ──────────────────────────────────────────────────────────────
 export async function generateCompetencyPDF(reportData, attemptId) {
   const lang = reportData.language || 'ar';
 
@@ -911,7 +986,8 @@ export async function generateCompetencyPDF(reportData, attemptId) {
 
   pages.forEach((page, idx) => {
     if (idx > 0) pdf.addPage();
-    pdf.addImage(page.toDataURL(), 'PNG', 0, 0, W, H);
+    // Render at full A4 dimensions — canvas is 3× for sharpness
+    pdf.addImage(page.toDataURL(), 'PNG', 0, 0, W_MM, H_MM, '', 'FAST');
   });
 
   const fileName = `optivance-competency-report-${reportData.report_id || attemptId || 'report'}.pdf`;
