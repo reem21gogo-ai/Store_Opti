@@ -203,22 +203,39 @@ function minibar(cx,x,y,w,h,score,color){
   if(score>0) rr(cx,x,y,Math.max((score/100)*w,h),h,color,null,h/2);
 }
 
-// ─── CHROME ───────────────────────────────────────────────────────────────────
-function hdr(cx,title,pg,lang,ac=P.blue){
-  const rtl=lang==='ar';
-  seg(cx,0,0,W,14,P.navy,P.blue,'h');
-  rr(cx,0,14,W,.8,P.teal);
-  rr(cx,rtl?W-50:6,3,44,8,P.teal+'22',P.teal+'55',4);
-  T(cx,'OPTIVANCE',rtl?W-28:28,7,{s:7.5,c:P.teal,b:true,a:'center'});
-  T(cx,title,rtl?W-56:56,7,{s:9.5,c:P.white,b:true,a:rtl?'right':'left',rtl});
-  rr(cx,rtl?5:W-20,3.5,15,7,ac,null,4);
-  T(cx,String(pg),rtl?12.5:W-12.5,7,{s:7,c:P.white,b:true,a:'center'});
+// ─── GALLUP-STYLE PROGRESS STRIP ─────────────────────────────────────────────
+// 6 coloured slots across the full width — one per domain
+// highlightIdx = which slot is the current domain (-1 = all filled for overview pages)
+function progressStrip(cx, domainScores, highlightIdx) {
+  const sY=0, sH=11, slotW=W/6;
+  DC.forEach((clr,i)=>{
+    const x=i*slotW;
+    // overview: all full colour; domain page: only current slot gets colour
+    const fill = (highlightIdx<0) ? clr : (i===highlightIdx ? clr : P.border);
+    rr(cx,x,sY,slotW,sH,fill,null,0);
+    if(i>0) ln(cx,x,sY,x,sY+sH,P.white,0.5);
+  });
 }
-function ftr(cx){
-  rr(cx,0,H-6,W,6,P.navy);
-  ln(cx,0,H-6,W,H-6,P.teal+'33',.35);
-  T(cx,'OPTIVANCE  ·  www.optivance.com  ·  info@optivance.com  ·  © 2025',
-    W/2,H-3,{s:5.5,c:P.white+'44',a:'center'});
+
+// ─── CHROME ───────────────────────────────────────────────────────────────────
+function hdr(cx, rpt, title, pg, lang, highlightIdx=-1){
+  const rtl=lang==='ar';
+  const user=rpt.user||{};
+  // Gallup-style: coloured strip at top, then white header row
+  progressStrip(cx, rpt.domain_scores||{}, highlightIdx);
+  // White header row
+  rr(cx,0,11,W,7,P.white);
+  ln(cx,0,18,W,18,P.border,.3);
+  // Brand left
+  T(cx,'OPTIVANCE',rtl?W-14:14,14.5,{s:7.5,c:P.navy,b:true,a:rtl?'right':'left'});
+  // Name | Date right
+  const nameDate=`${user.name||''}  |  ${user.completion_date||''}`;
+  T(cx,nameDate,rtl?14:W-14,14.5,{s:7,c:P.sub,b:false,a:rtl?'left':'right'});
+}
+function ftr(cx, pg){
+  ln(cx,0,H-8,W,H-8,P.border,.3);
+  T(cx,'OPTIVANCE  ·  www.optivance.com  ·  © 2025 All rights reserved.',14,H-4,{s:6,c:P.muted});
+  T(cx,String(pg),W-14,H-4,{s:6.5,c:P.sub,b:true,a:'right'});
 }
 function secTitle(cx,title,x,y,rtl,c=P.blue){
   T(cx,title,x,y,{s:10,c,b:true,a:rtl?'right':'left',rtl});
@@ -259,18 +276,18 @@ function p1_cover(rpt,lang){
   for(let xi=0;xi<CW;xi+=mm(8))for(let yi=0;yi<CH;yi+=mm(8)){cx.beginPath();cx.arc(xi,yi,mm(.35),0,Math.PI*2);cx.fill();}
   cx.restore();
 
-  // teal top line
-  rr(cx,0,0,W,2.2,P.teal);
+  // Gallup-style progress strip at top of cover
+  progressStrip(cx, rpt.domain_scores||{}, -1);
 
   // right accent column
   cx.save();cx.globalAlpha=.055;rr(cx,W-52,0,52,H,P.teal);cx.restore();
   ln(cx,W-52,0,W-52,H,P.teal+'18',.4);
 
-  // OPTIVANCE brand
+  // OPTIVANCE brand (below the strip which is 11mm)
   const lx=rtl?W-60:12,lw=48;
-  rr(cx,lx,15,lw,11,P.teal+'1a',P.teal+'44',5.5);
-  T(cx,'OPTIVANCE',lx+lw/2,20.5,{s:9.5,c:P.teal,b:true,a:'center'});
-  T(cx,tr('للاستشارات وتطوير المواهب','Consulting & Talent Development'),lx+lw/2,28,{s:6,c:P.white+'55',a:'center',rtl});
+  rr(cx,lx,16,lw,11,P.teal+'1a',P.teal+'44',5.5);
+  T(cx,'OPTIVANCE',lx+lw/2,21.5,{s:9.5,c:P.teal,b:true,a:'center'});
+  T(cx,tr('للاستشارات وتطوير المواهب','Consulting & Talent Development'),lx+lw/2,29,{s:6,c:P.white+'55',a:'center',rtl});
 
   // main title
   const tx=rtl?W-13:13,ta=rtl?'right':'left';
@@ -332,10 +349,10 @@ function p2_welcome(rpt,lang){
   const lv=LEVEL_LABELS[user.professional_level]?.[lang]||'—';
   const ta=rtl?'right':'left',tx=rtl?W-12:12;
 
-  hdr(cx,tr('مرحباً بك في تقريرك','Welcome to Your Report'),2,lang);
-  ftr(cx);
+  hdr(cx,rpt,tr('مرحباً بك في تقريرك','Welcome to Your Report'),2,lang,-1);
+  ftr(cx,2);
 
-  let y=20;
+  let y=22;
 
   // Welcome card
   rr(cx,8,y,W-16,30,P.white,P.border,4);
@@ -408,10 +425,10 @@ function p3_about(rpt,lang){
   const rtl=lang==='ar',tr=(ar,en)=>rtl?ar:en;
   const ta=rtl?'right':'left',tx=rtl?W-12:12;
 
-  hdr(cx,tr('عن المقياس','About This Assessment'),3,lang);
-  ftr(cx);
+  hdr(cx,rpt,tr('عن المقياس','About This Assessment'),3,lang,-1);
+  ftr(cx,3);
 
-  let y=20;
+  let y=22;
 
   // what it measures
   rr(cx,8,y,W-16,58,P.white,P.border,4);
@@ -490,10 +507,10 @@ function p4_snapshot(rpt,lang){
   const band=ov.band||sb(ov.score);
   const summary=OVERALL_SUMMARIES[band]?.[lang]||'';
 
-  hdr(cx,tr('النظرة العامة على نتائجك','Your Overall Competency Snapshot'),4,lang);
-  ftr(cx);
+  hdr(cx,rpt,tr('النظرة العامة على نتائجك','Your Overall Competency Snapshot'),4,lang,-1);
+  ftr(cx,4);
 
-  let y=20;
+  let y=22;
 
   // score hero bar
   seg(cx,0,y,W,24,P.navy,P.blue,'h');
@@ -579,12 +596,12 @@ function p_domain(rpt,lang,idx,pgNum){
   const dClr=DC[idx]||P.blue;
   const content=domain.content[band]?.[lang]||{};
 
-  hdr(cx,domain.name[lang],pgNum,lang,dClr);
-  ftr(cx);
+  hdr(cx,rpt,domain.name[lang],pgNum,lang,idx);
+  ftr(cx,pgNum);
 
-  let y=20;
+  let y=22;
 
-  // domain header band
+  // domain header band (Gallup: domain label badge + big name + description)
   rr(cx,0,y,W,22,P.white,null);
   ln(cx,0,y+22,W,y+22,P.border,.4);
   dot(cx,rtl?W-21:21,y+11,9,dClr+'22',dClr,.7);
@@ -707,10 +724,10 @@ function p11_devplan(rpt,lang){
   const ov=rpt.overall||{score:0,band:'Moderate'};
   const band=ov.band||sb(ov.score);
 
-  hdr(cx,tr('خطة التطوير الشخصية','Personal Development Plan'),11,lang);
-  ftr(cx);
+  hdr(cx,rpt,tr('خطة التطوير الشخصية','Personal Development Plan'),11,lang,-1);
+  ftr(cx,11);
 
-  let y=20;
+  let y=22;
 
   // profile + overall mini
   rr(cx,8,y,W-16,18,P.white,P.border,4);
