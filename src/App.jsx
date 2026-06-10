@@ -29,6 +29,7 @@ import Checkout from '@/pages/store/Checkout';
 import Account from '@/pages/store/Account';
 import StoreLogin from '@/pages/store/StoreLogin';
 import CompetencyAssessmentLanding from '@/pages/store/CompetencyAssessmentLanding';
+import AssessmentIntake from '@/pages/store/AssessmentIntake';
 import CompetencyLevels from '@/pages/store/CompetencyLevels';
 import TakeCompetencyAssessment from '@/pages/store/TakeCompetencyAssessment';
 import CompetencyReport from '@/pages/store/CompetencyReport';
@@ -82,6 +83,7 @@ const AuthenticatedApp = () => {
       <Route path="/store/account" element={<Account />} />
       <Route path="/store/competency" element={<CompetencyAssessmentLanding />} />
       <Route path="/store/competency/levels" element={<CompetencyLevels />} />
+      <Route path="/store/competency/intake" element={<AssessmentIntake />} />
       <Route path="/store/competency/assessment" element={<TakeCompetencyAssessment />} />
       <Route path="/store/competency/report/:attemptId" element={<CompetencyReport />} />
 

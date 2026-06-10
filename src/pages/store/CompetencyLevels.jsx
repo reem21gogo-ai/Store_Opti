@@ -70,7 +70,7 @@ export default function CompetencyLevels() {
 
   const handleStart = () => {
     if (!selectedLevel || !selectedVersion) return;
-    navigate(`/store/competency/assessment?level=${selectedLevel}&version=${selectedVersion}`);
+    navigate(`/store/competency/intake?level=${selectedLevel}&version=${selectedVersion}`);
   };
 
   return (
