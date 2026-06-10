@@ -126,11 +126,8 @@ export default function CompetencyAssessmentLanding() {
 
   const title = lang === 'ar' ? 'مقياس الكفاءات الأساسية' : 'Core Competency Assessment';
   const description = lang === 'ar'
-    ? 'تقييم شامل لكفاءاتك المهنية والسلوكية من خلال 45 سؤال مصمم علمياً يقيس 20 جدارة أساسية في 6 مجالات رئيسية'
-    : 'A comprehensive assessment of your professional competencies through 45 scientifically-designed questions measuring 20 core competencies across 6 key domains';
-  const quickPrice = 99;
-  const fullPrice = 159;
-  const plan = PLANS[selectedPlan][lang];
+    ? 'تقييم شامل لكفاءاتك المهنية والسلوكية من خلال أسئلة مصممة علمياً تقيس 20 جدارة أساسية في 6 مجالات رئيسية'
+    : 'A comprehensive assessment of your professional competencies through scientifically-designed questions measuring 20 core competencies across 6 key domains';
 
   return (
     <div className="bg-store-bg min-h-screen" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -261,112 +258,59 @@ export default function CompetencyAssessmentLanding() {
                     </div>
                   ))}
                   <div className="pt-2 text-xs text-slate-400 text-center">
-                    {lang === 'ar' ? '⬆ هذه معاينة توضيحية فقط' : '⬆ Illustrative preview only'}
+                    {lang === 'ar' ? 'معاينة توضيحية فقط' : 'Illustrative preview only'}
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* RIGHT: Plan Selector + CTA */}
+          {/* RIGHT: CTA Card */}
           <div className="lg:col-span-2">
             <div className="sticky top-24 space-y-4">
-              <h2 className="font-heading font-bold text-corp-dark text-lg">
-                {lang === 'ar' ? 'اختر النسخة المناسبة' : 'Choose Your Version'}
-              </h2>
-
-              {/* Quick Plan */}
-              <button
-                onClick={() => setSelectedPlan('quick')}
-                className={`w-full rounded-2xl p-5 border-2 text-start transition-all ${selectedPlan === 'quick' ? 'border-brand-accent bg-brand-accent/5' : 'border-slate-200 bg-white hover:border-slate-300'}`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-heading font-black text-corp-dark text-base">{PLANS.quick[lang].name}</span>
-                      <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">{PLANS.quick[lang].badge}</span>
+              {/* Pricing Card */}
+              <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                <div className="p-6 border-b border-slate-50">
+                  <div className="flex items-baseline gap-1 mb-1">
+                    <span className="text-xs text-slate-500">{lang === 'ar' ? 'يبدأ من' : 'Starting from'}</span>
+                    <span className="font-heading font-black text-3xl text-corp-dark">99</span>
+                    <span className="text-slate-500 text-sm">{lang === 'ar' ? ' ر.س' : ' SAR'}</span>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    {lang === 'ar' ? 'يختلف السعر حسب مستواك ونسخة المقياس' : 'Price varies by level and version'}
+                  </p>
+                </div>
+                <div className="p-6 space-y-3">
+                  {[
+                    lang === 'ar' ? 'نتائج فورية عند الإنهاء' : 'Instant results on completion',
+                    lang === 'ar' ? 'تقرير PDF احترافي' : 'Professional PDF report',
+                    lang === 'ar' ? 'ضمان الرضا الكامل' : 'Full satisfaction guarantee',
+                    lang === 'ar' ? 'خطة تطوير 90 يوم (شاملة)' : '90-day dev plan (full version)',
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-2.5">
+                      <CheckCircle size={14} className="text-brand-accent flex-shrink-0" />
+                      <span className="text-sm text-slate-600">{item}</span>
                     </div>
-                    <div className="text-slate-500 text-xs">{PLANS.quick[lang].tagline}</div>
-                  </div>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${selectedPlan === 'quick' ? 'border-brand-accent bg-brand-accent' : 'border-slate-300'}`}>
-                    {selectedPlan === 'quick' && <div className="w-2 h-2 rounded-full bg-white" />}
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center gap-1 text-xs text-slate-500"><Clock size={12} /> {PLANS.quick[lang].duration}</div>
-                  <div className="flex items-center gap-1 text-xs text-slate-500"><BarChart2 size={12} /> {PLANS.quick[lang].questions}</div>
-                </div>
-                <ul className="space-y-1.5 mb-4">
-                  {PLANS.quick[lang].outputs.map((o, i) => (
-                    <li key={i} className="flex items-center gap-2 text-xs text-slate-600">
-                      <CheckCircle size={12} className="text-brand-accent flex-shrink-0" /> {o}
-                    </li>
                   ))}
-                </ul>
-                <div className="flex items-end gap-1">
-                  <span className="font-heading font-black text-2xl text-corp-dark">{quickPrice}</span>
-                  <span className="text-slate-400 text-sm mb-0.5">{PLANS.quick[lang].price_suffix}</span>
                 </div>
-              </button>
-
-              {/* Full Plan */}
-              <button
-                onClick={() => setSelectedPlan('full')}
-                className={`w-full rounded-2xl p-5 border-2 text-start transition-all relative ${selectedPlan === 'full' ? 'border-brand-primary bg-brand-primary/5' : 'border-slate-200 bg-white hover:border-slate-300'}`}
-              >
-                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                  <span className="bg-corp-dark text-white text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
-                    {lang === 'ar' ? '⭐ الأكثر قيمة' : '⭐ Best Value'}
-                  </span>
-                </div>
-                <div className="flex items-start justify-between mb-3 mt-2">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-heading font-black text-corp-dark text-base">{PLANS.full[lang].name}</span>
-                    </div>
-                    <div className="text-slate-500 text-xs">{PLANS.full[lang].tagline}</div>
-                  </div>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${selectedPlan === 'full' ? 'border-brand-primary bg-brand-primary' : 'border-slate-300'}`}>
-                    {selectedPlan === 'full' && <div className="w-2 h-2 rounded-full bg-white" />}
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center gap-1 text-xs text-slate-500"><Clock size={12} /> {PLANS.full[lang].duration}</div>
-                  <div className="flex items-center gap-1 text-xs text-slate-500"><BarChart2 size={12} /> {PLANS.full[lang].questions}</div>
-                </div>
-                <ul className="space-y-1.5 mb-4">
-                  {PLANS.full[lang].outputs.map((o, i) => (
-                    <li key={i} className="flex items-center gap-2 text-xs text-slate-600">
-                      <CheckCircle size={12} className="text-brand-primary flex-shrink-0" /> {o}
-                    </li>
-                  ))}
-                </ul>
-                <div className="flex items-end gap-1">
-                  <span className="font-heading font-black text-2xl text-corp-dark">{fullPrice}</span>
-                  <span className="text-slate-400 text-sm mb-0.5">{PLANS.full[lang].price_suffix}</span>
-                </div>
-              </button>
+              </div>
 
               {/* Start CTA */}
               {user ? (
-                <button onClick={handleStart} className="w-full py-4 rounded-2xl font-heading font-black text-base flex items-center justify-center gap-2 transition-all" style={{ background: 'linear-gradient(135deg, #1A3A5C, #05E1AE)', color: 'white' }}>
+                <button onClick={handleStart} className="w-full py-4 rounded-2xl font-heading font-black text-base flex items-center justify-center gap-2 transition-all hover:opacity-90" style={{ background: 'linear-gradient(135deg, #1A3A5C, #05E1AE)', color: 'white' }}>
                   <Play size={16} fill="currentColor" />
-                  {lang === 'ar' ? `ابدأ ${plan.name}` : `Start ${plan.name}`}
-                  <ChevronRight size={16} />
+                  {lang === 'ar' ? 'ابدأ التقييم' : 'Start Assessment'}
+                  <Arrow size={16} />
                 </button>
               ) : (
-                <button onClick={handleStart} className="w-full py-4 rounded-2xl font-heading font-black text-base flex items-center justify-center gap-2 transition-all" style={{ background: '#1A3A5C', color: 'white' }}>
+                <button onClick={handleStart} className="w-full py-4 rounded-2xl font-heading font-black text-base flex items-center justify-center gap-2 transition-all hover:opacity-90" style={{ background: '#1A3A5C', color: 'white' }}>
                   <Lock size={15} />
                   {lang === 'ar' ? 'سجّل دخولك للبدء' : 'Login to Start'}
                 </button>
               )}
 
-              <p className="text-center text-xs text-slate-400">
-                {lang === 'ar' ? '✓ نتائج فورية  ✓ تقرير PDF  ✓ ضمان الرضا' : '✓ Instant results  ✓ PDF report  ✓ Satisfaction guaranteed'}
-              </p>
-
               <Link to="/consultation" className="w-full py-3 rounded-xl border border-slate-200 text-slate-600 text-sm text-center flex items-center justify-center gap-2 hover:border-brand-primary/50 hover:text-brand-primary transition-all bg-white">
-                {lang === 'ar' ? 'تحتاج مساعدة في الاختيار؟ تواصل معنا' : 'Need help choosing? Contact us'}
+                {lang === 'ar' ? 'تحتاج مساعدة؟ تواصل معنا' : 'Need help? Contact us'}
               </Link>
             </div>
           </div>

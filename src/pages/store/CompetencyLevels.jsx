@@ -1,59 +1,72 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLang } from '@/lib/LanguageContext';
-import { ArrowLeft, ArrowRight, Clock, BarChart2, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ArrowLeft, ArrowRight, Settings, Users, Crown,
+  CheckCircle2, Clock, BarChart2, ChevronRight
+} from 'lucide-react';
 import StoreNavbar from '@/components/store/StoreNavbar';
 import StoreFooter from '@/components/store/StoreFooter';
-import { base44 } from '@/api/base44Client';
 
 export default function CompetencyLevels() {
   const { lang, isRTL } = useLang();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
+  const FwdArrow = isRTL ? ArrowLeft : ArrowRight;
 
-  const [user, setUser] = useState(null);
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [selectedVersion, setSelectedVersion] = useState(null);
-
-  useEffect(() => {
-    base44.auth.isAuthenticated().then(async authed => {
-      if (authed) setUser(await base44.auth.me());
-    });
-  }, []);
 
   const levels = [
     {
       id: 'operational',
+      Icon: Settings,
+      color: '#05E1AE',
       titleAr: 'المستوى التشغيلي',
       titleEn: 'Operational Level',
-      descAr: 'للموظفين والأخصائيين والمنفذين',
-      descEn: 'For staff, specialists, and implementers',
-      icon: '👨‍💼',
-      quick: { price: 99, duration: '15 دقيقة' },
-      full: { price: 199, duration: '30 دقيقة' },
+      targetAr: 'للموظفين والأخصائيين والمنفذين',
+      targetEn: 'For staff, specialists, and implementers',
+      profileAr: 'يُقيّم الكفاءات الأساسية اللازمة لتنفيذ المهام بكفاءة وإنجاز العمل اليومي باحترافية.',
+      profileEn: 'Measures core competencies needed for efficient task execution and professional daily performance.',
+      traitsAr: ['تنفيذ المهام والمبادرة', 'التواصل الفعّال', 'العمل ضمن الفريق', 'إدارة الوقت والأولويات'],
+      traitsEn: ['Task Execution & Initiative', 'Effective Communication', 'Teamwork & Collaboration', 'Time & Priority Management'],
+      quick: { price: 99, questionsAr: '20 سؤال', questionsEn: '20 Questions', durationAr: '15 دقيقة', durationEn: '15 min' },
+      full:  { price: 199, questionsAr: '45 سؤال', questionsEn: '45 Questions', durationAr: '30 دقيقة', durationEn: '30 min' },
     },
     {
       id: 'supervisory',
+      Icon: Users,
+      color: '#336fa3',
       titleAr: 'المستوى الإشرافي',
       titleEn: 'Supervisory Level',
-      descAr: 'لقادة الفرق والمشرفين',
-      descEn: 'For team leaders and supervisors',
-      icon: '👔',
-      quick: { price: 129, duration: '15 دقيقة' },
-      full: { price: 249, duration: '30 دقيقة' },
+      targetAr: 'لقادة الفرق والمشرفين المباشرين',
+      targetEn: 'For team leaders and direct supervisors',
+      profileAr: 'يُقيّم قدرتك على قيادة الفريق وتوجيهه، واتخاذ القرارات، وتطوير الأداء الجماعي.',
+      profileEn: 'Measures your ability to lead, guide a team, make decisions, and develop group performance.',
+      traitsAr: ['قيادة الفريق وتطويره', 'اتخاذ القرارات', 'التفكير الاستراتيجي', 'إدارة الأداء والمتابعة'],
+      traitsEn: ['Team Leadership & Development', 'Decision Making', 'Strategic Thinking', 'Performance Management'],
+      quick: { price: 129, questionsAr: '20 سؤال', questionsEn: '20 Questions', durationAr: '15 دقيقة', durationEn: '15 min' },
+      full:  { price: 249, questionsAr: '45 سؤال', questionsEn: '45 Questions', durationAr: '30 دقيقة', durationEn: '30 min' },
     },
     {
       id: 'leadership',
+      Icon: Crown,
+      color: '#1A3A5C',
       titleAr: 'المستوى القيادي',
       titleEn: 'Leadership Level',
-      descAr: 'للمديرين والقيادات التنفيذية',
-      descEn: 'For managers and executives',
-      icon: '👑',
-      quick: { price: 159, duration: '15 دقيقة' },
-      full: { price: 299, duration: '30 دقيقة' },
+      targetAr: 'للمديرين والقيادات العليا والتنفيذيين',
+      targetEn: 'For managers, senior leaders, and executives',
+      profileAr: 'يُقيّم الكفاءات القيادية الاستراتيجية كالرؤية والتأثير وقيادة التغيير وبناء الثقافة التنظيمية.',
+      profileEn: 'Measures strategic leadership competencies: vision, influence, leading change, and organizational culture.',
+      traitsAr: ['الرؤية الاستراتيجية', 'التأثير والإلهام', 'قيادة التغيير والابتكار', 'بناء الثقافة التنظيمية'],
+      traitsEn: ['Strategic Vision', 'Influence & Inspiration', 'Leading Change & Innovation', 'Building Org Culture'],
+      quick: { price: 159, questionsAr: '20 سؤال', questionsEn: '20 Questions', durationAr: '15 دقيقة', durationEn: '15 min' },
+      full:  { price: 299, questionsAr: '45 سؤال', questionsEn: '45 Questions', durationAr: '30 دقيقة', durationEn: '30 min' },
     },
   ];
+
+  const selected = levels.find(l => l.id === selectedLevel);
 
   const handleStart = () => {
     if (!selectedLevel || !selectedVersion) return;
@@ -74,156 +87,187 @@ export default function CompetencyLevels() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-16">
-        {/* Header */}
-        <div className="text-center mb-14">
-          <h1 className="font-heading font-black text-corp-dark text-3xl md:text-4xl mb-3">
-            {lang === 'ar' ? 'اختر مستواك الوظيفي' : 'Select Your Professional Level'}
-          </h1>
-          <p className="text-slate-500 text-base max-w-2xl mx-auto">
-            {lang === 'ar' ? 'سيتم تخصيص الأسئلة والسيناريوهات حسب مستوى الخبرة والمسؤolية' : 'Questions will be tailored to your professional level and responsibilities'}
-          </p>
-        </div>
+      <div className="max-w-6xl mx-auto px-6 py-14">
 
-        {/* Levels Grid */}
-        <div className="grid grid-cols-1 gap-6 mb-10">
-          {levels.map(level => (
-            <div
-              key={level.id}
-              onClick={() => {
-                setSelectedLevel(level.id);
-                setSelectedVersion(null);
-              }}
-              className={`rounded-2xl border-2 overflow-hidden transition-all cursor-pointer ${
-                selectedLevel === level.id
-                  ? 'border-brand-primary bg-white shadow-lg'
-                  : 'border-slate-100 bg-white hover:border-slate-200'
-              }`}
-            >
-              <div className="p-6 md:p-8">
-                <div className="flex items-start gap-4 mb-6">
-                  <div className="text-4xl">{level.icon}</div>
-                  <div className="flex-1">
-                    <h3 className="font-heading font-black text-corp-dark text-xl mb-1">
-                      {level[lang === 'ar' ? 'titleAr' : 'titleEn']}
-                    </h3>
-                    <p className="text-slate-500 text-sm">
-                      {level[lang === 'ar' ? 'descAr' : 'descEn']}
-                    </p>
-                  </div>
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                    selectedLevel === level.id ? 'border-brand-primary bg-brand-primary' : 'border-slate-300'
-                  }`}>
-                    {selectedLevel === level.id && <CheckCircle size={16} className="text-white" />}
-                  </div>
-                </div>
-
-                {/* Version Selection - Shows when level selected */}
-                {selectedLevel === level.id && (
-                  <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 mt-6 space-y-3">
-                    <div className="text-xs font-bold text-slate-600 uppercase tracking-wide">
-                      {lang === 'ar' ? 'اختر النسخة' : 'Choose Version'}
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {/* Quick Version */}
-                      <button
-                        onClick={e => {
-                          e.stopPropagation();
-                          setSelectedVersion('quick');
-                        }}
-                        className={`p-4 rounded-xl border-2 text-left transition-all ${
-                          selectedVersion === 'quick'
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-slate-200 bg-white hover:border-slate-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-semibold text-corp-dark text-sm">
-                            {lang === 'ar' ? 'النسخة السريعة' : 'Quick Version'}
-                          </span>
-                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
-                            {lang === 'ar' ? 'شهيرة' : 'Popular'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 mb-2">
-                          <div className="flex items-center gap-1 text-xs text-slate-500">
-                            <Clock size={12} /> {level.quick.duration}
-                          </div>
-                          <div className="flex items-center gap-1 text-xs text-slate-500">
-                            <BarChart2 size={12} /> {lang === 'ar' ? '20 سؤال' : '20 questions'}
-                          </div>
-                        </div>
-                        <div className="flex items-baseline gap-1">
-                          <span className="font-heading font-black text-brand-accent text-lg">{level.quick.price}</span>
-                          <span className="text-xs text-slate-500">{lang === 'ar' ? 'ر.س' : 'SAR'}</span>
-                        </div>
-                      </button>
-
-                      {/* Full Version */}
-                      <button
-                        onClick={e => {
-                          e.stopPropagation();
-                          setSelectedVersion('full');
-                        }}
-                        className={`p-4 rounded-xl border-2 text-left transition-all relative ${
-                          selectedVersion === 'full'
-                            ? 'border-brand-primary bg-brand-primary/5'
-                            : 'border-slate-200 bg-white hover:border-slate-300'
-                        }`}
-                      >
-                        <div className="absolute -top-2 -right-2">
-                          <span className="bg-brand-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                            ⭐ {lang === 'ar' ? 'الأفضل' : 'Best'}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between mb-2 mt-2">
-                          <span className="font-semibold text-corp-dark text-sm">
-                            {lang === 'ar' ? 'النسخة الشاملة' : 'Full Version'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 mb-2">
-                          <div className="flex items-center gap-1 text-xs text-slate-500">
-                            <Clock size={12} /> {level.full.duration}
-                          </div>
-                          <div className="flex items-center gap-1 text-xs text-slate-500">
-                            <BarChart2 size={12} /> {lang === 'ar' ? '45 سؤال' : '45 questions'}
-                          </div>
-                        </div>
-                        <div className="flex items-baseline gap-1">
-                          <span className="font-heading font-black text-corp-dark text-lg">{level.full.price}</span>
-                          <span className="text-xs text-slate-500">{lang === 'ar' ? 'ر.س' : 'SAR'}</span>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Action Buttons */}
-        {selectedLevel && selectedVersion && (
-          <div className="flex gap-3">
-            <button
-              onClick={() => {
-                setSelectedLevel(null);
-                setSelectedVersion(null);
-              }}
-              className="flex-1 py-3.5 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition-all"
-            >
-              {lang === 'ar' ? 'اختر مستوى آخر' : 'Choose Different Level'}
-            </button>
-            <button
-              onClick={handleStart}
-              className="flex-1 py-3.5 rounded-xl font-heading font-bold text-white transition-all flex items-center justify-center gap-2"
-              style={{ background: 'linear-gradient(135deg, #1A3A5C, #05E1AE)' }}
-            >
-              {lang === 'ar' ? 'ابدأ التقييم الآن' : 'Start Assessment Now'}
-              <ArrowRight size={16} className={isRTL ? 'rotate-180' : ''} />
-            </button>
+        {/* ── Step 1: Choose Level ── */}
+        <div className="mb-14">
+          <div className="text-center mb-10">
+            <p className="text-xs font-bold uppercase tracking-widest text-brand-primary mb-2">
+              {lang === 'ar' ? 'الخطوة 1 من 2' : 'Step 1 of 2'}
+            </p>
+            <h1 className="font-heading font-black text-corp-dark text-3xl md:text-4xl mb-3">
+              {lang === 'ar' ? 'ما مستواك الوظيفي؟' : 'What is Your Professional Level?'}
+            </h1>
+            <p className="text-slate-500 text-sm max-w-xl mx-auto">
+              {lang === 'ar'
+                ? 'الأسئلة ستُصمَّم خصيصاً وفق المستوى الذي تختاره لضمان دقة النتائج'
+                : 'Questions are tailored to your level to ensure accurate results'}
+            </p>
           </div>
-        )}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {levels.map(level => {
+              const { Icon } = level;
+              const isActive = selectedLevel === level.id;
+              return (
+                <motion.div
+                  key={level.id}
+                  onClick={() => { setSelectedLevel(level.id); setSelectedVersion(null); }}
+                  whileHover={{ y: -3 }}
+                  className={`rounded-2xl border-2 p-6 cursor-pointer transition-all bg-white ${
+                    isActive ? 'border-brand-primary shadow-lg' : 'border-slate-100 hover:border-slate-200'
+                  }`}
+                >
+                  {/* Icon + Title */}
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: `${level.color}18`, border: `1px solid ${level.color}30` }}>
+                      <Icon size={18} style={{ color: level.color }} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-heading font-black text-corp-dark text-base leading-tight">
+                        {level[lang === 'ar' ? 'titleAr' : 'titleEn']}
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {level[lang === 'ar' ? 'targetAr' : 'targetEn']}
+                      </p>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center transition-all ${
+                      isActive ? 'border-brand-primary bg-brand-primary' : 'border-slate-300'
+                    }`}>
+                      {isActive && <div className="w-2 h-2 rounded-full bg-white" />}
+                    </div>
+                  </div>
+
+                  {/* Profile */}
+                  <p className="text-xs text-slate-500 leading-relaxed mb-4">
+                    {level[lang === 'ar' ? 'profileAr' : 'profileEn']}
+                  </p>
+
+                  {/* Traits */}
+                  <ul className="space-y-1.5">
+                    {(lang === 'ar' ? level.traitsAr : level.traitsEn).map((trait, i) => (
+                      <li key={i} className="flex items-center gap-2 text-xs text-slate-600">
+                        <CheckCircle2 size={11} style={{ color: level.color, flexShrink: 0 }} />
+                        {trait}
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── Step 2: Choose Version — only shows after level selected ── */}
+        <AnimatePresence>
+          {selectedLevel && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+            >
+              <div className="text-center mb-8">
+                <p className="text-xs font-bold uppercase tracking-widest text-brand-primary mb-2">
+                  {lang === 'ar' ? 'الخطوة 2 من 2' : 'Step 2 of 2'}
+                </p>
+                <h2 className="font-heading font-black text-corp-dark text-2xl mb-2">
+                  {lang === 'ar' ? 'اختر نسخة المقياس' : 'Choose Your Assessment Version'}
+                </h2>
+                <p className="text-slate-500 text-sm">
+                  {lang === 'ar' ? 'النسختان تقيسان نفس الكفاءات بمستوى تفصيل مختلف' : 'Both versions measure the same competencies with different detail levels'}
+                </p>
+              </div>
+
+              {selected && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto mb-8">
+                  {(['quick', 'full'] ).map(v => {
+                    const vData = selected[v];
+                    const isQuick = v === 'quick';
+                    const isSelectedV = selectedVersion === v;
+                    return (
+                      <button
+                        key={v}
+                        onClick={() => setSelectedVersion(v)}
+                        className={`rounded-2xl p-5 border-2 text-start transition-all relative ${
+                          isSelectedV
+                            ? isQuick ? 'border-blue-500 bg-blue-50' : 'border-brand-primary bg-brand-primary/5'
+                            : 'border-slate-200 bg-white hover:border-slate-300'
+                        }`}
+                      >
+                        {!isQuick && (
+                          <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                            <span className="bg-corp-dark text-white text-xs font-bold px-3 py-0.5 rounded-full whitespace-nowrap">
+                              {lang === 'ar' ? 'الأكثر قيمة' : 'Best Value'}
+                            </span>
+                          </div>
+                        )}
+                        <div className={`mt-${isQuick ? 0 : 2}`}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-heading font-black text-corp-dark text-base">
+                              {lang === 'ar' ? (isQuick ? 'النسخة السريعة' : 'النسخة الشاملة') : (isQuick ? 'Quick Version' : 'Full Version')}
+                            </span>
+                            {isQuick && (
+                              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                                {lang === 'ar' ? 'شهيرة' : 'Popular'}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 mb-3">
+                            <div className="flex items-center gap-1 text-xs text-slate-500">
+                              <Clock size={11} /> {lang === 'ar' ? vData.durationAr : vData.durationEn}
+                            </div>
+                            <div className="flex items-center gap-1 text-xs text-slate-500">
+                              <BarChart2 size={11} /> {lang === 'ar' ? vData.questionsAr : vData.questionsEn}
+                            </div>
+                          </div>
+                          <ul className="space-y-1 mb-4">
+                            {(isQuick
+                              ? (lang === 'ar'
+                                ? ['تقرير ملخص للكفاءات', 'أبرز نقاط القوة', 'توصيات تطوير سريعة', 'تقرير PDF']
+                                : ['Competency summary', 'Top strengths', 'Quick development tips', 'PDF Report'])
+                              : (lang === 'ar'
+                                ? ['تحليل 20 جدارة كاملة', 'تقرير 15+ صفحة', 'خطة تطوير 90 يوم', 'مقارنة بمعايير القطاع', 'تقرير PDF شامل']
+                                : ['Full 20 competency analysis', '15+ page report', '90-day development plan', 'Industry benchmarks', 'Full PDF report'])
+                            ).map((o, i) => (
+                              <li key={i} className="flex items-center gap-2 text-xs text-slate-600">
+                                <CheckCircle2 size={11} className={isQuick ? 'text-blue-500' : 'text-brand-primary'} style={{ flexShrink: 0 }} />
+                                {o}
+                              </li>
+                            ))}
+                          </ul>
+                          <div className="flex items-baseline gap-1 mt-auto">
+                            <span className="font-heading font-black text-2xl text-corp-dark">{vData.price}</span>
+                            <span className="text-slate-400 text-sm">{lang === 'ar' ? ' ر.س' : ' SAR'}</span>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* CTA */}
+              <div className="flex gap-3 max-w-2xl mx-auto">
+                <button
+                  onClick={() => { setSelectedLevel(null); setSelectedVersion(null); }}
+                  className="px-6 py-3.5 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition-all"
+                >
+                  {lang === 'ar' ? 'تغيير المستوى' : 'Change Level'}
+                </button>
+                <button
+                  onClick={handleStart}
+                  disabled={!selectedVersion}
+                  className="flex-1 py-3.5 rounded-xl font-heading font-bold text-white transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ background: selectedVersion ? 'linear-gradient(135deg, #1A3A5C, #05E1AE)' : '#94a3b8' }}
+                >
+                  {lang === 'ar' ? 'ابدأ التقييم' : 'Start Assessment'}
+                  <FwdArrow size={16} />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <StoreFooter />
