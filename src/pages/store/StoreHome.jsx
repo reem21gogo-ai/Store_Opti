@@ -17,10 +17,10 @@ export default function StoreHome() {
 
   useEffect(() => {
     Promise.all([
-      base44.entities.Product.filter({ is_featured: true, is_published: true }, '-created_date', 6),
-      base44.entities.Product.filter({ is_free: true, is_published: true }, '-created_date', 4),
-      base44.entities.Assessment.filter({ is_published: true }, '-created_date', 4),
-    ]).then(([f, fr, a]) => { setFeatured(f); setFree(fr); setAssessments(a); setLoading(false); });
+    base44.entities.Product.filter({ is_featured: true, is_published: true }, '-created_date', 6),
+    base44.entities.Product.filter({ is_free: true, is_published: true }, '-created_date', 4),
+    base44.entities.Assessment.filter({ is_published: true }, '-created_date', 4)]
+    ).then(([f, fr, a]) => {setFeatured(f);setFree(fr);setAssessments(a);setLoading(false);});
   }, []);
 
   return (
@@ -52,12 +52,12 @@ export default function StoreHome() {
       <section className="py-6 px-6 bg-white border-b border-slate-100">
         <div className="max-w-7xl mx-auto flex gap-3 overflow-x-auto no-scrollbar">
           <Link to="/store/products" className="flex-shrink-0 px-4 py-2 rounded-xl bg-brand-primary/5 text-brand-primary text-sm font-medium hover:bg-brand-primary/10 transition-all">{translations.store.allCategories[lang]}</Link>
-          {productCategories.map(cat => (
-            <Link key={cat.value} to={`/store/products?category=${cat.value}`}
-              className="flex-shrink-0 px-4 py-2 rounded-xl bg-slate-50 text-slate-600 text-sm font-medium hover:bg-brand-primary/5 hover:text-brand-primary transition-all">
+          {productCategories.map((cat) =>
+          <Link key={cat.value} to={`/store/products?category=${cat.value}`}
+          className="flex-shrink-0 px-4 py-2 rounded-xl bg-slate-50 text-slate-600 text-sm font-medium hover:bg-brand-primary/5 hover:text-brand-primary transition-all">
               {cat[lang]}
             </Link>
-          ))}
+          )}
         </div>
       </section>
 
@@ -68,15 +68,15 @@ export default function StoreHome() {
             <h2 className="font-heading font-black text-corp-dark text-2xl">{lang === 'ar' ? 'منتجات مميزة' : 'Featured Products'}</h2>
             <Link to="/store/products" className="text-brand-primary text-sm flex items-center gap-1 hover:gap-2 transition-all">{translations.common.viewAll[lang]} <Arrow size={13} /></Link>
           </div>
-          {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">{[1,2,3].map(i => <div key={i} className="h-64 bg-white rounded-3xl animate-pulse"></div>)}</div>
-          ) : featured.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {featured.map(p => <ProductCard key={p.id} product={p} lang={lang} />)}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-slate-400 text-sm">{lang === 'ar' ? 'لا توجد منتجات مميزة بعد' : 'No featured products yet'}</div>
-          )}
+          {loading ?
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">{[1, 2, 3].map((i) => <div key={i} className="h-64 bg-white rounded-3xl animate-pulse"></div>)}</div> :
+          featured.length > 0 ?
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {featured.map((p) => <ProductCard key={p.id} product={p} lang={lang} />)}
+            </div> :
+
+          <div className="text-center py-12 text-slate-400 text-sm">{lang === 'ar' ? 'لا توجد منتجات مميزة بعد' : 'No featured products yet'}</div>
+          }
         </div>
       </section>
 
@@ -90,12 +90,12 @@ export default function StoreHome() {
             </div>
             <Link to="/store/assessments" className="text-brand-primary text-sm flex items-center gap-1 hover:gap-2 transition-all">{translations.common.viewAll[lang]} <Arrow size={13} /></Link>
           </div>
-          {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">{[1,2].map(i => <div key={i} className="h-48 bg-slate-50 rounded-3xl animate-pulse"></div>)}</div>
-          ) : assessments.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {assessments.map(a => (
-                <Link key={a.id} to={`/store/assessments/${a.id}`} className="bg-white rounded-3xl p-6 border border-slate-100 hover:shadow-md transition-all group">
+          {loading ?
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">{[1, 2].map((i) => <div key={i} className="h-48 bg-slate-50 rounded-3xl animate-pulse"></div>)}</div> :
+          assessments.length > 0 ?
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {assessments.map((a) =>
+            <Link key={a.id} to={`/store/assessments/${a.id}`} className="bg-white rounded-3xl p-6 border border-slate-100 hover:shadow-md transition-all group">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center flex-shrink-0">
                       <BarChart2 size={20} className="text-brand-primary" />
@@ -110,16 +110,16 @@ export default function StoreHome() {
                     </div>
                   </div>
                 </Link>
-              ))}
-            </div>
-          ) : (
-           <div className="text-center py-12 text-slate-400 text-sm">{lang === 'ar' ? 'لا توجد تقييمات بعد' : 'No assessments yet'}</div>
-          )}
+            )}
+            </div> :
+
+          <div className="text-center py-12 text-slate-400 text-sm">{lang === 'ar' ? 'لا توجد تقييمات بعد' : 'No assessments yet'}</div>
+          }
           </div>
           </section>
 
           {/* Competency Assessment */}
-          <section className="py-14 px-6">
+          <section className="py-14 px-6 bg-[hsl(var(--sidebar-primary))]">
           <div className="max-w-7xl mx-auto">
           <div className="bg-gradient-to-r from-brand-primary to-brand-accent rounded-3xl overflow-hidden">
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-10 items-center">
@@ -175,21 +175,21 @@ export default function StoreHome() {
             <h2 className="font-heading font-black text-corp-dark text-2xl">{lang === 'ar' ? 'موارد مجانية' : 'Free Resources'}</h2>
             <Link to="/store/products?category=free" className="text-brand-primary text-sm flex items-center gap-1 hover:gap-2 transition-all">{translations.common.viewAll[lang]} <Arrow size={13} /></Link>
           </div>
-          {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="h-40 bg-white rounded-2xl animate-pulse"></div>)}</div>
-          ) : free.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {free.map(p => (
-                <Link key={p.id} to={`/store/products/${p.id}`} className="bg-white rounded-2xl p-5 hover:shadow-md transition-all group">
+          {loading ?
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">{[1, 2, 3, 4].map((i) => <div key={i} className="h-40 bg-white rounded-2xl animate-pulse"></div>)}</div> :
+          free.length > 0 ?
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {free.map((p) =>
+            <Link key={p.id} to={`/store/products/${p.id}`} className="bg-white rounded-2xl p-5 hover:shadow-md transition-all group">
                   <div className="w-10 h-10 rounded-xl bg-brand-accent/10 flex items-center justify-center mb-3"><Download size={16} className="text-brand-accent" /></div>
                   <h4 className="font-heading font-bold text-corp-dark text-sm mb-1 group-hover:text-brand-primary transition-colors">{p[`title_${lang}`] || p.title_ar}</h4>
                   <span className="text-brand-accent text-xs font-bold">{translations.common.free[lang]}</span>
                 </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-slate-400 text-sm">{lang === 'ar' ? 'لا توجد موارد مجانية بعد' : 'No free resources yet'}</div>
-          )}
+            )}
+            </div> :
+
+          <div className="text-center py-12 text-slate-400 text-sm">{lang === 'ar' ? 'لا توجد موارد مجانية بعد' : 'No free resources yet'}</div>
+          }
         </div>
       </section>
 
@@ -203,8 +203,8 @@ export default function StoreHome() {
       </section>
 
       <StoreFooter />
-    </div>
-  );
+    </div>);
+
 }
 
 function ProductCard({ product, lang }) {
@@ -217,11 +217,11 @@ function ProductCard({ product, lang }) {
       <div className="p-5">
         <h3 className="font-heading font-bold text-corp-dark text-base mb-2 group-hover:text-brand-primary transition-colors line-clamp-2">{product[`title_${lang}`] || product.title_ar}</h3>
         <div className="flex items-center justify-between">
-          {product.is_free
-            ? <span className="text-brand-accent font-bold text-sm">{translations.store.free[lang]}</span>
-            : <span className="font-heading font-black text-corp-dark">{product.price?.toLocaleString()} <span className="text-slate-400 text-xs font-normal">{translations.common.currency[lang]}</span></span>}
+          {product.is_free ?
+          <span className="text-brand-accent font-bold text-sm">{translations.store.free[lang]}</span> :
+          <span className="font-heading font-black text-corp-dark">{product.price?.toLocaleString()} <span className="text-slate-400 text-xs font-normal">{translations.common.currency[lang]}</span></span>}
         </div>
       </div>
-    </Link>
-  );
+    </Link>);
+
 }
