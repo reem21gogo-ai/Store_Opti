@@ -578,7 +578,7 @@ export default function CompetencyReport() {
                   </div>
 
                   <div className="mt-5 flex flex-col sm:flex-row gap-3">
-                    <Link to="/consultation"
+                    <Link to="/store"
                   className="flex-1 py-3 rounded-xl font-heading font-bold text-white text-sm text-center transition-all hover:opacity-90"
                   style={{ background: 'linear-gradient(135deg,#1A3A5C,#05E1AE)' }}>
                       {t('اطلب جلسة استشارية', 'Request a Consultation')}
@@ -637,12 +637,12 @@ export default function CompetencyReport() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <Link to="/consultation"
+                  <Link to="/store"
                 className="flex-1 py-3 rounded-xl font-heading font-bold text-white text-sm text-center"
                 style={{ background: 'linear-gradient(135deg,#1A3A5C,#05E1AE)' }}>
                     {t('تواصل مع فريقنا', 'Get in Touch')}
                   </Link>
-                  <Link to="/"
+                  <Link to="/store"
                 className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-semibold text-sm text-center hover:bg-slate-50 flex items-center justify-center gap-2">
                     <Home size={14} /> {t('الموقع الرئيسي', 'Main Website')}
                   </Link>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLang } from '@/lib/LanguageContext';
 import { translations } from '@/lib/i18n';
-import { ShoppingCart, User, Menu, X, Globe, ArrowLeft, ArrowRight } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Globe } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 export default function StoreNavbar({ cartCount = 0 }) {
@@ -11,7 +11,6 @@ export default function StoreNavbar({ cartCount = 0 }) {
   const [user, setUser] = useState(null);
   const location = useLocation();
   const t = translations.nav;
-  const BackArrow = isRTL ? ArrowRight : ArrowLeft;
 
   useEffect(() => {
     base44.auth.isAuthenticated().then(async (authed) => {
@@ -28,9 +27,6 @@ export default function StoreNavbar({ cartCount = 0 }) {
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
       <nav className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
-        <Link to="/" className="hidden md:flex items-center gap-1.5 text-slate-400 hover:text-brand-primary text-xs transition-colors flex-shrink-0">
-          <BackArrow size={12} />{lang === 'ar' ? 'الموقع الرئيسي' : 'Main Site'}
-        </Link>
         <Link to="/store" className="flex items-center gap-2 flex-shrink-0">
           <div className="w-7 h-7 rounded-lg bg-brand-primary flex items-center justify-center">
             <span className="text-white font-heading font-black text-xs">O</span>

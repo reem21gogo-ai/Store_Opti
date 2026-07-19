@@ -1,20 +1,12 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import { LanguageProvider } from '@/lib/LanguageContext';
-
-// Corporate pages
-import Home from '@/pages/corp/Home';
-import About from '@/pages/corp/About';
-import Services from '@/pages/corp/Services';
-import Methodology from '@/pages/corp/Methodology';
-import Consultation from '@/pages/corp/Consultation';
-import Contact from '@/pages/corp/Contact';
 
 // Store pages
 import StoreHome from '@/pages/store/StoreHome';
@@ -61,15 +53,8 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
-      {/* Corporate site */}
-      <Route path="/" element={<Home />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/services" element={<Services />} />
-      <Route path="/methodology" element={<Methodology />} />
-      <Route path="/consultation" element={<Consultation />} />
-      <Route path="/contact" element={<Contact />} />
-
       {/* Store */}
+      <Route path="/" element={<Navigate to="/store" replace />} />
       <Route path="/store" element={<StoreHome />} />
       <Route path="/store/login" element={<StoreLogin />} />
       <Route path="/store/products" element={<Products />} />

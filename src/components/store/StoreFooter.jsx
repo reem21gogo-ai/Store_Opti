@@ -18,7 +18,6 @@ export default function StoreFooter() {
           <Link to="/store/products" className="hover:text-brand-primary">{translations.store.products[lang]}</Link>
           <Link to="/store/assessments" className="hover:text-brand-primary">{translations.store.assessments[lang]}</Link>
           <Link to="/store/account" className="hover:text-brand-primary">{translations.nav.account[lang]}</Link>
-          <Link to="/" className="hover:text-brand-primary">{lang === 'ar' ? 'الموقع الرئيسي' : 'Main Site'}</Link>
         </div>
         <p className="text-xs text-slate-400">© {new Date().getFullYear()} OPTIVANCE</p>
       </div>
