@@ -284,7 +284,7 @@ export default function CompetencyReport() {
             <div className="space-y-6">
                 {/* Cover */}
                 <div className="bg-gradient-to-br from-corp-dark via-brand-primary/90 to-corp-surface rounded-2xl p-8 text-center relative overflow-hidden">
-                  <div className="absolute inset-0 text-[hsl(var(--background))] bg-[hsl(var(--background))] opacity-10"
+                  <div className="absolute inset-0 text-[hsl(var(--background))] bg-[hsl(var(--background))] opacity-0"
                 style={{ backgroundImage: 'linear-gradient(rgba(5,225,174,1) 1px, transparent 1px), linear-gradient(90deg,rgba(5,225,174,1) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
                   <div className="relative z-10">
                     <div className="inline-flex items-center gap-2 bg-brand-accent/15 border border-brand-accent/25 rounded-full px-3 py-1 mb-4">
@@ -320,7 +320,7 @@ export default function CompetencyReport() {
                     </div>
                     <BandBadge band={overall.band} lang={lang} size="lg" />
                     <div className="mt-4 grid grid-cols-3 gap-3 text-xs text-white/60 max-w-xs mx-auto">
-                      <div><span className="block text-white/40">{t('الاسم', 'Name')}</span>{user.preferred_name || user.name}</div>
+                      <div className="text-[hsl(var(--foreground))]"><span className="block text-white/40">{t('الاسم', 'Name')}</span>{user.preferred_name || user.name}</div>
                       <div><span className="block text-white/40">{t('المستوى', 'Level')}</span>{levelLabel}</div>
                       <div><span className="block text-[hsl(var(--primary))]">{t('التاريخ', 'Date')}</span>{user.completion_date}</div>
                     </div>
