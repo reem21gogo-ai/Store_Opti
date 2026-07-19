@@ -320,8 +320,8 @@ export default function CompetencyReport() {
                     </div>
                     <BandBadge band={overall.band} lang={lang} size="lg" />
                     <div className="mt-4 grid grid-cols-3 gap-3 text-xs text-white/60 max-w-xs mx-auto">
-                      <div className="text-[hsl(var(--foreground))]"><span className="block text-white/40">{t('الاسم', 'Name')}</span>{user.preferred_name || user.name}</div>
-                      <div><span className="block text-white/40">{t('المستوى', 'Level')}</span>{levelLabel}</div>
+                      <div className="text-[hsl(var(--foreground))]"><span className="block text-[hsl(var(--foreground))]">{t('الاسم', 'Name')}</span>{user.preferred_name || user.name}</div>
+                      <div><span className="block text-[hsl(var(--card-foreground))]">{t('المستوى', 'Level')}</span>{levelLabel}</div>
                       <div><span className="block text-[hsl(var(--primary))]">{t('التاريخ', 'Date')}</span>{user.completion_date}</div>
                     </div>
                   </div>
