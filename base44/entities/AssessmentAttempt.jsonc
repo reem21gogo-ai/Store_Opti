@@ -5,6 +5,14 @@
     "assessment_id": {
       "type": "string"
     },
+    "product_type": {
+      "type": "string",
+      "enum": [
+        "employee_competency",
+        "career_orientation"
+      ],
+      "default": "employee_competency"
+    },
     "user_id": {
       "type": "string"
     },

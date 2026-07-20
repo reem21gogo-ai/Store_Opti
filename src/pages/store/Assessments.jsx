@@ -29,7 +29,20 @@ export default function Assessments() {
           is_published: true,
           is_competency: true,
         };
-        setAssessments([competencyAssessment, ...data]);
+        const careerAssessment = {
+          id: 'career-orientation',
+          title_ar: 'مقياس الميول والتوجّه المهني',
+          title_en: 'Career Orientation & Work Environment Fit',
+          description_ar: 'اكتشف المجالات المهنية التي تتوافق مع ميولك، قدراتك، قيمك ونقاط قوتك مع رمز هولاند وخطة 90 يوم',
+          description_en: 'Discover career fields aligned with your interests, abilities, values, and strengths with Holland Code and 90-day plan',
+          category: 'career',
+          duration_minutes: 45,
+          price: 149,
+          is_free: false,
+          is_published: true,
+          is_career: true,
+        };
+        setAssessments([careerAssessment, competencyAssessment, ...data]);
         setLoading(false);
       });
   }, []);
@@ -65,7 +78,7 @@ export default function Assessments() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map(a => (
-              <Link key={a.id} to={a.is_competency ? '/store/competency' : `/store/assessments/${a.id}`} className="bg-white rounded-3xl overflow-hidden hover:shadow-lg transition-all group border border-slate-100">
+              <Link key={a.id} to={a.is_competency ? '/store/competency' : a.is_career ? '/store/career' : `/store/assessments/${a.id}`} className="bg-white rounded-3xl overflow-hidden hover:shadow-lg transition-all group border border-slate-100">
                 <div className="h-36 bg-gradient-to-br from-brand-primary/10 to-brand-accent/5 flex items-center justify-center relative">
                   {a.cover_image_url ? <img src={a.cover_image_url} alt="" className="w-full h-full object-cover" /> : <BarChart2 size={32} className="text-brand-primary/30" />}
                   {a.is_free && <span className="absolute top-3 start-3 bg-brand-accent text-corp-dark text-xs font-bold px-2.5 py-1 rounded-full">{translations.common.free[lang]}</span>}

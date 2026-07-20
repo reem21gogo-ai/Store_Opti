@@ -168,8 +168,60 @@ export default function StoreHome() {
           </div>
           </section>
 
-          {/* Free products */}
-      <section className="py-14 px-6" style={{ background: 'linear-gradient(135deg, #f0fdf8, #e8f4fd)' }}>
+          {/* Career Orientation Assessment */}
+          <section className="py-14 px-6 bg-white">
+            <div className="max-w-7xl mx-auto">
+              <div className="rounded-3xl overflow-hidden border border-slate-100" style={{ background: 'linear-gradient(135deg, #336fa3, #05e1ae)' }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-10 items-center">
+                  <div className="text-white">
+                    <div className="inline-flex items-center gap-2 bg-white/15 rounded-full px-3 py-1 mb-4">
+                      <Sparkles size={14} />
+                      <span className="text-xs font-medium">{lang === 'ar' ? 'منتج جديد' : 'New Product'}</span>
+                    </div>
+                    <h2 className="font-heading font-black text-2xl md:text-3xl mb-3">{lang === 'ar' ? 'مقياس الميول والتوجّه المهني' : 'Career Orientation & Work Environment Fit'}</h2>
+                    <p className="text-white/80 mb-6 leading-relaxed">{lang === 'ar' ? 'اكتشف المجالات المهنية التي تتوافق مع ميولك، قدراتك، قيمك ونقاط قوتك. 150 سؤال، 6 أبعاد، رمز هولاند، مسارات مهنية مطابقة، وخطة 90 يوم.' : 'Discover career fields aligned with your interests, abilities, values, and strengths. 150 questions, 6 dimensions, Holland Code, career matches, and a 90-day plan.'}</p>
+                    <div className="grid grid-cols-3 gap-3 mb-6">
+                      <div className="bg-white/10 rounded-xl p-3 text-center">
+                        <div className="font-black text-xl">150</div>
+                        <div className="text-xs text-white/60">{lang === 'ar' ? 'سؤال' : 'Questions'}</div>
+                      </div>
+                      <div className="bg-white/10 rounded-xl p-3 text-center">
+                        <div className="font-black text-xl">6</div>
+                        <div className="text-xs text-white/60">{lang === 'ar' ? 'أبعاد' : 'Dimensions'}</div>
+                      </div>
+                      <div className="bg-white/10 rounded-xl p-3 text-center">
+                        <div className="font-black text-xl">40-45</div>
+                        <div className="text-xs text-white/60">{lang === 'ar' ? 'دقيقة' : 'Min'}</div>
+                      </div>
+                    </div>
+                    <Link to="/store/career" className="bg-white text-brand-primary px-8 py-3.5 rounded-xl font-bold hover:opacity-90 transition-all inline-flex items-center gap-2">
+                      {lang === 'ar' ? 'ابدأ المقياس' : 'Start Assessment'} <Arrow size={16} />
+                    </Link>
+                  </div>
+                  <div className="text-white">
+                    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                      <p className="text-xs text-white/60 mb-3">{lang === 'ar' ? 'ماذا ستحصل عليه:' : 'What you\'ll get:'}</p>
+                      <div className="space-y-2.5">
+                        {[
+                          lang === 'ar' ? 'رمز هولاند (Holland Code)' : 'Holland Code (RIASEC)',
+                          lang === 'ar' ? 'تحليل قيم العمل والتحفيزات' : 'Work values & motivations analysis',
+                          lang === 'ar' ? 'تقييم المهارات والقدرات' : 'Skills & abilities assessment',
+                          lang === 'ar' ? 'مسارات مهنية مطابقة' : 'Matching career paths',
+                          lang === 'ar' ? 'خطة عمل مخصصة لـ 90 يوم' : 'Personalized 90-day action plan',
+                          lang === 'ar' ? 'تقرير PDF قابل للتحميل' : 'Downloadable PDF report',
+                        ].map((item, i) => (
+                          <p key={i} className="text-sm flex items-center gap-2"><span className="text-brand-accent">✓</span> {item}</p>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+               {/* Free products */}
+           <section className="py-14 px-6" style={{ background: 'linear-gradient(135deg, #f0fdf8, #e8f4fd)' }}>
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h2 className="font-heading font-black text-corp-dark text-2xl">{lang === 'ar' ? 'موارد مجانية' : 'Free Resources'}</h2>
@@ -198,7 +250,7 @@ export default function StoreHome() {
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-heading font-black text-white text-2xl md:text-3xl mb-3">{lang === 'ar' ? 'لا تجد ما تبحث عنه؟' : "Can't find what you're looking for?"}</h2>
           <p className="text-white/50 mb-6">{lang === 'ar' ? 'تواصل مع فريقنا لحل مخصص' : 'Contact our team for a custom solution'}</p>
-          <Link to="/consultation" className="btn-catalyst px-8 py-3 rounded-xl inline-flex items-center gap-2">{translations.nav.consultation[lang]} <Arrow size={15} /></Link>
+          <Link to="/store/products" className="btn-catalyst px-8 py-3 rounded-xl inline-flex items-center gap-2">{translations.store.products[lang]} <Arrow size={15} /></Link>
         </div>
       </section>
 

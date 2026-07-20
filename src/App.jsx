@@ -25,6 +25,9 @@ import AssessmentIntake from '@/pages/store/AssessmentIntake';
 import CompetencyLevels from '@/pages/store/CompetencyLevels';
 import TakeCompetencyAssessment from '@/pages/store/TakeCompetencyAssessment';
 import CompetencyReport from '@/pages/store/CompetencyReport';
+import CareerAssessmentLanding from '@/pages/store/CareerAssessmentLanding';
+import TakeCareerAssessment from '@/pages/store/TakeCareerAssessment';
+import CareerReport from '@/pages/store/CareerReport';
 
 // Admin
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -71,6 +74,9 @@ const AuthenticatedApp = () => {
       <Route path="/store/competency/intake" element={<AssessmentIntake />} />
       <Route path="/store/competency/assessment" element={<TakeCompetencyAssessment />} />
       <Route path="/store/competency/report/:attemptId" element={<CompetencyReport />} />
+      <Route path="/store/career" element={<CareerAssessmentLanding />} />
+      <Route path="/store/career/assessment" element={<TakeCareerAssessment />} />
+      <Route path="/store/career/report/:attemptId" element={<CareerReport />} />
 
       {/* Admin */}
       <Route path="/admin" element={<AdminLayout />}>

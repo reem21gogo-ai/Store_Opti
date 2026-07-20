@@ -97,14 +97,22 @@ export default function Account() {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center"><BarChart2 size={16} className="text-brand-primary" /></div>
                   <div>
-                    <div className="font-medium text-corp-dark text-sm">{lang === 'ar' ? 'تقييم' : 'Assessment'} #{attempt.assessment_id?.slice(-6)}</div>
+                    <div className="font-medium text-corp-dark text-sm">
+                      {attempt.product_type === 'career_orientation'
+                        ? (lang === 'ar' ? 'مقياس الميول والتوجّه المهني' : 'Career Orientation')
+                        : attempt.product_type === 'employee_competency'
+                        ? (lang === 'ar' ? 'مقياس الكفاءات الأساسية' : 'Core Competency Assessment')
+                        : `${lang === 'ar' ? 'تقييم' : 'Assessment'} #${attempt.assessment_id?.slice(-6)}`}
+                    </div>
                     <div className="text-slate-400 text-xs">{attempt.status === 'completed' ? translations.account.completed[lang] : translations.account.inProgress[lang]}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   {attempt.status === 'completed' && attempt.percentage && <span className="font-heading font-black text-brand-primary">{attempt.percentage}%</span>}
                   {attempt.status === 'completed'
-                    ? <Link to={`/store/assessments/${attempt.assessment_id}/results/${attempt.id}`} className="text-brand-primary text-xs flex items-center gap-1 hover:gap-1.5 transition-all">{translations.account.viewReport[lang]} <Arrow size={11} /></Link>
+                    ? <Link to={attempt.product_type === 'career_orientation' ? `/store/career/report/${attempt.id}` : attempt.product_type === 'employee_competency' ? `/store/competency/report/${attempt.id}` : `/store/assessments/${attempt.assessment_id}/results/${attempt.id}`} className="text-brand-primary text-xs flex items-center gap-1 hover:gap-1.5 transition-all">{translations.account.viewReport[lang]} <Arrow size={11} /></Link>
+                    : attempt.product_type === 'career_orientation'
+                    ? <Link to="/store/career/assessment" className="btn-catalyst px-3 py-1.5 rounded-full text-xs">{lang === 'ar' ? 'أكمل' : 'Continue'}</Link>
                     : <Link to={`/store/assessments/${attempt.assessment_id}/take`} className="btn-catalyst px-3 py-1.5 rounded-full text-xs">{lang === 'ar' ? 'أكمل' : 'Continue'}</Link>}
                 </div>
               </div>
