@@ -26,6 +26,7 @@ import CompetencyLevels from '@/pages/store/CompetencyLevels';
 import TakeCompetencyAssessment from '@/pages/store/TakeCompetencyAssessment';
 import CompetencyReport from '@/pages/store/CompetencyReport';
 import CareerAssessmentLanding from '@/pages/store/CareerAssessmentLanding';
+import CareerIntake from '@/pages/store/CareerIntake';
 import TakeCareerAssessment from '@/pages/store/TakeCareerAssessment';
 import CareerReport from '@/pages/store/CareerReport';
 
@@ -75,6 +76,7 @@ const AuthenticatedApp = () => {
       <Route path="/store/competency/assessment" element={<TakeCompetencyAssessment />} />
       <Route path="/store/competency/report/:attemptId" element={<CompetencyReport />} />
       <Route path="/store/career" element={<CareerAssessmentLanding />} />
+      <Route path="/store/career/intake" element={<CareerIntake />} />
       <Route path="/store/career/assessment" element={<TakeCareerAssessment />} />
       <Route path="/store/career/report/:attemptId" element={<CareerReport />} />
 

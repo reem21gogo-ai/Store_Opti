@@ -1,360 +1,356 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+/**
+ * TakeCareerAssessment — timed assessment player mirroring TakeCompetencyAssessment.
+ * 25-second timer per question with auto-transition, auto-advance on selection,
+ * progress bar, timer ring, section icons, confirm modal, completion screen.
+ */
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLang } from '@/lib/LanguageContext';
-import { base44 } from '@/api/base44Client';
+import { Clock, CheckCircle2, ArrowLeft, ArrowRight, AlertCircle } from 'lucide-react';
 import StoreNavbar from '@/components/store/StoreNavbar';
-import { ALL_QUESTIONS, SCALES, SECTION_ORDER, getQuestionsBySection, getSectionStartIndex } from '@/lib/careerQuestions';
+import { base44 } from '@/api/base44Client';
+import { ALL_QUESTIONS, SCALES } from '@/lib/careerQuestions';
 import { SECTIONS, USER_STATUSES } from '@/lib/careerContent';
-import { calculateCareerScores, getCompletionStats } from '@/lib/careerScoring';
+import { calculateCareerScores } from '@/lib/careerScoring';
 import {
-  ArrowLeft, ArrowRight, Save, CheckCircle2, AlertCircle,
-  ChevronLeft, X, Loader2, FileCheck,
-  Compass, Heart, Zap, Users, Star, Building2
+  Compass, Heart, Zap, Users, Star, Building2,
 } from 'lucide-react';
 
 const SECTION_ICONS = { riasec: Compass, work_values: Heart, skills: Zap, personality: Users, strengths: Star, environment: Building2 };
 
-const STORAGE_KEY = 'career_assessment_session';
+const TIMER_SECONDS = 25;
+const SAVE_KEY = 'career_assessment_answers';
 
 export default function TakeCareerAssessment() {
-  const { lang, isRTL } = useLang();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [showReview, setShowReview] = useState(false);
-  const [user, setUser] = useState(null);
-  const [status, setStatus] = useState('job_seeker');
 
-  const tr = (ar, en) => (lang === 'ar' ? ar : en);
-  const Back = isRTL ? ArrowRight : ArrowLeft;
-  const Next = isRTL ? ArrowLeft : ArrowRight;
+  const assessmentLang = (() => {
+    const urlLang = searchParams.get('lang');
+    if (urlLang) return urlLang;
+    try { return JSON.parse(localStorage.getItem('career_intake') || '{}').assessmentLang || 'ar'; } catch { return 'ar'; }
+  })();
+  const isRTL = assessmentLang === 'ar';
+  const BackArrow = isRTL ? ArrowRight : ArrowLeft;
 
-  // ── Load session ──
-  useEffect(() => {
-    const init = async () => {
-      // Check auth
-      const authed = await base44.auth.isAuthenticated();
-      if (!authed) { navigate('/store/login?redirect=/store/career/assessment'); return; }
-      const me = await base44.auth.me();
-      setUser(me);
+  const total = ALL_QUESTIONS.length;
 
-      // Load status
-      const savedStatus = localStorage.getItem('career_status') || 'job_seeker';
-      setStatus(savedStatus);
+  const [current, setCurrent] = useState(0);
+  const [answers, setAnswers] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); } catch { return {}; }
+  });
+  const [timeLeft, setTimeLeft] = useState(TIMER_SECONDS);
+  const [selected, setSelected] = useState(null);
+  const [completed, setCompleted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const timerRef = useRef(null);
 
-      // Load saved session
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          const session = JSON.parse(saved);
-          setAnswers(session.answers || {});
-          setCurrentIdx(session.currentIdx || 0);
-        } catch {}
-      }
-      setLoading(false);
-    };
-    init();
-  }, [navigate]);
+  const t = (ar, en) => assessmentLang === 'ar' ? ar : en;
 
-  // ── Autosave ──
-  const saveSession = useCallback((ans, idx) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ answers: ans, currentIdx: idx, savedAt: Date.now() }));
-  }, []);
-
-  useEffect(() => {
-    if (!loading) saveSession(answers, currentIdx);
-  }, [answers, currentIdx, loading, saveSession]);
-
-  const question = ALL_QUESTIONS[currentIdx];
-  const totalQuestions = ALL_QUESTIONS.length;
+  const question = ALL_QUESTIONS[current];
   const sectionId = question?.section;
   const section = SECTIONS.find(s => s.id === sectionId);
-  const sectionQuestions = getQuestionsBySection(sectionId);
-  const sectionStartIdx = getSectionStartIndex(sectionId);
-  const questionInSection = currentIdx - sectionStartIdx + 1;
-  const sectionProgress = Math.round((questionInSection / sectionQuestions.length) * 100);
-  const overallProgress = Math.round(((currentIdx + 1) / totalQuestions) * 100);
-  const isAnswered = !!answers[question?.id];
+  const SectionIcon = SECTION_ICONS[sectionId] || Compass;
 
-  const handleAnswer = (value, score) => {
-    setAnswers(prev => ({
-      ...prev,
-      [question.id]: { value, score, timestamp: Date.now() },
-    }));
-  };
+  const goTo = useCallback((idx) => {
+    if (idx >= total) { setShowConfirm(true); return; }
+    if (idx < 0) return;
+    setCurrent(idx);
+    setSelected(answers[idx] ? answers[idx].value : null);
+    setTimeLeft(TIMER_SECONDS);
+  }, [total, answers]);
 
-  const goNext = () => {
-    if (!isAnswered) return;
-    if (currentIdx < totalQuestions - 1) {
-      setCurrentIdx(currentIdx + 1);
-    } else {
-      setShowReview(true);
-    }
-  };
+  // Auth check
+  useEffect(() => {
+    base44.auth.isAuthenticated().then(async (authed) => {
+      if (!authed) { navigate('/store/login?redirect=/store/career/intake'); return; }
+      setAuthChecked(true);
+    });
+  }, [navigate]);
 
-  const goPrev = () => {
-    if (currentIdx > 0) setCurrentIdx(currentIdx - 1);
-  };
-
-  const goToQuestion = (idx) => {
-    setCurrentIdx(idx);
-    setShowReview(false);
-  };
-
-  const saveAndExit = () => {
-    saveSession(answers, currentIdx);
-    navigate('/store/account');
-  };
-
-  const submitAssessment = async () => {
-    setSubmitting(true);
-    try {
-      const userProfile = {
-        name: user?.full_name || user?.email || '—',
-        email: user?.email || '',
-        status,
-        statusLabel: USER_STATUSES[status]?.[lang] || status,
-        language: lang,
-        completion_date: new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US'),
-      };
-
-      const reportData = calculateCareerScores(answers, userProfile);
-
-      // Save to entity
-      const attempt = await base44.entities.AssessmentAttempt.create({
-        assessment_id: `career_${Date.now()}`,
-        product_type: 'career_orientation',
-        user_id: user?.id,
-        user_email: user?.email,
-        user_name: user?.full_name,
-        status: 'completed',
-        answers,
-        current_question_index: totalQuestions,
-        report_data: reportData,
-        completed_at: new Date().toISOString(),
+  // Timer
+  useEffect(() => {
+    if (!authChecked || showConfirm || completed || loading) return;
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          setTimeout(() => goTo(current + 1), 300);
+          return 0;
+        }
+        return prev - 1;
       });
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, [current, goTo, showConfirm, completed, loading, authChecked]);
 
-      // Cache report data
-      localStorage.setItem(`career_report_${attempt.id}`, JSON.stringify(reportData));
-      // Clear session
-      localStorage.removeItem(STORAGE_KEY);
-
-      navigate(`/store/career/report/${attempt.id}`);
-    } catch (err) {
-      console.error(err);
-      alert(tr('حدث خطأ. حاول مرة أخرى.', 'An error occurred. Please try again.'));
-    }
-    setSubmitting(false);
+  const handleSelect = (value, score) => {
+    if (selected) return;
+    setSelected(value);
+    const newAnswers = { ...answers, [question.id]: { value, score, timestamp: Date.now() } };
+    setAnswers(newAnswers);
+    localStorage.setItem(SAVE_KEY, JSON.stringify(newAnswers));
+    clearInterval(timerRef.current);
+    setTimeout(() => goTo(current + 1), 700);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-store-bg flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
-      </div>
-    );
-  }
+  const handleFinish = async () => {
+    setCompleted(true);
+    setLoading(true);
 
-  // ── REVIEW SCREEN ──
-  if (showReview) {
-    const stats = getCompletionStats(answers);
+    const intake = (() => {
+      try { return JSON.parse(localStorage.getItem('career_intake') || '{}'); } catch { return {}; }
+    })();
+
+    const me = await base44.auth.me().catch(() => null);
+    const userProfile = {
+      name: intake.fullName || me?.full_name || '—',
+      preferred_name: intake.preferredName || intake.fullName?.split(' ')[0] || '',
+      email: intake.email || me?.email || '',
+      status: intake.status || 'job_seeker',
+      statusLabel: USER_STATUSES[intake.status]?.[assessmentLang] || intake.status || '',
+      motivation: intake.customMotivation || intake.motivation || '',
+      language: assessmentLang,
+      completion_date: new Date().toLocaleDateString(assessmentLang === 'ar' ? 'ar-SA' : 'en-US'),
+    };
+
+    const reportData = calculateCareerScores(answers, userProfile);
+
+    const attemptData = {
+      assessment_id: `career_${Date.now()}`,
+      product_type: 'career_orientation',
+      user_id: me?.id || 'guest',
+      user_email: intake.email || me?.email || '',
+      user_name: intake.fullName || me?.full_name || '',
+      status: 'completed',
+      answers,
+      current_question_index: total,
+      report_data: reportData,
+      completed_at: new Date().toISOString(),
+    };
+
+    localStorage.removeItem(SAVE_KEY);
+
+    const attempt = await base44.entities.AssessmentAttempt.create(attemptData).catch(() => null);
+    const id = attempt?.id || 'local';
+
+    localStorage.setItem(`career_report_${id}`, JSON.stringify(reportData));
+
+    setTimeout(() => navigate(`/store/career/report/${id}`), 800);
+  };
+
+  // Loading screen
+  if (loading || completed) {
     return (
-      <div className="min-h-screen bg-store-bg" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="min-h-screen bg-store-bg flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
         <StoreNavbar />
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-          <h1 className="font-heading font-black text-2xl text-corp-dark mb-2 text-center">
-            {tr('مراجعة الإجابات', 'Review Your Answers')}
-          </h1>
-          <p className="text-slate-500 text-sm text-center mb-8">
-            {tr('راجع أقسامك قبل الإرسال النهائي', 'Review your sections before final submission')}
-          </p>
-
-          {/* Completion bar */}
-          <div className="bg-white rounded-2xl border border-slate-100 p-6 mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold text-corp-dark">{tr('نسبة الإكمال', 'Completion')}</span>
-              <span className="font-heading font-black text-2xl text-brand-primary">{stats.percentage}%</span>
+        <div className="flex-1 flex items-center justify-center px-6 py-16">
+          <div className="bg-white rounded-2xl p-12 max-w-md w-full text-center shadow-lg">
+            <div className="flex justify-center mb-6">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: 'rgba(5,225,174,0.1)' }}>
+                <CheckCircle2 size={40} style={{ color: '#05E1AE' }} />
+              </div>
             </div>
-            <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-              <div className="h-full assessment-progress rounded-full transition-all" style={{ width: `${stats.percentage}%` }} />
-            </div>
-            <p className="text-xs text-slate-400 mt-2 text-center">
-              {stats.answered} / {stats.total} {tr('سؤال مجاب', 'questions answered')}
+            <h1 className="font-heading font-black text-corp-dark text-2xl mb-3">
+              {t('أحسنت! تم إكمال المقياس', 'Well Done! Assessment Complete')}
+            </h1>
+            <p className="text-slate-500 text-sm mb-8">
+              {t('جاري تحليل إجاباتك وإعداد تقريرك الشخصي...', 'Analyzing your answers and generating your personalized report...')}
             </p>
-          </div>
-
-          {/* Sections status */}
-          <div className="space-y-3 mb-6">
-            {SECTIONS.map((s, i) => {
-              const secStats = stats.sections[s.id];
-              const Icon = SECTION_ICONS[s.id];
-              return (
-                <div key={s.id} className="bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                    secStats.complete ? 'bg-brand-accent/15' : 'bg-amber-50'
-                  }`}>
-                    {secStats.complete ? <CheckCircle2 size={18} className="text-brand-accent" /> : <AlertCircle size={18} className="text-amber-500" />}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-heading font-bold text-corp-dark text-sm">{tr(s.name.ar, s.name.en)}</div>
-                    <div className="text-xs text-slate-400">{secStats.answered} / {secStats.total} {tr('مجاب', 'answered')}</div>
-                  </div>
-                  <button onClick={() => goToQuestion(getSectionStartIndex(s.id))} className="text-xs text-brand-primary font-semibold hover:underline">
-                    {tr('مراجعة', 'Review')}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-
-          {stats.answered < stats.total && (
-            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 mb-6 flex items-start gap-3">
-              <AlertCircle size={18} className="text-amber-500 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-700">
-                {tr(`لديك ${stats.total - stats.answered} سؤال بدون إجابة. يمكنك مراجعتها أو الإرسال كما هو.`, `You have ${stats.total - stats.answered} unanswered questions. You can review them or submit as is.`)}
-              </p>
+            <div className="flex justify-center gap-2">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="w-2.5 h-2.5 rounded-full animate-pulse"
+                  style={{ backgroundColor: '#05E1AE', animationDelay: `${i * 0.2}s` }} />
+              ))}
             </div>
-          )}
-
-          <div className="flex gap-3">
-            <button onClick={() => setShowReview(false)} className="px-5 py-3 rounded-xl border border-slate-200 text-slate-500 font-semibold text-sm hover:bg-slate-50 flex items-center gap-2">
-              <Back size={16} /> {tr('رجوع', 'Back')}
-            </button>
-            <button onClick={submitAssessment} disabled={submitting} className="flex-1 btn-authority text-sm disabled:opacity-60">
-              {submitting ? (
-                <><Loader2 size={16} className="inline me-2 animate-spin" /> {tr('جاري الحساب...', 'Calculating...')}</>
-              ) : (
-                <><FileCheck size={16} className="inline me-2" /> {tr('إرسال وعرض النتائج', 'Submit & View Results')}</>
-              )}
-            </button>
           </div>
         </div>
       </div>
     );
   }
 
-  // ── QUESTION SCREEN ──
-  const renderQuestion = () => {
-    if (!question) return null;
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-store-bg flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-brand-primary/20 border-t-brand-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
 
-    // Scale questions (preference, importance, ability, agreement)
+  // Confirm submit modal
+  if (showConfirm) {
+    const answeredCount = Object.keys(answers).length;
+    const unanswered = total - answeredCount;
+    return (
+      <div className="min-h-screen bg-store-bg flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
+        <StoreNavbar />
+        <div className="flex-1 flex items-center justify-center px-6">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl border border-slate-100 shadow-xl p-8 max-w-md w-full text-center">
+            <div className="w-16 h-16 rounded-full bg-brand-primary/10 flex items-center justify-center mx-auto mb-5">
+              <AlertCircle size={28} className="text-brand-primary" />
+            </div>
+            <h2 className="font-heading font-black text-corp-dark text-xl mb-3">
+              {t('هل أنت مستعد للإرسال؟', 'Ready to Submit?')}
+            </h2>
+            <p className="text-slate-500 text-sm mb-2">
+              {t(`أجبت على ${answeredCount} من ${total} سؤال`, `You answered ${answeredCount} of ${total} questions`)}
+            </p>
+            {unanswered > 0 && (
+              <p className="text-amber-600 text-xs mb-5">
+                {t(`${unanswered} سؤال لم تُجب عليه — سيُحسب بدون نقاط`, `${unanswered} unanswered — will count as zero`)}
+              </p>
+            )}
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => { setShowConfirm(false); setCurrent(total - 1); setTimeLeft(TIMER_SECONDS); }}
+                className="flex-1 py-3 rounded-xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-all">
+                {t('مراجعة الإجابات', 'Review Answers')}
+              </button>
+              <button onClick={handleFinish}
+                className="flex-1 py-3 rounded-xl font-heading font-bold text-white text-sm transition-all hover:opacity-90"
+                style={{ background: 'linear-gradient(135deg,#1A3A5C,#05E1AE)' }}>
+                {t('إرسال التقرير', 'Submit & Get Report')}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  const timerPct = (timeLeft / TIMER_SECONDS) * 100;
+  const isWarning = timeLeft <= 7;
+  const radius = 24;
+  const circ = 2 * Math.PI * radius;
+  const dash = (timerPct / 100) * circ;
+
+  // ── Render question options by type ──
+  const renderOptions = () => {
+    if (!question) return null;
+    const currentVal = answers[question.id]?.value;
+
+    // Scale questions
     if (question.type === 'scale_5') {
       const scale = SCALES[question.scale];
-      const currentVal = answers[question.id]?.value;
       return (
-        <div className="space-y-2.5">
-          {scale.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => handleAnswer(opt.value)}
-              className={`w-full flex items-center gap-3 p-4 rounded-2xl border-2 transition-all text-start ${
-                currentVal === opt.value
-                  ? 'border-brand-primary bg-brand-primary/5 shadow-sm'
-                  : 'border-slate-100 bg-white hover:border-slate-200'
-              }`}
-            >
-              <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
-                currentVal === opt.value ? 'border-brand-primary bg-brand-primary' : 'border-slate-300'
-              }`}>
-                {currentVal === opt.value && <div className="w-2 h-2 bg-white rounded-full" />}
-              </div>
-              <span className={`text-sm font-medium ${currentVal === opt.value ? 'text-brand-primary' : 'text-slate-600'}`}>
-                {tr(opt.label_ar, opt.label_en)}
-              </span>
-            </button>
-          ))}
+        <div className="space-y-3">
+          {scale.map((opt) => {
+            const isSelected = currentVal === opt.value;
+            return (
+              <motion.button key={opt.value}
+                onClick={() => handleSelect(opt.value)}
+                disabled={!!selected}
+                whileHover={!selected ? { scale: 1.01 } : {}}
+                whileTap={!selected ? { scale: 0.99 } : {}}
+                className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-start ${
+                  isSelected ? 'border-brand-primary bg-brand-primary/8 shadow-md' : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                  isSelected ? 'border-brand-primary bg-brand-primary' : 'border-slate-300'
+                }`}>
+                  {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
+                </div>
+                <span className={`text-sm font-medium leading-relaxed ${isSelected ? 'text-corp-dark' : 'text-slate-700'}`}>
+                  {t(opt.label_ar, opt.label_en)}
+                </span>
+              </motion.button>
+            );
+          })}
         </div>
       );
     }
 
     // Forced choice A/B
     if (question.type === 'forced_choice') {
-      const currentVal = answers[question.id]?.value;
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {question.options.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => handleAnswer(opt.value)}
-              className={`p-5 rounded-2xl border-2 transition-all text-start min-h-[100px] flex items-center ${
-                currentVal === opt.value
-                  ? 'border-brand-primary bg-brand-primary/5 shadow-sm'
-                  : 'border-slate-100 bg-white hover:border-slate-200'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center text-xs font-bold ${
-                  currentVal === opt.value ? 'border-brand-primary bg-brand-primary text-white' : 'border-slate-300 text-slate-400'
+          {question.options.map((opt) => {
+            const isSelected = currentVal === opt.value;
+            return (
+              <motion.button key={opt.value}
+                onClick={() => handleSelect(opt.value)}
+                disabled={!!selected}
+                whileHover={!selected ? { scale: 1.01 } : {}}
+                whileTap={!selected ? { scale: 0.99 } : {}}
+                className={`p-5 rounded-xl border-2 transition-all text-start min-h-[100px] flex items-center ${
+                  isSelected ? 'border-brand-primary bg-brand-primary/8 shadow-md' : 'border-slate-200 bg-white hover:border-slate-300'
                 }`}>
-                  {opt.value}
+                <div className="flex items-start gap-3">
+                  <div className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center text-xs font-bold transition-all ${
+                    isSelected ? 'border-brand-primary bg-brand-primary text-white' : 'border-slate-300 text-slate-400'
+                  }`}>
+                    {opt.value}
+                  </div>
+                  <span className={`text-sm font-medium leading-relaxed ${isSelected ? 'text-corp-dark' : 'text-slate-700'}`}>
+                    {t(opt.label_ar, opt.label_en)}
+                  </span>
                 </div>
-                <span className={`text-sm font-medium leading-relaxed ${currentVal === opt.value ? 'text-brand-primary' : 'text-slate-600'}`}>
-                  {tr(opt.label_ar, opt.label_en)}
-                </span>
-              </div>
-            </button>
-          ))}
+              </motion.button>
+            );
+          })}
         </div>
       );
     }
 
     // Situational
     if (question.type === 'situational') {
-      const currentVal = answers[question.id]?.value;
       return (
-        <div className="space-y-2.5">
-          {question.options.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => handleAnswer(opt.value, opt.score)}
-              className={`w-full flex items-center gap-3 p-4 rounded-2xl border-2 transition-all text-start ${
-                currentVal === opt.value
-                  ? 'border-brand-primary bg-brand-primary/5 shadow-sm'
-                  : 'border-slate-100 bg-white hover:border-slate-200'
-              }`}
-            >
-              <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
-                currentVal === opt.value ? 'border-brand-primary bg-brand-primary' : 'border-slate-300'
-              }`}>
-                {currentVal === opt.value && <div className="w-2 h-2 bg-white rounded-full" />}
-              </div>
-              <span className={`text-sm font-medium ${currentVal === opt.value ? 'text-brand-primary' : 'text-slate-600'}`}>
-                {tr(opt.label_ar, opt.label_en)}
-              </span>
-            </button>
-          ))}
+        <div className="space-y-3">
+          {question.options.map((opt) => {
+            const isSelected = currentVal === opt.value;
+            return (
+              <motion.button key={opt.value}
+                onClick={() => handleSelect(opt.value, opt.score)}
+                disabled={!!selected}
+                whileHover={!selected ? { scale: 1.01 } : {}}
+                whileTap={!selected ? { scale: 0.99 } : {}}
+                className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-start ${
+                  isSelected ? 'border-brand-primary bg-brand-primary/8 shadow-md' : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                  isSelected ? 'border-brand-primary bg-brand-primary' : 'border-slate-300'
+                }`}>
+                  {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
+                </div>
+                <span className={`text-sm font-medium leading-relaxed ${isSelected ? 'text-corp-dark' : 'text-slate-700'}`}>
+                  {t(opt.label_ar, opt.label_en)}
+                </span>
+              </motion.button>
+            );
+          })}
         </div>
       );
     }
 
     // Paired preference
     if (question.type === 'paired') {
-      const currentVal = answers[question.id]?.value;
       return (
         <div className="grid grid-cols-2 gap-3">
-          {question.options.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => handleAnswer(opt.value)}
-              className={`p-5 rounded-2xl border-2 transition-all text-center min-h-[100px] flex flex-col items-center justify-center ${
-                currentVal === opt.value
-                  ? 'border-brand-primary bg-brand-primary/5 shadow-sm'
-                  : 'border-slate-100 bg-white hover:border-slate-200'
-              }`}
-            >
-              <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold mb-2 ${
-                currentVal === opt.value ? 'border-brand-primary bg-brand-primary text-white' : 'border-slate-300 text-slate-400'
-              }`}>
-                {opt.value}
-              </div>
-              <span className={`text-sm font-medium ${currentVal === opt.value ? 'text-brand-primary' : 'text-slate-600'}`}>
-                {tr(opt.label_ar, opt.label_en)}
-              </span>
-            </button>
-          ))}
+          {question.options.map((opt) => {
+            const isSelected = currentVal === opt.value;
+            return (
+              <motion.button key={opt.value}
+                onClick={() => handleSelect(opt.value)}
+                disabled={!!selected}
+                whileHover={!selected ? { scale: 1.01 } : {}}
+                whileTap={!selected ? { scale: 0.99 } : {}}
+                className={`p-5 rounded-xl border-2 transition-all text-center min-h-[100px] flex flex-col items-center justify-center ${
+                  isSelected ? 'border-brand-primary bg-brand-primary/8 shadow-md' : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}>
+                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold mb-2 transition-all ${
+                  isSelected ? 'border-brand-primary bg-brand-primary text-white' : 'border-slate-300 text-slate-400'
+                }`}>
+                  {opt.value}
+                </div>
+                <span className={`text-sm font-medium ${isSelected ? 'text-corp-dark' : 'text-slate-700'}`}>
+                  {t(opt.label_ar, opt.label_en)}
+                </span>
+              </motion.button>
+            );
+          })}
         </div>
       );
     }
@@ -363,93 +359,99 @@ export default function TakeCareerAssessment() {
   };
 
   return (
-    <div className="min-h-screen bg-store-bg" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-store-bg flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
       <StoreNavbar />
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
-        {/* Top bar: section + save & exit */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-brand-primary bg-brand-primary/10 px-3 py-1 rounded-full">
-              {tr(section?.name.ar, section?.name.en)}
-            </span>
-            <span className="text-xs text-slate-400">
-              {tr('سؤال', 'Q')} {questionInSection} / {sectionQuestions.length}
-            </span>
-          </div>
-          <button onClick={saveAndExit} className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-brand-primary transition-colors">
-            <Save size={13} /> {tr('حفظ وخروج', 'Save & Exit')}
-          </button>
-        </div>
+      <div className="flex-1 px-6 py-10">
+        <div className="max-w-2xl mx-auto">
 
-        {/* Progress bars */}
-        <div className="space-y-2 mb-6">
-          <div>
-            <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-              <span>{tr('تقدم القسم', 'Section Progress')}</span>
-              <span>{sectionProgress}%</span>
+          {/* Progress Header */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-6">
+            {/* Section badge */}
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-brand-primary/10 flex items-center justify-center flex-shrink-0">
+                <SectionIcon size={16} className="text-brand-primary" />
+              </div>
+              <span className="text-xs font-semibold text-brand-primary bg-brand-primary/10 px-3 py-1 rounded-full">
+                {t(section?.name.ar, section?.name.en)}
+              </span>
             </div>
-            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-              <div className="h-full bg-brand-primary rounded-full transition-all" style={{ width: `${sectionProgress}%` }} />
-            </div>
-          </div>
-          <div>
-            <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-              <span>{tr('التقدم الإجمالي', 'Overall Progress')}</span>
-              <span>{overallProgress}% • {currentIdx + 1} / {totalQuestions}</span>
-            </div>
-            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-              <div className="h-full assessment-progress rounded-full transition-all" style={{ width: `${overallProgress}%` }} />
-            </div>
-          </div>
-        </div>
 
-        {/* Question card */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentIdx}
-            initial={{ opacity: 0, x: isRTL ? -15 : 15 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: isRTL ? 15 : -15 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="bg-white rounded-2xl border border-slate-100 p-6 md:p-8">
-              <div className="flex items-start gap-3 mb-6">
+            {/* Progress dots */}
+            <div className="flex items-center gap-1 mb-4 overflow-hidden">
+              {ALL_QUESTIONS.map((_, i) => (
+                <div key={i} className={`h-2 rounded-full transition-all duration-300 ${
+                  i < current ? 'flex-1 min-w-[4px]' : i === current ? 'flex-[2] min-w-[12px]' : 'flex-1 min-w-[4px]'
+                }`} style={{
+                  background: i < current ? '#05E1AE' : i === current ? 'linear-gradient(90deg,#1A3A5C,#05E1AE)' : '#E5E7EB',
+                }} />
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-heading font-bold text-corp-dark text-sm">
+                  {t(`السؤال ${current + 1} من ${total}`, `Question ${current + 1} of ${total}`)}
+                </div>
+                <div className="text-xs text-slate-500 mt-0.5">
+                  {t(`${total - current - 1} سؤال متبقٍ`, `${total - current - 1} remaining`)}
+                </div>
+              </div>
+              {/* Timer ring */}
+              <div className="relative flex-shrink-0">
+                <svg width="64" height="64" viewBox="0 0 64 64">
+                  <circle cx="32" cy="32" r={radius} fill="none" stroke="#E5E7EB" strokeWidth="4" />
+                  <circle cx="32" cy="32" r={radius} fill="none"
+                    stroke={isWarning ? '#EF4444' : '#05E1AE'}
+                    strokeWidth="4"
+                    strokeDasharray={`${dash} ${circ}`}
+                    strokeLinecap="round"
+                    transform="rotate(-90 32 32)"
+                    style={{ transition: 'stroke-dasharray 1s linear, stroke 0.3s' }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className={`font-heading font-black text-sm leading-none ${isWarning ? 'text-red-500' : 'text-corp-dark'}`}>{timeLeft}</span>
+                  <span className="text-slate-400" style={{ fontSize: '8px' }}>{t('ث', 's')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Question Card */}
+          <AnimatePresence mode="wait">
+            <motion.div key={current}
+              initial={{ opacity: 0, x: isRTL ? -30 : 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: isRTL ? 30 : -30 }}
+              transition={{ duration: 0.25 }}
+              className="bg-white rounded-2xl shadow-sm border border-slate-100 p-7 mb-6">
+              <div className="flex items-start gap-3 mb-7">
                 <div className="w-8 h-8 rounded-xl bg-brand-primary/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-brand-primary text-xs font-bold">{currentIdx + 1}</span>
+                  <span className="text-brand-primary text-xs font-bold">{current + 1}</span>
                 </div>
                 <h2 className="font-heading font-bold text-corp-dark text-lg leading-relaxed pt-0.5">
-                  {tr(question.question_ar, question.question_en || question.question_ar)}
+                  {t(question.question_ar, question.question_en || question.question_ar)}
                 </h2>
               </div>
-              {renderQuestion()}
-            </div>
-          </motion.div>
-        </AnimatePresence>
+              {renderOptions()}
+            </motion.div>
+          </AnimatePresence>
 
-        {/* Navigation */}
-        <div className="flex items-center justify-between mt-6">
-          <button
-            onClick={goPrev}
-            disabled={currentIdx === 0}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl border border-slate-200 text-slate-500 font-semibold text-sm hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-          >
-            <Back size={16} /> {tr('السابق', 'Previous')}
-          </button>
-          <button
-            onClick={goNext}
-            disabled={!isAnswered}
-            className="flex items-center gap-2 btn-authority text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {currentIdx === totalQuestions - 1 ? tr('مراجعة', 'Review') : tr('التالي', 'Next')}
-            <Next size={16} />
-          </button>
+          {/* Nav buttons */}
+          <div className="flex items-center justify-between">
+            <button onClick={() => { clearInterval(timerRef.current); goTo(current - 1); }}
+              disabled={current === 0}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+              <BackArrow size={14} />
+              {t('السابق', 'Previous')}
+            </button>
+            <p className="text-xs text-slate-400 flex items-center gap-1.5">
+              <Clock size={11} />
+              {t('ينتقل تلقائياً عند الاختيار', 'Auto-advances on selection')}
+            </p>
+          </div>
         </div>
-        {!isAnswered && (
-          <p className="text-center text-xs text-slate-400 mt-3">
-            {tr('يجب الإجابة قبل المتابعة', 'Answer required to continue')}
-          </p>
-        )}
       </div>
     </div>
   );

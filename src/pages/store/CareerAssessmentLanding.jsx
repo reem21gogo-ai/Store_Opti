@@ -1,278 +1,270 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+/**
+ * CareerAssessmentLanding — Product landing page for the Career Orientation assessment.
+ * Mirrors the CompetencyAssessmentLanding layout: hero, how-it-works, model, preview, pricing CTA.
+ */
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLang } from '@/lib/LanguageContext';
-import { base44 } from '@/api/base44Client';
-import StoreNavbar from '@/components/store/StoreNavbar';
-import StoreFooter from '@/components/store/StoreFooter';
-import { PRODUCT_INFO, USER_STATUSES, SECTIONS, COMPLETION_TIPS } from '@/lib/careerContent';
-import { ALL_QUESTIONS } from '@/lib/careerQuestions';
 import {
   Compass, Heart, Zap, Users, Star, Building2,
-  ArrowLeft, ArrowRight, CheckCircle2, Clock, Save, FileText,
-  Sparkles, Target, BookOpen, AlertCircle, ChevronLeft
+  Clock, BarChart2, Play, ArrowLeft, ArrowRight, CheckCircle, Lock,
+  FileText, Target, Sparkles, ChevronRight
 } from 'lucide-react';
+import StoreNavbar from '@/components/store/StoreNavbar';
+import StoreFooter from '@/components/store/StoreFooter';
+import { base44 } from '@/api/base44Client';
+import { PRODUCT_INFO, SECTIONS } from '@/lib/careerContent';
 
 const SECTION_ICONS = { riasec: Compass, work_values: Heart, skills: Zap, personality: Users, strengths: Star, environment: Building2 };
+
+const WHAT_TO_EXPECT = {
+  ar: [
+    { icon: Compass, title: '٦ أبعاد مهنية', desc: 'ميول، قيم، مهارات، شخصية، قوة، بيئة' },
+    { icon: Clock, title: '٢٥ ثانية لكل سؤال', desc: 'وقت مناسب للإجابة الصادقة والتلقائية' },
+    { icon: Target, title: 'نتائج فورية', desc: 'تقريرك يظهر مباشرة بعد الانتهاء' },
+    { icon: FileText, title: 'تقرير PDF', desc: '٩ صفحات تحليلية قابلة للتحميل' },
+  ],
+  en: [
+    { icon: Compass, title: '6 Career Dimensions', desc: 'Interests, values, skills, personality, strengths, environment' },
+    { icon: Clock, title: '25 Seconds Per Question', desc: 'Time for natural, honest responses' },
+    { icon: Target, title: 'Instant Results', desc: 'Your report appears immediately after completion' },
+    { icon: FileText, title: 'PDF Report', desc: '9 analytical pages, downloadable' },
+  ],
+};
 
 export default function CareerAssessmentLanding() {
   const { lang, isRTL } = useLang();
   const navigate = useNavigate();
-  const [step, setStep] = useState(0);
+  const Arrow = isRTL ? ArrowLeft : ArrowRight;
+  const BackArrow = isRTL ? ArrowRight : ArrowLeft;
   const [user, setUser] = useState(null);
-  const [authed, setAuthed] = useState(false);
-  const [status, setStatus] = useState('');
-
-  const tr = (ar, en) => (lang === 'ar' ? ar : en);
-  const Back = isRTL ? ArrowRight : ArrowLeft;
-  const Next = isRTL ? ArrowLeft : ArrowRight;
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    base44.auth.isAuthenticated().then(async (a) => {
-      setAuthed(a);
-      if (a) setUser(await base44.auth.me());
+    base44.auth.isAuthenticated().then(async (authed) => {
+      if (authed) setUser(await base44.auth.me());
+      setLoading(false);
     });
-    // Restore saved status
-    const saved = localStorage.getItem('career_status');
-    if (saved) setStatus(saved);
   }, []);
 
-  const startAssessment = () => {
-    if (!authed) { navigate('/store/login?redirect=/store/career'); return; }
-    localStorage.setItem('career_status', status);
-    localStorage.setItem('career_lang', lang);
-    navigate('/store/career/assessment');
+  const handleStart = () => {
+    if (!user) {
+      navigate('/store/login?redirect=' + encodeURIComponent('/store/career/intake'));
+      return;
+    }
+    navigate('/store/career/intake');
   };
 
-  const steps = [
-    // ── Screen 1: Intro ──
-    {
-      title: PRODUCT_INFO.name_ar,
-      subtitle: PRODUCT_INFO.subtitle_ar,
-      content: (
-        <div className="text-center max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-brand-primary/10 text-brand-primary px-4 py-1.5 rounded-full text-xs font-semibold mb-6">
-            <Sparkles size={14} /> {tr('منتج Optivance الجديد', 'New Optivance Product')}
-          </div>
-          <h1 className="font-heading font-black text-3xl md:text-4xl text-corp-dark mb-4 leading-tight">
-            {tr(PRODUCT_INFO.name_ar, PRODUCT_INFO.name_en)}
-          </h1>
-          <p className="text-slate-500 text-base md:text-lg leading-relaxed mb-8">
-            {tr(PRODUCT_INFO.subtitle_ar, PRODUCT_INFO.subtitle_en)}
-          </p>
-          <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto mb-8">
-            {[
-              { icon: FileText, val: '150', label: tr('سؤال', 'Questions') },
-              { icon: Target, val: '6', label: tr('أبعاد', 'Dimensions') },
-              { icon: Clock, val: '40-45', label: tr('دقيقة', 'Minutes') },
-            ].map((s, i) => {
-              const Icon = s.icon;
-              return (
-                <div key={i} className="bg-white rounded-2xl border border-slate-100 p-4 text-center">
-                  <Icon size={20} className="text-brand-primary mx-auto mb-2" />
-                  <div className="font-heading font-black text-xl text-corp-dark">{s.val}</div>
-                  <div className="text-xs text-slate-400">{s.label}</div>
-                </div>
-              );
-            })}
-          </div>
-          <button onClick={() => setStep(1)} className="btn-authority text-sm px-8 py-3.5">
-            {tr('ابدأ الآن', 'Get Started')} <Next size={16} className="inline ms-2" />
-          </button>
-        </div>
-      ),
-    },
-    // ── Screen 2: Status Selection ──
-    {
-      title: tr('ما الذي يصف وضعك الحالي؟', 'What Best Describes Your Current Status?'),
-      subtitle: tr('هذا يساعدنا في تخصيص التوصيات وخطة العمل المناسبة لك.', 'This helps us personalize recommendations and your action plan.'),
-      content: (
-        <div className="max-w-2xl mx-auto">
-          <div className="space-y-3">
-            {Object.entries(USER_STATUSES).map(([key, val]) => (
-              <button
-                key={key}
-                onClick={() => { setStatus(key); localStorage.setItem('career_status', key); }}
-                className={`w-full flex items-center gap-4 p-5 rounded-2xl border-2 transition-all text-start ${
-                  status === key
-                    ? 'border-brand-primary bg-brand-primary/5 shadow-md'
-                    : 'border-slate-100 bg-white hover:border-slate-200'
-                }`}
-              >
-                <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
-                  status === key ? 'border-brand-primary bg-brand-primary' : 'border-slate-300'
-                }`}>
-                  {status === key && <CheckCircle2 size={12} className="text-white" />}
-                </div>
-                <span className={`font-heading font-bold text-base ${status === key ? 'text-brand-primary' : 'text-corp-dark'}`}>
-                  {tr(val.ar, val.en)}
-                </span>
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-3 mt-8">
-            <button onClick={() => setStep(0)} className="px-5 py-3 rounded-xl border border-slate-200 text-slate-500 font-semibold text-sm hover:bg-slate-50 flex items-center gap-2">
-              <Back size={16} /> {tr('رجوع', 'Back')}
-            </button>
-            <button
-              onClick={() => status && setStep(2)}
-              disabled={!status}
-              className="flex-1 btn-authority text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {tr('التالي', 'Next')} <Next size={16} className="inline ms-2" />
-            </button>
-          </div>
-        </div>
-      ),
-    },
-    // ── Screen 3: Info ──
-    {
-      title: tr('معلومات عن المقياس', 'About This Assessment'),
-      subtitle: '',
-      content: (
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl border border-slate-100 p-6 space-y-4">
-            {[
-              { icon: FileText, text: tr('150 سؤال تغطي 6 أبعاد مهنية', '150 questions covering 6 career dimensions') },
-              { icon: Clock, text: tr('وقت الإكمال المقدر: 40-45 دقيقة', 'Estimated completion time: 40-45 minutes') },
-              { icon: Save, text: tr('حفظ تلقائي بعد كل إجابة', 'Automatic saving after each response') },
-              { icon: ArrowLeft, text: tr('إمكانية الخروج والعودة لاحقاً', 'Ability to exit and resume later') },
-              { icon: FileText, text: tr('تقرير PDF مخصص قابل للتحميل', 'Personalized downloadable PDF report') },
-              { icon: Target, text: tr('مسارات مهنية مطابقة وخطة 90 يوم', 'Career matches and a 90-day action plan') },
-            ].map((item, i) => {
-              const Icon = item.icon;
-              return (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-brand-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Icon size={16} className="text-brand-primary" />
-                  </div>
-                  <span className="text-slate-600 text-sm">{item.text}</span>
-                </div>
-              );
-            })}
-          </div>
-          <div className="flex gap-3 mt-6">
-            <button onClick={() => setStep(1)} className="px-5 py-3 rounded-xl border border-slate-200 text-slate-500 font-semibold text-sm hover:bg-slate-50 flex items-center gap-2">
-              <Back size={16} /> {tr('رجوع', 'Back')}
-            </button>
-            <button onClick={() => setStep(3)} className="flex-1 btn-authority text-sm">
-              {tr('التالي', 'Next')} <Next size={16} className="inline ms-2" />
-            </button>
-          </div>
-        </div>
-      ),
-    },
-    // ── Screen 4: Tips ──
-    {
-      title: tr('نصائح قبل البدء', 'Tips Before You Begin'),
-      subtitle: '',
-      content: (
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl border border-slate-100 p-6">
-            <div className="space-y-3">
-              {(lang === 'ar' ? COMPLETION_TIPS.ar : COMPLETION_TIPS.en).map((tip, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-brand-accent/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-brand-accent text-xs font-bold">{i + 1}</span>
-                  </div>
-                  <span className="text-slate-600 text-sm leading-relaxed">{tip}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="flex gap-3 mt-6">
-            <button onClick={() => setStep(2)} className="px-5 py-3 rounded-xl border border-slate-200 text-slate-500 font-semibold text-sm hover:bg-slate-50 flex items-center gap-2">
-              <Back size={16} /> {tr('رجوع', 'Back')}
-            </button>
-            <button onClick={() => setStep(4)} className="flex-1 btn-authority text-sm">
-              {tr('التالي', 'Next')} <Next size={16} className="inline ms-2" />
-            </button>
-          </div>
-        </div>
-      ),
-    },
-    // ── Screen 5: Sections Overview ──
-    {
-      title: tr('أقسام المقياس', 'Assessment Sections'),
-      subtitle: tr('6 أقسام تغطي جميع أبعاد ميولك المهنية', '6 sections covering all dimensions of your career orientation'),
-      content: (
-        <div className="max-w-3xl mx-auto">
-          <div className="space-y-3">
-            {SECTIONS.map((s, i) => {
-              const Icon = SECTION_ICONS[s.id] || BookOpen;
-              return (
-                <div key={s.id} className="flex items-center gap-4 bg-white rounded-2xl border border-slate-100 p-4">
-                  <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Icon size={18} className="text-brand-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-400">{i + 1}</span>
-                      <span className="font-heading font-bold text-corp-dark text-sm">{tr(s.name.ar, s.name.en)}</span>
-                    </div>
-                  </div>
-                  <span className="text-xs font-semibold text-slate-400 bg-slate-50 px-3 py-1 rounded-full">
-                    {s.questionCount} {tr('سؤال', 'Q')}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-6 p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-3">
-            <AlertCircle size={18} className="text-amber-500 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-700 leading-relaxed">
-              {tr(
-                'هذا المقياس أداة إرشادية وتطويرية ولا يقدم تشخيصاً طبياً أو نفسياً أو توظيفياً.',
-                'This assessment is a guidance and development tool and does not provide medical, psychological, or recruitment diagnosis.'
-              )}
-            </p>
-          </div>
-          <div className="flex gap-3 mt-6">
-            <button onClick={() => setStep(3)} className="px-5 py-3 rounded-xl border border-slate-200 text-slate-500 font-semibold text-sm hover:bg-slate-50 flex items-center gap-2">
-              <Back size={16} /> {tr('رجوع', 'Back')}
-            </button>
-            <button onClick={startAssessment} className="flex-1 btn-authority text-sm">
-              {tr('ابدأ المقياس', 'Start Assessment')} <Next size={16} className="inline ms-2" />
-            </button>
-          </div>
-        </div>
-      ),
-    },
-  ];
+  if (loading) return (
+    <div className="min-h-screen bg-store-bg flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-brand-primary/20 border-t-brand-primary rounded-full animate-spin"></div>
+    </div>
+  );
 
-  const current = steps[step];
+  const title = lang === 'ar' ? PRODUCT_INFO.name_ar : PRODUCT_INFO.name_en;
+  const description = lang === 'ar' ? PRODUCT_INFO.subtitle_ar : PRODUCT_INFO.subtitle_en;
 
   return (
-    <div className="min-h-screen bg-store-bg" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="bg-store-bg min-h-screen" dir={isRTL ? 'rtl' : 'ltr'}>
       <StoreNavbar />
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-        {/* Progress dots */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          {steps.map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 rounded-full transition-all ${i === step ? 'w-8 bg-brand-primary' : i < step ? 'w-4 bg-brand-primary/40' : 'w-4 bg-slate-200'}`}
-            />
-          ))}
-        </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, x: isRTL ? -20 : 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: isRTL ? 20 : -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {current.title && (
-              <div className="text-center mb-8">
-                <h2 className="font-heading font-black text-2xl md:text-3xl text-corp-dark mb-2">{current.title}</h2>
-                {current.subtitle && <p className="text-slate-500 text-sm md:text-base">{current.subtitle}</p>}
+      {/* Breadcrumb */}
+      <div className="bg-white border-b border-slate-100 px-6 py-3">
+        <div className="max-w-6xl mx-auto">
+          <Link to="/store/assessments" className="flex items-center gap-2 text-slate-500 hover:text-brand-primary text-sm transition-colors w-fit">
+            <BackArrow size={14} />
+            {lang === 'ar' ? 'العودة للمقاييس' : 'Back to Assessments'}
+          </Link>
+        </div>
+      </div>
+
+      {/* Hero */}
+      <div className="from-corp-dark via-brand-primary to-corp-surface py-14 px-6 bg-[hsl(var(--sidebar-foreground))]">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center gap-8">
+          <div className="flex-1">
+            <div className="inline-flex items-center gap-2 bg-brand-accent/15 border border-brand-accent/25 rounded-full px-3 py-1 mb-5">
+              <Sparkles size={13} className="text-brand-accent" />
+              <span className="text-brand-accent text-xs font-semibold uppercase tracking-wide">
+                {lang === 'ar' ? 'منتج جديد' : 'New Product'}
+              </span>
+            </div>
+            <h1 className="font-heading font-black text-white text-3xl md:text-4xl mb-4 leading-tight">{title}</h1>
+            <p className="text-white/65 text-base leading-relaxed max-w-xl">{description}</p>
+            <div className="flex flex-wrap gap-3 mt-5">
+              {[
+                { icon: Users, label: lang === 'ar' ? '+١,٠٠٠ مستخدم' : '+1,000 Users' },
+                { icon: Star, label: lang === 'ar' ? '٤.٨ تقييم' : '4.8 Rating' },
+                { icon: Clock, label: lang === 'ar' ? 'نتائج فورية' : 'Instant Results' },
+              ].map((badge, i) => {
+                const Icon = badge.icon;
+                return (
+                  <div key={i} className="flex items-center gap-1.5 bg-white/10 border border-white/15 rounded-full px-3 py-1.5">
+                    <Icon size={12} className="text-brand-accent" />
+                    <span className="text-white/80 text-xs">{badge.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {/* Quick visual */}
+          <div className="hidden md:flex flex-col items-center justify-center w-36 h-36 rounded-3xl bg-white/10 border border-white/20 backdrop-blur-sm">
+            <span className="font-heading font-black text-4xl text-brand-accent">١٥٠</span>
+            <span className="text-white/50 text-xs mt-1 text-center">{lang === 'ar' ? 'سؤال • ٦ أبعاد' : 'Questions • 6 Dimensions'}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
+
+          {/* LEFT: Details */}
+          <div className="lg:col-span-3 space-y-8">
+
+            {/* How it works */}
+            <div>
+              <h2 className="font-heading font-bold text-corp-dark text-xl mb-5">
+                {lang === 'ar' ? 'كيف يعمل المقياس؟' : 'How Does the Assessment Work?'}
+              </h2>
+              <div className="grid grid-cols-2 gap-4">
+                {WHAT_TO_EXPECT[lang].map((item, i) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={i} className="bg-white rounded-2xl p-5 border border-slate-100 flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-brand-primary/8 flex items-center justify-center flex-shrink-0">
+                        <Icon size={18} className="text-brand-primary" />
+                      </div>
+                      <div>
+                        <div className="font-heading font-semibold text-corp-dark text-sm mb-1">{item.title}</div>
+                        <div className="text-slate-500 text-xs leading-relaxed">{item.desc}</div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
-            {current.content}
-          </motion.div>
-        </AnimatePresence>
+            </div>
+
+            {/* Six dimensions */}
+            <div className="bg-gradient-to-br from-brand-primary/5 to-brand-accent/5 rounded-2xl p-6 border border-brand-primary/10">
+              <h2 className="font-heading font-bold text-corp-dark text-lg mb-3">
+                {lang === 'ar' ? 'مبني على نموذج RIASEC ومعايير عالمية' : 'Built on RIASEC Model & Global Standards'}
+              </h2>
+              <p className="text-slate-600 text-sm leading-relaxed mb-4">
+                {lang === 'ar'
+                  ? 'يقيس المقياس ٦ أبعاد رئيسية: الميول المهنية (RIASEC)، قيم العمل، المهارات، الشخصية، نقاط القوة، وتفضيلات بيئة العمل — لإعطائك صورة متكاملة عن توجّهك المهني.'
+                  : 'The assessment measures 6 core dimensions: Occupational Interests (RIASEC), Work Values, Skills, Personality, Strengths, and Environment Preferences — giving you a complete picture of your career orientation.'}
+              </p>
+              <div className="space-y-2">
+                {SECTIONS.map((s, i) => {
+                  const Icon = SECTION_ICONS[s.id] || BarChart2;
+                  return (
+                    <div key={s.id} className="flex items-center gap-3 bg-white rounded-xl border border-slate-100 px-4 py-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-brand-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Icon size={15} className="text-brand-primary" />
+                      </div>
+                      <span className="font-medium text-corp-dark text-sm flex-1">{lang === 'ar' ? s.name.ar : s.name.en}</span>
+                      <span className="text-xs text-slate-400 font-semibold">{s.questionCount} {lang === 'ar' ? 'سؤال' : 'Q'}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Sample output preview */}
+            <div>
+              <h2 className="font-heading font-bold text-corp-dark text-xl mb-5">
+                {lang === 'ar' ? 'مثال على مخرجات المقياس' : 'Sample Output Preview'}
+              </h2>
+              <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+                <div className="bg-corp-dark px-6 py-4 flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full bg-red-400" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                  <div className="w-3 h-3 rounded-full bg-green-400" />
+                  <span className="text-white/40 text-xs mx-auto">{lang === 'ar' ? 'معاينة التقرير' : 'Report Preview'}</span>
+                </div>
+                <div className="p-6 space-y-4">
+                  {(lang === 'ar'
+                    ? [
+                        { label: 'الميول الاستكشافية (Investigative)', pct: 85 },
+                        { label: 'الميول الاجتماعية (Social)', pct: 72 },
+                        { label: 'قيم العمل: الاستقلالية', pct: 90 },
+                        { label: 'المهارات التحليلية', pct: 78 },
+                      ]
+                    : [
+                        { label: 'Investigative Interests', pct: 85 },
+                        { label: 'Social Interests', pct: 72 },
+                        { label: 'Work Value: Autonomy', pct: 90 },
+                        { label: 'Analytical Skills', pct: 78 },
+                      ]
+                  ).map((bar, i) => (
+                    <div key={i}>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-sm font-medium text-slate-700">{bar.label}</span>
+                        <span className="text-sm font-bold text-brand-primary">{bar.pct}%</span>
+                      </div>
+                      <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${bar.pct}%`, background: 'linear-gradient(90deg, #1A3A5C, #05E1AE)' }} />
+                      </div>
+                    </div>
+                  ))}
+                  <div className="pt-2 text-xs text-slate-400 text-center">
+                    {lang === 'ar' ? 'معاينة توضيحية فقط' : 'Illustrative preview only'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT: CTA Card */}
+          <div className="lg:col-span-2">
+            <div className="sticky top-24 space-y-4">
+              {/* Pricing Card */}
+              <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                <div className="p-6 border-b border-slate-50">
+                  <div className="flex items-baseline gap-1 mb-1">
+                    <span className="text-xs text-slate-500">{lang === 'ar' ? 'يبدأ من' : 'Starting from'}</span>
+                    <span className="font-heading font-black text-3xl text-corp-dark">149</span>
+                    <span className="text-slate-500 text-sm">{lang === 'ar' ? ' ر.س' : ' SAR'}</span>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    {lang === 'ar' ? 'تقييم شامل مع تقرير PDF وخطة ٩٠ يوم' : 'Full assessment with PDF report & 90-day plan'}
+                  </p>
+                </div>
+                <div className="p-6 space-y-3">
+                  {[
+                    lang === 'ar' ? '١٥٠ سؤال عبر ٦ أبعاد' : '150 questions across 6 dimensions',
+                    lang === 'ar' ? 'رمز هولاند (Holland Code)' : 'Holland Code (RIASEC)',
+                    lang === 'ar' ? 'مسارات مهنية مطابقة' : 'Matched career paths',
+                    lang === 'ar' ? 'تقرير PDF من ٩ صفحات' : '9-page PDF report',
+                    lang === 'ar' ? 'خطة عمل ٩٠ يوم' : '90-day action plan',
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-2.5">
+                      <CheckCircle size={14} className="text-brand-accent flex-shrink-0" />
+                      <span className="text-sm text-slate-600">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Start CTA */}
+              {user ? (
+                <button onClick={handleStart} className="w-full py-4 rounded-2xl font-heading font-black text-base flex items-center justify-center gap-2 transition-all hover:opacity-90" style={{ background: 'linear-gradient(135deg, #1A3A5C, #05E1AE)', color: 'white' }}>
+                  <Play size={16} fill="currentColor" />
+                  {lang === 'ar' ? 'ابدأ التقييم' : 'Start Assessment'}
+                  <Arrow size={16} />
+                </button>
+              ) : (
+                <button onClick={handleStart} className="w-full py-4 rounded-2xl font-heading font-black text-base flex items-center justify-center gap-2 transition-all hover:opacity-90" style={{ background: '#1A3A5C', color: 'white' }}>
+                  <Lock size={15} />
+                  {lang === 'ar' ? 'سجّل دخولك للبدء' : 'Login to Start'}
+                </button>
+              )}
+
+              <Link to="/store/assessments" className="w-full py-3 rounded-xl border border-slate-200 text-slate-600 text-sm text-center flex items-center justify-center gap-2 hover:border-brand-primary/50 hover:text-brand-primary transition-all bg-white">
+                {lang === 'ar' ? 'استكشف مقاييس أخرى' : 'Explore Other Assessments'}
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
       <StoreFooter />
     </div>
