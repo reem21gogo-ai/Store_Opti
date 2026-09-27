@@ -5,6 +5,8 @@ import { translations } from '@/lib/i18n';
 import { ShoppingCart, User, Menu, X, Globe } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
+const LOGO = 'https://media.base44.com/images/public/6a27c58ce09a421d00c705cf/91b07a8e4_logoVectorized.svg';
+
 export default function StoreNavbar({ cartCount = 0 }) {
   const { lang, isRTL, toggleLang } = useLang();
   const [open, setOpen] = useState(false);
