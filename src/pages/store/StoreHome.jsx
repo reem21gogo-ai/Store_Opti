@@ -2,10 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '@/lib/LanguageContext';
 import { translations, productCategories } from '@/lib/i18n';
-import { ArrowRight, ArrowLeft, Download, BarChart2, Package, Sparkles, Award } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Download, BarChart2, Package, Sparkles, Award, Users, Target, Building2 } from 'lucide-react';
 import StoreNavbar from '@/components/store/StoreNavbar';
 import StoreFooter from '@/components/store/StoreFooter';
 import { base44 } from '@/api/base44Client';
+
+const CATEGORY_ICONS = {
+  assessments: BarChart2,
+  leadership: Award,
+  hr: Users,
+  strategy: Target,
+  organizations: Building2,
+  personal: Sparkles,
+  free: Download,
+};
 
 export default function StoreHome() {
   const { lang, isRTL } = useLang();
@@ -51,13 +61,19 @@ export default function StoreHome() {
       {/* Categories */}
       <section className="py-6 px-6 bg-white border-b border-slate-100">
         <div className="max-w-7xl mx-auto flex gap-3 overflow-x-auto no-scrollbar">
-          <Link to="/store/products" className="flex-shrink-0 px-4 py-2 rounded-xl bg-brand-primary/5 text-brand-primary text-sm font-medium hover:bg-brand-primary/10 transition-all">{translations.store.allCategories[lang]}</Link>
-          {productCategories.map((cat) =>
-          <Link key={cat.value} to={`/store/products?category=${cat.value}`}
-          className="flex-shrink-0 px-4 py-2 rounded-xl bg-slate-50 text-slate-600 text-sm font-medium hover:bg-brand-primary/5 hover:text-brand-primary transition-all">
-              {cat[lang]}
-            </Link>
-          )}
+          <Link to="/store/products" className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-primary/5 text-brand-primary text-sm font-semibold hover:bg-brand-primary/10 transition-all">
+            <Package size={15} />{translations.store.allCategories[lang]}
+          </Link>
+          {productCategories.map((cat) => {
+            const Icon = CATEGORY_ICONS[cat.value] || Package;
+            return (
+              <Link key={cat.value} to={`/store/products?category=${cat.value}`}
+                className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-50 text-slate-600 text-sm font-medium hover:bg-brand-primary/5 hover:text-brand-primary transition-all">
+                <Icon size={15} className="text-corp-blue" />
+                {cat[lang]}
+              </Link>
+            );
+          })}
         </div>
       </section>
 

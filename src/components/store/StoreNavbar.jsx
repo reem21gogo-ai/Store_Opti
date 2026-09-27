@@ -28,12 +28,8 @@ export default function StoreNavbar({ cartCount = 0 }) {
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
-      <nav className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
-        <Link to="/store" className="flex items-center gap-2 flex-shrink-0">
-          <img src={LOGO} alt="OPTIVANCE" className="h-8 w-auto" />
-          <span className="text-brand-accent text-xs font-medium hidden sm:block">{lang === 'ar' ? 'المتجر' : 'Store'}</span>
-        </Link>
-        <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
+      <nav className="relative max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+        <div className="hidden md:flex items-center gap-1 flex-1">
           {links.map(l => (
             <Link key={l.to} to={l.to}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${location.pathname === l.to ? 'text-brand-primary bg-brand-primary/5' : 'text-slate-600 hover:text-corp-dark hover:bg-slate-50'}`}>
@@ -41,7 +37,10 @@ export default function StoreNavbar({ cartCount = 0 }) {
             </Link>
           ))}
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <Link to="/store" className="absolute left-1/2 -translate-x-1/2 flex-shrink-0">
+          <img src={LOGO} alt="OPTIVANCE" className="h-8 w-auto" />
+        </Link>
+        <div className="flex items-center gap-2 flex-shrink-0 ms-auto">
           <button onClick={toggleLang} className="hidden md:flex items-center gap-1 text-slate-400 hover:text-brand-primary text-xs transition-colors">
             <Globe size={13} />{lang === 'ar' ? 'EN' : 'عر'}
           </button>

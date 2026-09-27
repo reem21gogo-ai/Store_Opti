@@ -40,6 +40,7 @@
     --corp-dark: #0D1F33;
     --corp-surface: #162F4A;
     --store-bg: #F6F8FA;
+    --corp-blue: #326EA3;
 
     --font-heading: 'Tajawal', 'Inter', sans-serif;
     --font-body: 'Tajawal', 'Inter', sans-serif;
@@ -93,6 +94,7 @@
   .text-brand-primary { color: var(--brand-primary); }
   .text-brand-accent { color: var(--brand-accent); }
   .text-corp-dark { color: var(--corp-dark); }
+  .text-corp-blue { color: var(--corp-blue); }
 
   .border-brand-primary { border-color: var(--brand-primary); }
   .border-brand-accent { border-color: var(--brand-accent); }

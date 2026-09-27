@@ -126,13 +126,13 @@ export const translations = {
 };
 
 export const productCategories = [
-  { value: 'assessments', ar: 'التقييمات', en: 'Assessments' },
-  { value: 'leadership', ar: 'القيادة', en: 'Leadership' },
-  { value: 'hr', ar: 'الموارد البشرية', en: 'Human Resources' },
-  { value: 'strategy', ar: 'الاستراتيجية', en: 'Strategy' },
-  { value: 'personal', ar: 'التطوير الشخصي', en: 'Personal Development' },
-  { value: 'free', ar: 'مجاني', en: 'Free' },
-  { value: 'organizations', ar: 'المؤسسات', en: 'Organizations' },
+  { value: 'assessments', ar: 'المقاييس والتقييمات', en: 'Assessments' },
+  { value: 'leadership', ar: 'أدوات القيادة', en: 'Leadership Tools' },
+  { value: 'hr', ar: 'أدوات الموارد البشرية', en: 'HR Tools' },
+  { value: 'strategy', ar: 'قوالب الاستراتيجية', en: 'Strategy Templates' },
+  { value: 'organizations', ar: 'حلول المؤسسات', en: 'Organizations' },
+  { value: 'personal', ar: 'التطوير الشخصي', en: 'Personal Growth' },
+  { value: 'free', ar: 'موارد مجانية', en: 'Free Resources' },
 ];
 
 export const assessmentCategories = [

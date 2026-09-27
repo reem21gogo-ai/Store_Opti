@@ -123,19 +123,19 @@ export default function StoreFooter() {
             <p className="text-slate-500 text-sm leading-relaxed mb-6 max-w-sm">{c.desc}</p>
             <div className="space-y-3">
               <a href={`mailto:${c.contact.email}`} className="flex items-center gap-3 text-slate-500 hover:text-brand-primary text-sm transition-colors">
-                <Mail size={15} className="text-brand-accent" />{c.contact.email}
+                <Mail size={15} className="text-corp-blue" />{c.contact.email}
               </a>
               <a href={`tel:${c.contact.phone.replace(/\s/g, '')}`} className="flex items-center gap-3 text-slate-500 hover:text-brand-primary text-sm transition-colors">
-                <Phone size={15} className="text-brand-accent" />{c.contact.phone}
+                <Phone size={15} className="text-corp-blue" />{c.contact.phone}
               </a>
               <span className="flex items-center gap-3 text-slate-500 text-sm">
-                <MapPin size={15} className="text-brand-accent" />{c.contact.location}
+                <MapPin size={15} className="text-corp-blue" />{c.contact.location}
               </span>
             </div>
             <div className="flex items-center gap-2.5 mt-6">
               {SOCIALS.map(s => (
                 <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer" aria-label={s.name}
-                  className="w-9 h-9 rounded-lg flex items-center justify-center border border-slate-200 text-slate-400 hover:text-brand-primary hover:border-brand-primary/40 transition-all">
+                  className="w-9 h-9 rounded-lg flex items-center justify-center border border-slate-200 text-corp-blue hover:border-brand-primary/40 transition-all">
                   <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d={s.path} /></svg>
                 </a>
               ))}
