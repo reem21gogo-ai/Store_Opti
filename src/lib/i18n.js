@@ -6,7 +6,8 @@ export const translations = {
     methodology: { ar: 'منهجيتنا', en: 'Methodology' },
     contact: { ar: 'تواصل معنا', en: 'Contact' },
     consultation: { ar: 'طلب استشارة', en: 'Request Consultation' },
-    store: { ar: 'المتجر الرقمي', en: 'Digital Store' },
+    store: { ar: 'المتجر', en: 'Store' },
+    freeResources: { ar: 'موارد مجانية', en: 'Free Resources' },
     login: { ar: 'تسجيل الدخول', en: 'Login' },
     logout: { ar: 'تسجيل الخروج', en: 'Logout' },
     account: { ar: 'حسابي', en: 'My Account' },
@@ -38,7 +39,7 @@ export const translations = {
     orDivider: { ar: 'أو', en: 'or' },
   },
   store: {
-    title: { ar: 'المتجر الرقمي', en: 'Digital Store' },
+    title: { ar: 'المتجر', en: 'Store' },
     subtitle: { ar: 'أدوات ومنتجات رقمية لتطوير الأفراد والمؤسسات', en: 'Digital tools and products for individual and organizational growth' },
     products: { ar: 'المنتجات', en: 'Products' },
     assessments: { ar: 'التقييمات', en: 'Assessments' },

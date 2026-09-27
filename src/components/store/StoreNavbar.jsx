@@ -24,7 +24,9 @@ export default function StoreNavbar({ cartCount = 0 }) {
     { to: '/store', label: t.store[lang] },
     { to: '/store/products', label: translations.store.products[lang] },
     { to: '/store/assessments', label: translations.store.assessments[lang] },
+    { to: '/store/products?category=free', label: t.freeResources[lang] },
   ];
+  const activePath = location.pathname + location.search;
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
@@ -32,7 +34,7 @@ export default function StoreNavbar({ cartCount = 0 }) {
         <div className="hidden md:flex items-center gap-1 flex-1">
           {links.map(l => (
             <Link key={l.to} to={l.to}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${location.pathname === l.to ? 'text-brand-primary bg-brand-primary/5' : 'text-slate-600 hover:text-corp-dark hover:bg-slate-50'}`}>
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${activePath === l.to ? 'text-brand-primary bg-brand-primary/5' : 'text-slate-600 hover:text-corp-dark hover:bg-slate-50'}`}>
               {l.label}
             </Link>
           ))}
