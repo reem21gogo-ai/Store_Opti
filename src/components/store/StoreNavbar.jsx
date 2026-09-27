@@ -30,10 +30,7 @@ export default function StoreNavbar({ cartCount = 0 }) {
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
       <nav className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
         <Link to="/store" className="flex items-center gap-2 flex-shrink-0">
-          <div className="w-7 h-7 rounded-lg bg-brand-primary flex items-center justify-center">
-            <span className="text-white font-heading font-black text-xs">O</span>
-          </div>
-          <span className="font-heading font-black text-corp-dark text-base tracking-wider">OPTIVANCE</span>
+          <img src={LOGO} alt="OPTIVANCE" className="h-8 w-auto" />
           <span className="text-brand-accent text-xs font-medium hidden sm:block">{lang === 'ar' ? 'المتجر' : 'Store'}</span>
         </Link>
         <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
