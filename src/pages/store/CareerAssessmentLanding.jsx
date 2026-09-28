@@ -20,10 +20,10 @@ const SECTION_ICONS = { riasec: Compass, work_values: Heart, skills: Zap, person
 
 const WHAT_TO_EXPECT = {
   ar: [
-    { icon: Compass, title: '٦ أبعاد مهنية', desc: 'ميول، قيم، مهارات، شخصية، قوة، بيئة' },
-    { icon: Clock, title: '٢٥ ثانية لكل سؤال', desc: 'وقت مناسب للإجابة الصادقة والتلقائية' },
+    { icon: Compass, title: '6 أبعاد مهنية', desc: 'ميول، قيم، مهارات، شخصية، قوة، بيئة' },
+    { icon: Clock, title: '25 ثانية لكل سؤال', desc: 'وقت مناسب للإجابة الصادقة والتلقائية' },
     { icon: Target, title: 'نتائج فورية', desc: 'تقريرك يظهر مباشرة بعد الانتهاء' },
-    { icon: FileText, title: 'تقرير PDF', desc: '٩ صفحات تحليلية قابلة للتحميل' },
+    { icon: FileText, title: 'تقرير PDF', desc: '9 صفحات تحليلية قابلة للتحميل' },
   ],
   en: [
     { icon: Compass, title: '6 Career Dimensions', desc: 'Interests, values, skills, personality, strengths, environment' },
@@ -93,8 +93,8 @@ export default function CareerAssessmentLanding() {
             <p className="text-white/65 text-base leading-relaxed max-w-xl">{description}</p>
             <div className="flex flex-wrap gap-3 mt-5">
               {[
-                { icon: Users, label: lang === 'ar' ? '+١,٠٠٠ مستخدم' : '+1,000 Users' },
-                { icon: Star, label: lang === 'ar' ? '٤.٨ تقييم' : '4.8 Rating' },
+                { icon: Users, label: lang === 'ar' ? '+1,000 مستخدم' : '+1,000 Users' },
+                { icon: Star, label: lang === 'ar' ? '4.8 تقييم' : '4.8 Rating' },
                 { icon: Clock, label: lang === 'ar' ? 'نتائج فورية' : 'Instant Results' },
               ].map((badge, i) => {
                 const Icon = badge.icon;
@@ -109,8 +109,8 @@ export default function CareerAssessmentLanding() {
           </div>
           {/* Quick visual */}
           <div className="hidden md:flex flex-col items-center justify-center w-36 h-36 rounded-3xl bg-white/10 border border-white/20 backdrop-blur-sm">
-            <span className="font-heading font-black text-4xl text-brand-accent">١٥٠</span>
-            <span className="text-white/50 text-xs mt-1 text-center">{lang === 'ar' ? 'سؤال • ٦ أبعاد' : 'Questions • 6 Dimensions'}</span>
+            <span className="font-heading font-black text-4xl text-brand-accent">150</span>
+            <span className="text-white/50 text-xs mt-1 text-center">{lang === 'ar' ? 'سؤال • 6 أبعاد' : 'Questions • 6 Dimensions'}</span>
           </div>
         </div>
       </div>
@@ -151,7 +151,7 @@ export default function CareerAssessmentLanding() {
               </h2>
               <p className="text-slate-600 text-sm leading-relaxed mb-4">
                 {lang === 'ar'
-                  ? 'يقيس المقياس ٦ أبعاد رئيسية: الميول المهنية (RIASEC)، قيم العمل، المهارات، الشخصية، نقاط القوة، وتفضيلات بيئة العمل — لإعطائك صورة متكاملة عن توجّهك المهني.'
+                  ? 'يقيس المقياس 6 أبعاد رئيسية: الميول المهنية (RIASEC)، قيم العمل، المهارات، الشخصية، نقاط القوة، وتفضيلات بيئة العمل — لإعطائك صورة متكاملة عن توجّهك المهني.'
                   : 'The assessment measures 6 core dimensions: Occupational Interests (RIASEC), Work Values, Skills, Personality, Strengths, and Environment Preferences — giving you a complete picture of your career orientation.'}
               </p>
               <div className="space-y-2">
@@ -191,16 +191,16 @@ export default function CareerAssessmentLanding() {
                     <span className="text-slate-500 text-sm">{lang === 'ar' ? ' ر.س' : ' SAR'}</span>
                   </div>
                   <p className="text-xs text-slate-400">
-                    {lang === 'ar' ? 'تقييم شامل مع تقرير PDF وخطة ٩٠ يوم' : 'Full assessment with PDF report & 90-day plan'}
+                    {lang === 'ar' ? 'تقييم شامل مع تقرير PDF وخطة 90 يوم' : 'Full assessment with PDF report & 90-day plan'}
                   </p>
                 </div>
                 <div className="p-6 space-y-3">
                   {[
-                    lang === 'ar' ? '١٥٠ سؤال عبر ٦ أبعاد' : '150 questions across 6 dimensions',
+                    lang === 'ar' ? '150 سؤال عبر 6 أبعاد' : '150 questions across 6 dimensions',
                     lang === 'ar' ? 'رمز هولاند (Holland Code)' : 'Holland Code (RIASEC)',
                     lang === 'ar' ? 'مسارات مهنية مطابقة' : 'Matched career paths',
-                    lang === 'ar' ? 'تقرير PDF من ٩ صفحات' : '9-page PDF report',
-                    lang === 'ar' ? 'خطة عمل ٩٠ يوم' : '90-day action plan',
+                    lang === 'ar' ? 'تقرير PDF من 9 صفحات' : '9-page PDF report',
+                    lang === 'ar' ? 'خطة عمل 90 يوم' : '90-day action plan',
                   ].map((item, i) => (
                     <div key={i} className="flex items-center gap-2.5">
                       <CheckCircle size={14} className="text-brand-accent flex-shrink-0" />

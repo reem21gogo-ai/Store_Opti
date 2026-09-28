@@ -55,7 +55,7 @@ export default function Cart() {
                     <div className="w-12 h-12 rounded-xl bg-brand-primary/10 flex items-center justify-center"><Package size={18} className="text-brand-primary" /></div>
                     <div>
                       <div className="font-medium text-corp-dark text-sm">{item[`title_${lang}`] || item.title_ar}</div>
-                      <div className="text-slate-400 text-xs">{item.price?.toLocaleString()} {translations.common.currency[lang]}</div>
+                      <div className="text-slate-400 text-xs">{item.price?.toLocaleString('en-US')} {translations.common.currency[lang]}</div>
                     </div>
                   </div>
                   <button onClick={() => removeItem(item.product_id)} className="text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
@@ -65,9 +65,9 @@ export default function Cart() {
             <div className="lg:col-span-1">
               <div className="bg-white rounded-2xl p-6 sticky top-24">
                 <h3 className="font-heading font-bold text-corp-dark text-base mb-5">{lang === 'ar' ? 'ملخص الطلب' : 'Order Summary'}</h3>
-                <div className="flex justify-between text-sm text-slate-600 mb-2"><span>{lang === 'ar' ? 'المجموع' : 'Subtotal'}</span><span>{total.toLocaleString()} {translations.common.currency[lang]}</span></div>
+                <div className="flex justify-between text-sm text-slate-600 mb-2"><span>{lang === 'ar' ? 'المجموع' : 'Subtotal'}</span><span>{total.toLocaleString('en-US')} {translations.common.currency[lang]}</span></div>
                 <div className="border-t border-slate-100 my-4"></div>
-                <div className="flex justify-between font-heading font-black text-corp-dark mb-6"><span>{lang === 'ar' ? 'الإجمالي' : 'Total'}</span><span>{total.toLocaleString()} {translations.common.currency[lang]}</span></div>
+                <div className="flex justify-between font-heading font-black text-corp-dark mb-6"><span>{lang === 'ar' ? 'الإجمالي' : 'Total'}</span><span>{total.toLocaleString('en-US')} {translations.common.currency[lang]}</span></div>
                 <Link to="/store/checkout" className="btn-catalyst w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm">{translations.store.checkout[lang]} <Arrow size={14} /></Link>
                 <Link to="/store/products" className="mt-3 w-full py-2.5 text-center text-slate-500 text-sm hover:text-brand-primary block transition-colors">{lang === 'ar' ? 'متابعة التسوق' : 'Continue Shopping'}</Link>
               </div>

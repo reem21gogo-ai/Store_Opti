@@ -42,14 +42,14 @@ export default function AdminOrders() {
                 <tr key={o.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-5 py-3 font-mono text-xs text-slate-500">{o.id?.slice(-8)}</td>
                   <td className="px-5 py-3"><div className="font-medium text-corp-dark">{o.user_name || o.user_email}</div><div className="text-slate-400 text-xs">{o.user_email}</div></td>
-                  <td className="px-5 py-3 font-bold text-corp-dark">{o.total_amount?.toLocaleString()} {translations.common.currency[lang]}</td>
+                  <td className="px-5 py-3 font-bold text-corp-dark">{o.total_amount?.toLocaleString('en-US')} {translations.common.currency[lang]}</td>
                   <td className="px-5 py-3">
                     <select value={o.status} onChange={e => updateStatus(o.id, e.target.value)}
                       className={`text-xs px-2 py-1 rounded-full font-medium border-none focus:outline-none cursor-pointer ${statusColor(o.status)}`}>
                       {['pending', 'paid', 'failed', 'refunded'].map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </td>
-                  <td className="px-5 py-3 text-slate-400 text-xs">{new Date(o.created_date).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}</td>
+                  <td className="px-5 py-3 text-slate-400 text-xs">{new Date(o.created_date).toLocaleDateString(lang === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US')}</td>
                 </tr>
               ))}
             </tbody>

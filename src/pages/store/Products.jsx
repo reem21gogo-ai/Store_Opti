@@ -76,7 +76,7 @@ export default function Products() {
                   <h3 className="font-heading font-bold text-corp-dark text-sm mb-3 group-hover:text-brand-primary transition-colors line-clamp-2">{p[`title_${lang}`] || p.title_ar}</h3>
                   {p.is_free
                     ? <span className="text-brand-accent font-bold text-sm flex items-center gap-1"><Download size={12} /> {translations.common.free[lang]}</span>
-                    : <span className="font-heading font-black text-corp-dark">{p.price?.toLocaleString()} <span className="text-slate-400 text-xs font-normal">{translations.common.currency[lang]}</span></span>}
+                    : <span className="font-heading font-black text-corp-dark">{p.price?.toLocaleString('en-US')} <span className="text-slate-400 text-xs font-normal">{translations.common.currency[lang]}</span></span>}
                 </div>
               </Link>
             ))}

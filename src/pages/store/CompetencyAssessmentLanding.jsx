@@ -160,8 +160,8 @@ export default function CompetencyAssessmentLanding() {
             </p>
             <div className="flex flex-wrap gap-3 mt-5">
               {[
-              { icon: Users, label: lang === 'ar' ? '+٥,٠٠٠ مستخدم' : '+5,000 Users' },
-              { icon: Star, label: lang === 'ar' ? '٤.٩ تقييم' : '4.9 Rating' },
+              { icon: Users, label: lang === 'ar' ? '+5,000 مستخدم' : '+5,000 Users' },
+              { icon: Star, label: lang === 'ar' ? '4.9 تقييم' : '4.9 Rating' },
               { icon: Clock, label: lang === 'ar' ? 'نتائج فورية' : 'Instant Results' }].
               map((badge, i) => {
                 const Icon = badge.icon;
@@ -176,7 +176,7 @@ export default function CompetencyAssessmentLanding() {
           </div>
           {/* Quick score visual */}
           <div className="hidden md:flex flex-col items-center justify-center w-36 h-36 rounded-3xl bg-white/10 border border-white/20 backdrop-blur-sm">
-            <span className="font-heading font-black text-4xl text-brand-accent">٢٠</span>
+            <span className="font-heading font-black text-4xl text-brand-accent">20</span>
             <span className="text-white/50 text-xs mt-1">{lang === 'ar' ? 'جدارة أساسية' : 'Core Competencies'}‌</span>
           </div>
         </div>

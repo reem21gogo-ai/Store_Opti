@@ -312,8 +312,8 @@ export default function TakeAssessment() {
             {(question?.question_type === 'scale_5' || question?.question_type === 'scale_10') && (
               <div>
                 <div className="flex items-center justify-between mb-4 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                  <span>{lang === 'ar' ? '١ – ضعيف جداً' : '1 – Very weak'}</span>
-                  <span>{question.question_type === 'scale_5' ? (lang === 'ar' ? '٥ – ممتاز' : '5 – Excellent') : (lang === 'ar' ? '١٠ – ممتاز' : '10 – Excellent')}</span>
+                  <span>{lang === 'ar' ? '1 – ضعيف جداً' : '1 – Very weak'}</span>
+                  <span>{question.question_type === 'scale_5' ? (lang === 'ar' ? '5 – ممتاز' : '5 – Excellent') : (lang === 'ar' ? '10 – ممتاز' : '10 – Excellent')}</span>
                 </div>
                 <div className="flex gap-2">
                   {Array.from({ length: question.question_type === 'scale_5' ? 5 : 10 }, (_, i) => i + 1).map(n => {

@@ -11,12 +11,12 @@ const PLANS = {
     ar: {
       name: 'النسخة السريعة',
       badge: 'الأكثر شيوعاً',
-      tagline: 'اكتشف أنماطك في ١٠ دقائق',
+      tagline: 'اكتشف أنماطك في 10 دقائق',
       questions: '15 سؤال',
-      duration: '١٠ دقائق',
+      duration: '10 دقائق',
       price_suffix: ' ر.س',
       outputs: [
-        'ملف شخصية بـ ٤ أنماط رئيسية',
+        'ملف شخصية بـ 4 أنماط رئيسية',
         'نقاط قوتك الأبرز (Top 3)',
         'نمط تفكيرك وقراراتك',
         'توصيات تطوير سريعة',
@@ -45,18 +45,18 @@ const PLANS = {
     ar: {
       name: 'النسخة الكاملة',
       badge: 'الأعمق والأشمل',
-      tagline: 'تحليل معمّق بـ ٤٥ دقيقة',
+      tagline: 'تحليل معمّق بـ 45 دقيقة',
       questions: '45 سؤال',
-      duration: '٤٥ دقيقة',
+      duration: '45 دقيقة',
       price_suffix: ' ر.س',
       outputs: [
-        'ملف شخصية ١٦ نمطاً تفصيلياً',
+        'ملف شخصية 16 نمطاً تفصيلياً',
         'خريطة نقاط القوة الكاملة',
         'أسلوب قيادتك وتأثيرك',
         'مناطق التطوير ذات الأولوية',
-        'تقرير PDF شامل (٢٠+ صفحة)',
+        'تقرير PDF شامل (20+ صفحة)',
         'مقارنة مع معايير القطاع',
-        'خطة تطوير مقترحة لـ ٩٠ يوماً',
+        'خطة تطوير مقترحة لـ 90 يوماً',
       ],
       note: 'للقادة والمهنيين الجادين في تطوير أنفسهم',
     },
@@ -84,7 +84,7 @@ const PLANS = {
 const WHAT_TO_EXPECT = {
   ar: [
     { icon: Brain, title: 'أسئلة سيناريو واقعية', desc: 'أسئلة مصممة من بيئات عمل حقيقية' },
-    { icon: Clock, title: '٢٥ ثانية لكل سؤال', desc: 'وقت مناسب للإجابة الصادقة التلقائية' },
+    { icon: Clock, title: '25 ثانية لكل سؤال', desc: 'وقت مناسب للإجابة الصادقة التلقائية' },
     { icon: Target, title: 'نتائج فورية', desc: 'تقريرك يظهر مباشرة بعد الانتهاء' },
     { icon: FileText, title: 'تقرير PDF', desc: 'احتفظ بتقريرك وشاركه مع مدربك' },
   ],
@@ -172,8 +172,8 @@ export default function AssessmentDetail() {
             </p>
             <div className="flex flex-wrap gap-3 mt-5">
               {[
-                { icon: Users, label: lang === 'ar' ? '+٥,٠٠٠ مستفيد' : '+5,000 Users' },
-                { icon: Star, label: lang === 'ar' ? '٤.٩ تقييم' : '4.9 Rating' },
+                { icon: Users, label: lang === 'ar' ? '+5,000 مستفيد' : '+5,000 Users' },
+                { icon: Star, label: lang === 'ar' ? '4.9 تقييم' : '4.9 Rating' },
                 { icon: Clock, label: lang === 'ar' ? 'نتائج فورية' : 'Instant Results' },
               ].map((badge, i) => {
                 const Icon = badge.icon;
@@ -188,7 +188,7 @@ export default function AssessmentDetail() {
           </div>
           {/* Quick score visual */}
           <div className="hidden md:flex flex-col items-center justify-center w-36 h-36 rounded-3xl bg-white/10 border border-white/20 backdrop-blur-sm">
-            <span className="font-heading font-black text-4xl text-brand-accent">٩٧</span>
+            <span className="font-heading font-black text-4xl text-brand-accent">97</span>
             <span className="text-white/50 text-xs mt-1">{lang === 'ar' ? 'دقة التحليل' : 'Analysis Accuracy'}%</span>
           </div>
         </div>

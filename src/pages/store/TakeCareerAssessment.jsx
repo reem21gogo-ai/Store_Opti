@@ -114,7 +114,7 @@ export default function TakeCareerAssessment() {
       statusLabel: USER_STATUSES[intake.status]?.[assessmentLang] || intake.status || '',
       motivation: intake.customMotivation || intake.motivation || '',
       language: assessmentLang,
-      completion_date: new Date().toLocaleDateString(assessmentLang === 'ar' ? 'ar-SA' : 'en-US'),
+      completion_date: new Date().toLocaleDateString(assessmentLang === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US'),
     };
 
     const reportData = calculateCareerScores(answers, userProfile);

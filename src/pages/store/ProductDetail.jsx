@@ -95,7 +95,7 @@ export default function ProductDetail() {
               <div className="text-center mb-5">
                 {product.is_free
                   ? <div className="text-3xl font-heading font-black text-brand-accent">{translations.common.free[lang]}</div>
-                  : <><div className="text-4xl font-heading font-black text-corp-dark">{product.price?.toLocaleString()}</div><div className="text-slate-400 text-sm">{translations.common.currency[lang]}</div></>}
+                  : <><div className="text-4xl font-heading font-black text-corp-dark">{product.price?.toLocaleString('en-US')}</div><div className="text-slate-400 text-sm">{translations.common.currency[lang]}</div></>}
               </div>
               {product.is_free ? (
                 <button onClick={handleFreeDownload} disabled={downloading} className="btn-catalyst w-full py-4 rounded-xl flex items-center justify-center gap-2 text-base mb-4 disabled:opacity-70">

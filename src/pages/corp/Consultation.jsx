@@ -57,7 +57,7 @@ export default function Consultation() {
           <p className="text-white/60 text-lg mb-6">{t.successMsg[lang]}</p>
           <div className="flex items-center justify-center gap-2 text-white/40 text-sm">
             <Clock size={14} />
-            <span>{lang === 'ar' ? 'سيتواصل معك فريقنا خلال ٢٤ ساعة' : 'Our team will contact you within 24 hours'}</span>
+            <span>{lang === 'ar' ? 'سيتواصل معك فريقنا خلال 24 ساعة' : 'Our team will contact you within 24 hours'}</span>
           </div>
         </div>
       </div>
@@ -81,9 +81,9 @@ export default function Consultation() {
       <section className="py-4 px-6">
         <div className="max-w-2xl mx-auto flex flex-wrap justify-center gap-4">
           {[
-            { icon: Clock, ar: 'رد خلال ٢٤ ساعة', en: 'Response within 24 hours' },
+            { icon: Clock, ar: 'رد خلال 24 ساعة', en: 'Response within 24 hours' },
             { icon: Shield, ar: 'معلوماتك محمية وسرية', en: 'Your info is private & confidential' },
-            { icon: Users, ar: 'خبرة +١٥ سنة', en: '+15 years experience' },
+            { icon: Users, ar: 'خبرة +15 سنة', en: '+15 years experience' },
           ].map((b, i) => {
             const Icon = b.icon;
             return (
@@ -165,7 +165,7 @@ export default function Consultation() {
                 </label>
                 <input value={form.budget} onChange={e => set('budget', e.target.value)}
                   className="w-full bg-corp-dark border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-brand-accent/50 placeholder:text-white/20 transition-colors"
-                  placeholder={lang === 'ar' ? 'مثال: ٥٠,٠٠٠ - ١٠٠,٠٠٠ ر.س' : 'e.g. 50,000 - 100,000 SAR'} />
+                  placeholder={lang === 'ar' ? 'مثال: 50,000 - 100,000 ر.س' : 'e.g. 50,000 - 100,000 SAR'} />
               </div>
               <div>
                 <label className="block text-white/70 text-sm font-medium mb-2">

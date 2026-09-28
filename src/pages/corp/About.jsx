@@ -24,7 +24,7 @@ const WHAT_MAKES_US_DIFFERENT = {
     { icon: BarChart2, title: 'مبني على القياس والبيانات', desc: 'نؤمن بأن ما لا يُقاس لا يُحسَّن. كل حل نقدمه مرتبط بمؤشرات أداء واضحة.' },
     { icon: Users, title: 'تركيز على الإنسان', desc: 'لا نقدم برامج جاهزة. نصمم كل حل بناءً على واقع العميل وثقافته وأهدافه.' },
     { icon: Shield, title: 'اعتمادات دولية موثوقة', desc: 'فريقنا يحمل اعتمادات من Harrison وNCDA وICF وغيرها من المنظمات الدولية المعترف بها.' },
-    { icon: Eye, title: 'خبرة خليجية عميقة', desc: 'أكثر من ١٥ عاماً في تقديم الاستشارات والتدريب التنفيذي عبر قطاعات متنوعة في الخليج.' },
+    { icon: Eye, title: 'خبرة خليجية عميقة', desc: 'أكثر من 15 عاماً في تقديم الاستشارات والتدريب التنفيذي عبر قطاعات متنوعة في الخليج.' },
     { icon: Lightbulb, title: 'تكامل رقمي وأدوات ذكية', desc: 'نجمع بين الخبرة الاستشارية التقليدية والأدوات الرقمية الحديثة لتحقيق أثر أشمل.' },
   ],
   en: [
@@ -95,17 +95,17 @@ export default function About() {
                 </p>
                 <p>
                   {lang === 'ar'
-                    ? 'بخبرة تمتد لأكثر من ١٥ عاماً عبر قطاعات متنوعة في دول الخليج، نفهم تحديات القيادة والتطوير في السياق الخليجي والعربي.'
+                    ? 'بخبرة تمتد لأكثر من 15 عاماً عبر قطاعات متنوعة في دول الخليج، نفهم تحديات القيادة والتطوير في السياق الخليجي والعربي.'
                     : 'With over 15 years of experience across diverse sectors in Gulf countries, we understand leadership and development challenges in the Gulf and Arab context.'}
                 </p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { num: '+١٥', en: '+15', label: { ar: 'سنة خبرة', en: 'Years Experience' } },
-                { num: '+١٥٠', en: '+150', label: { ar: 'مشروع مُنجز', en: 'Projects Delivered' } },
-                { num: '+٨٧', en: '+87', label: { ar: 'شريك استراتيجي', en: 'Strategic Partners' } },
-                { num: '+٣٥٠٠٠', en: '+35K', label: { ar: 'مستفيد', en: 'Beneficiaries' } },
+                { num: '+15', en: '+15', label: { ar: 'سنة خبرة', en: 'Years Experience' } },
+                { num: '+150', en: '+150', label: { ar: 'مشروع مُنجز', en: 'Projects Delivered' } },
+                { num: '+87', en: '+87', label: { ar: 'شريك استراتيجي', en: 'Strategic Partners' } },
+                { num: '+35000', en: '+35K', label: { ar: 'مستفيد', en: 'Beneficiaries' } },
               ].map((s, i) => (
                 <div key={i} className="p-6 rounded-2xl border border-white/10 bg-corp-dark text-center">
                   <div className="font-heading font-black text-3xl gradient-text mb-2">{lang === 'ar' ? s.num : s.en}</div>

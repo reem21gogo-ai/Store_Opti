@@ -124,9 +124,9 @@ export default function Account() {
             ? <EmptyState icon={<Package size={28} />} title={lang === 'ar' ? 'لا توجد مشتريات بعد' : 'No purchases yet'} cta={{ label: lang === 'ar' ? 'تصفح المنتجات' : 'Browse Products', to: '/store/products' }} />
             : <div className="grid gap-4">{orders.map(order => (
               <div key={order.id} className="bg-white rounded-2xl p-5 flex items-center justify-between">
-                <div><div className="font-medium text-corp-dark">#{order.id?.slice(-6)}</div><div className="text-slate-400 text-xs">{new Date(order.created_date).toLocaleDateString()}</div></div>
+                <div><div className="font-medium text-corp-dark">#{order.id?.slice(-6)}</div><div className="text-slate-400 text-xs">{new Date(order.created_date).toLocaleDateString(lang === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US')}</div></div>
                 <span className={`text-xs px-3 py-1 rounded-full font-medium ${order.status === 'paid' ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`}>{order.status}</span>
-                <span className="font-heading font-bold text-corp-dark">{order.total_amount?.toLocaleString()} {translations.common.currency[lang]}</span>
+                <span className="font-heading font-bold text-corp-dark">{order.total_amount?.toLocaleString('en-US')} {translations.common.currency[lang]}</span>
               </div>
             ))}</div>
         )}
@@ -148,7 +148,7 @@ export default function Account() {
             : <div className="grid gap-3">{orders.map(order => (
               <div key={order.id} className="bg-white rounded-xl p-4 flex items-center justify-between text-sm">
                 <span className="text-slate-500">#{order.id?.slice(-8)}</span>
-                <span className="text-slate-700">{new Date(order.created_date).toLocaleDateString()}</span>
+                <span className="text-slate-700">{new Date(order.created_date).toLocaleDateString(lang === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US')}</span>
                 <span className="font-bold text-corp-dark">{order.total_amount} {translations.common.currency[lang]}</span>
                 <span className={`px-2 py-0.5 rounded-full text-xs ${order.status === 'paid' ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'}`}>{order.status}</span>
               </div>

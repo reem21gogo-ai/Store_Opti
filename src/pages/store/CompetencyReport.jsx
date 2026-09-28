@@ -127,9 +127,9 @@ function DomainSection({ domain, domainData, lang, sectionRef }) {
           {content.goals &&
         <div className="grid grid-cols-3 gap-3">
               {[
-          { key: 'short', label: { ar: '٠–٣٠ يوم', en: '0–30 days' } },
-          { key: 'mid', label: { ar: '٣٠–٩٠ يوم', en: '30–90 days' } },
-          { key: 'long', label: { ar: '٩٠+ يوم', en: '90+ days' } }].
+          { key: 'short', label: { ar: '0–30 يوم', en: '0–30 days' } },
+          { key: 'mid', label: { ar: '30–90 يوم', en: '30–90 days' } },
+          { key: 'long', label: { ar: '90+ يوم', en: '90+ days' } }].
           map((g) =>
           <div key={g.key} className="rounded-xl p-3 bg-slate-50 border border-slate-100">
                   <div className="text-xs font-semibold text-slate-400 mb-1">{g.label[lang_key]}</div>
@@ -476,9 +476,9 @@ export default function CompetencyReport() {
                           {goals &&
                         <div className="px-5 py-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
                               {[
-                          { key: 'short', label: { ar: 'هدف قصير (٠–٣٠ يوم)', en: 'Short-Term (0–30 days)' } },
-                          { key: 'mid', label: { ar: 'هدف متوسط (٣٠–٩٠ يوم)', en: 'Mid-Term (30–90 days)' } },
-                          { key: 'long', label: { ar: 'هدف طويل (٩٠+ يوم)', en: 'Long-Term (90+ days)' } }].
+                          { key: 'short', label: { ar: 'هدف قصير (0–30 يوم)', en: 'Short-Term (0–30 days)' } },
+                          { key: 'mid', label: { ar: 'هدف متوسط (30–90 يوم)', en: 'Mid-Term (30–90 days)' } },
+                          { key: 'long', label: { ar: 'هدف طويل (90+ يوم)', en: 'Long-Term (90+ days)' } }].
                           map((g) =>
                           <div key={g.key} className="rounded-lg p-3 bg-slate-50 border border-slate-100">
                                   <div className="text-xs font-semibold text-slate-400 mb-1.5">{g.label[lang_key]}</div>

@@ -55,7 +55,7 @@ export default function AdminClients() {
                   </td>
                   <td className="px-5 py-3 text-slate-500">{u.email}</td>
                   <td className="px-5 py-3"><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'}`}>{u.role}</span></td>
-                  <td className="px-5 py-3 text-slate-400 text-xs">{new Date(u.created_date).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}</td>
+                  <td className="px-5 py-3 text-slate-400 text-xs">{new Date(u.created_date).toLocaleDateString(lang === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US')}</td>
                 </tr>
               ))}
             </tbody>

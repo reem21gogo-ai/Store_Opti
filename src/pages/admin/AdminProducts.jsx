@@ -66,7 +66,7 @@ export default function AdminProducts() {
                   <div className="font-medium text-corp-dark text-sm truncate">{p[`title_${lang}`] || p.title_ar}</div>
                   <div className="text-slate-400 text-xs flex items-center gap-2">
                     <span>{p.category}</span>
-                    {p.is_free ? <span className="text-brand-accent font-bold">{translations.common.free[lang]}</span> : <span>{p.price?.toLocaleString()} {translations.common.currency[lang]}</span>}
+                    {p.is_free ? <span className="text-brand-accent font-bold">{translations.common.free[lang]}</span> : <span>{p.price?.toLocaleString('en-US')} {translations.common.currency[lang]}</span>}
                     <span className={`px-1.5 py-0.5 rounded text-xs ${p.is_published ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>{p.is_published ? (lang === 'ar' ? 'منشور' : 'Published') : (lang === 'ar' ? 'مسودة' : 'Draft')}</span>
                   </div>
                 </div>

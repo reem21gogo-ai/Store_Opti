@@ -623,9 +623,9 @@ function buildDomain(rpt, lang, idx, pgNum) {
   // 3-phase goals
   if (content.goals && y < H - 40) {
     const phases = [
-      { k: 'short', ar: '٠–٣٠ يوم', en: '0–30 Days', c: '#B52020', bg: '#FEF2F2' },
-      { k: 'mid', ar: '٣٠–٩٠ يوم', en: '30–90 Days', c: '#B87000', bg: '#FFFBEB' },
-      { k: 'long', ar: '٩٠+ يوم', en: '90+ Days', c: '#1A7A4A', bg: '#ECFDF5' },
+      { k: 'short', ar: '0–30 يوم', en: '0–30 Days', c: '#B52020', bg: '#FEF2F2' },
+      { k: 'mid', ar: '30–90 يوم', en: '30–90 Days', c: '#B87000', bg: '#FFFBEB' },
+      { k: 'long', ar: '90+ يوم', en: '90+ Days', c: '#1A7A4A', bg: '#ECFDF5' },
     ];
     const pw2 = (W - 20) / 3;
     phases.forEach((ph, pi) => {
@@ -689,7 +689,7 @@ function buildDevPlan(rpt, lang) {
     hBar(ctx, 34, y + 18, W - 48, 4, d.score, dClr);
     // 3 goals
     const gw = (W - 52) / 3;
-    [{ k: 'short', l: tr('٠–٣٠', '0–30'), c: '#B52020' }, { k: 'mid', l: tr('٣٠–٩٠', '30–90'), c: '#B87000' }, { k: 'long', l: tr('٩٠+', '90+'), c: '#1A7A4A' }]
+    [{ k: 'short', l: tr('0–30', '0–30'), c: '#B52020' }, { k: 'mid', l: tr('30–90', '30–90'), c: '#B87000' }, { k: 'long', l: tr('90+', '90+'), c: '#1A7A4A' }]
       .forEach((ph, gi) => {
         const gx = 34 + gi * (gw + 3);
         rect(ctx, gx, y + 25, gw, 24, C.bg, C.border, 3);
@@ -751,9 +751,9 @@ function buildBackCover(rpt, lang) {
 
   const steps = [
     { n: '01', c: '#1558A0', ar: 'راجع تقريرك بعمق', en: 'Deep-Review Your Report', da: 'اقرأ تحليل كل مجال وافهم ما تعنيه نتيجتك', de: 'Read each domain and understand your score.' },
-    { n: '02', c: '#1A7A4A', ar: 'حدد هدفين فوريين', en: 'Set Two Immediate Goals', da: 'اختر هدفين من قسم ٠–٣٠ يومًا وابدأ بهما', de: 'Pick two 0–30 day goals and start today.' },
+    { n: '02', c: '#1A7A4A', ar: 'حدد هدفين فوريين', en: 'Set Two Immediate Goals', da: 'اختر هدفين من قسم 0–30 يومًا وابدأ بهما', de: 'Pick two 0–30 day goals and start today.' },
     { n: '03', c: '#B87000', ar: 'شاركه مع مشرفك', en: 'Share With Your Manager', da: 'ناقش التقرير مع مشرفك أو مرشدك المهني', de: 'Discuss with your direct manager or mentor.' },
-    { n: '04', c: '#6B21A8', ar: 'تابع تقدمك شهريًا', en: 'Track Progress Monthly', da: 'استخدم قالب التأمل مرة كل ٣٠ يومًا', de: 'Use the reflection template every 30 days.' },
+    { n: '04', c: '#6B21A8', ar: 'تابع تقدمك شهريًا', en: 'Track Progress Monthly', da: 'استخدم قالب التأمل مرة كل 30 يومًا', de: 'Use the reflection template every 30 days.' },
     { n: '05', c: C.teal, ar: 'استكشف حلول Optivance', en: 'Explore Optivance Solutions', da: 'تصفح متجرنا للأدوات والتدريبات', de: 'Browse our store for tools and training.' },
   ];
   let sy = 36;

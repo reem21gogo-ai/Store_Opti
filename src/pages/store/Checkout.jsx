@@ -63,13 +63,13 @@ export default function Checkout() {
               {items.map((item, i) => (
                 <div key={i} className="flex justify-between text-sm">
                   <span className="text-slate-600">{item[`title_${lang}`] || item.title_ar}</span>
-                  <span className="font-medium text-corp-dark">{item.price?.toLocaleString()} {translations.common.currency[lang]}</span>
+                  <span className="font-medium text-corp-dark">{item.price?.toLocaleString('en-US')} {translations.common.currency[lang]}</span>
                 </div>
               ))}
             </div>
             <div className="border-t border-slate-100 pt-4 flex justify-between font-heading font-black text-corp-dark">
               <span>{lang === 'ar' ? 'الإجمالي' : 'Total'}</span>
-              <span>{total.toLocaleString()} {translations.common.currency[lang]}</span>
+              <span>{total.toLocaleString('en-US')} {translations.common.currency[lang]}</span>
             </div>
           </div>
           <div className="bg-white rounded-2xl p-6">
@@ -86,7 +86,7 @@ export default function Checkout() {
             </div>
             <button onClick={handlePlaceOrder} disabled={processing}
               className="btn-catalyst w-full py-4 rounded-xl flex items-center justify-center gap-2 font-heading font-bold disabled:opacity-60">
-              {processing ? <div className="w-5 h-5 border-2 border-corp-dark/30 border-t-corp-dark rounded-full animate-spin"></div> : <><CreditCard size={16} /> {lang === 'ar' ? `ادفع ${total.toLocaleString()} ${translations.common.currency[lang]}` : `Pay ${total.toLocaleString()} ${translations.common.currency[lang]}`}</>}
+              {processing ? <div className="w-5 h-5 border-2 border-corp-dark/30 border-t-corp-dark rounded-full animate-spin"></div> : <><CreditCard size={16} /> {lang === 'ar' ? `ادفع ${total.toLocaleString('en-US')} ${translations.common.currency[lang]}` : `Pay ${total.toLocaleString('en-US')} ${translations.common.currency[lang]}`}</>}
             </button>
           </div>
         </div>

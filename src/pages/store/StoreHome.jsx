@@ -287,7 +287,7 @@ function ProductCard({ product, lang }) {
         <div className="flex items-center justify-between">
           {product.is_free ?
           <span className="text-brand-accent font-bold text-sm">{translations.store.free[lang]}</span> :
-          <span className="font-heading font-black text-corp-dark">{product.price?.toLocaleString()} <span className="text-slate-400 text-xs font-normal">{translations.common.currency[lang]}</span></span>}
+          <span className="font-heading font-black text-corp-dark">{product.price?.toLocaleString('en-US')} <span className="text-slate-400 text-xs font-normal">{translations.common.currency[lang]}</span></span>}
         </div>
       </div>
     </Link>);

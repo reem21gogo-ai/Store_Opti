@@ -93,9 +93,9 @@ const ROUTE_STEPS = [
 ];
 
 const FEATURED_PRODUCTS = [
-  { tag: { en: 'Assessment', ar: 'تقييم' }, badge: { en: 'Featured', ar: 'مميز' }, badgeColor: '#05E1AE', en: { title: 'Leadership Competency Assessment', desc: 'Measure your leadership competencies and receive a personalized development report.' }, ar: { title: 'مقياس الكفاءات القيادية', desc: 'قِس كفاءاتك القيادية واحصل على تقرير تطوير شخصي.' }, price: { en: '199 SAR', ar: '١٩٩ ر.س' } },
+  { tag: { en: 'Assessment', ar: 'تقييم' }, badge: { en: 'Featured', ar: 'مميز' }, badgeColor: '#05E1AE', en: { title: 'Leadership Competency Assessment', desc: 'Measure your leadership competencies and receive a personalized development report.' }, ar: { title: 'مقياس الكفاءات القيادية', desc: 'قِس كفاءاتك القيادية واحصل على تقرير تطوير شخصي.' }, price: { en: '199 SAR', ar: '199 ر.س' } },
   { tag: { en: 'Template', ar: 'نموذج' },   badge: { en: 'Free', ar: 'مجاني' },    badgeColor: '#336fa3', en: { title: 'Career Clarity Workbook', desc: 'A structured workbook to help you define your professional direction and goals.' },          ar: { title: 'كتاب وضوح المسار المهني', desc: 'كتاب عمل منظم يساعدك على تحديد اتجاهك ومسارك المهني.' },           price: { en: 'Free', ar: 'مجاني' } },
-  { tag: { en: 'Tool', ar: 'أداة' },         badge: { en: 'New', ar: 'جديد' },      badgeColor: '#3a9abf', en: { title: 'Team Performance Diagnostic', desc: "Evaluate your team's performance dynamics and identify key development areas." },         ar: { title: 'تشخيص أداء الفريق', desc: 'قيّم ديناميكيات أداء فريقك وحدد مجالات التطوير الرئيسية.' },             price: { en: '299 SAR', ar: '٢٩٩ ر.س' } },
+  { tag: { en: 'Tool', ar: 'أداة' },         badge: { en: 'New', ar: 'جديد' },      badgeColor: '#3a9abf', en: { title: 'Team Performance Diagnostic', desc: "Evaluate your team's performance dynamics and identify key development areas." },         ar: { title: 'تشخيص أداء الفريق', desc: 'قيّم ديناميكيات أداء فريقك وحدد مجالات التطوير الرئيسية.' },             price: { en: '299 SAR', ar: '299 ر.س' } },
 ];
 
 const ROUTE_COLORS = ['#05E1AE', '#3a9abf', '#336fa3', '#5bbdd6', '#2ec9a0'];

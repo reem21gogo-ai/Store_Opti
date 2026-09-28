@@ -81,7 +81,7 @@ export default function AdminConsultations() {
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusObj.color}`}>{statusObj[lang]}</span>
                     </div>
                     <div className="text-slate-400 text-xs mt-1">{req.email} · {clientLabel(req.client_type)} · {needLabel(req.need_type)}</div>
-                    <div className="text-slate-400 text-xs">{new Date(req.created_date).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}</div>
+                    <div className="text-slate-400 text-xs">{new Date(req.created_date).toLocaleDateString(lang === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US')}</div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <select value={req.status} onChange={e => { e.stopPropagation(); updateStatus(req.id, e.target.value); }} onClick={e => e.stopPropagation()}
