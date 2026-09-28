@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useLang } from '@/lib/LanguageContext';
 import { Clock, BarChart2, Play, ArrowLeft, ArrowRight, CheckCircle, Lock, Brain, Target, FileText, Users, Star, ChevronRight } from 'lucide-react';
 import StoreNavbar from '@/components/store/StoreNavbar';
+import CompetencyOutputPreview from '@/components/store/CompetencyOutputPreview';
 import StoreFooter from '@/components/store/StoreFooter';
 import { base44 } from '@/api/base44Client';
 
@@ -235,33 +236,7 @@ export default function CompetencyAssessmentLanding() {
               <h2 className="font-heading font-bold text-corp-dark text-xl mb-5">
                 {lang === 'ar' ? 'مثال على مخرجات المقياس' : 'Sample Output Preview'}
               </h2>
-              <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-                <div className="bg-corp-dark px-6 py-4 flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-red-400" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                  <div className="w-3 h-3 rounded-full bg-green-400" />
-                  <span className="text-white/40 text-xs mx-auto">{lang === 'ar' ? 'معاينة التقرير' : 'Report Preview'}</span>
-                </div>
-                <div className="p-6 space-y-4">
-                  {(lang === 'ar' ?
-                  [{ label: 'القيادة الاستراتيجية', pct: 88 }, { label: 'بناء العلاقات', pct: 73 }, { label: 'التنفيذ والإنجاز', pct: 65 }, { label: 'التفكير التحليلي', pct: 91 }] :
-                  [{ label: 'Strategic Leadership', pct: 88 }, { label: 'Relationship Building', pct: 73 }, { label: 'Executing & Delivering', pct: 65 }, { label: 'Analytical Thinking', pct: 91 }]).
-                  map((bar, i) =>
-                  <div key={i}>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-sm font-medium text-slate-700">{bar.label}</span>
-                        <span className="text-sm font-bold text-brand-primary">{bar.pct}%</span>
-                      </div>
-                      <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${bar.pct}%`, background: 'linear-gradient(90deg, #1A3A5C, #05E1AE)' }} />
-                      </div>
-                    </div>
-                  )}
-                  <div className="pt-2 text-xs text-slate-400 text-center">
-                    {lang === 'ar' ? 'معاينة توضيحية فقط' : 'Illustrative preview only'}
-                  </div>
-                </div>
-              </div>
+              <CompetencyOutputPreview />
             </div>
           </div>
 
