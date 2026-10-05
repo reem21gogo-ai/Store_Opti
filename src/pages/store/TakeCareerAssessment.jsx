@@ -55,12 +55,17 @@ export default function TakeCareerAssessment() {
   const SectionIcon = SECTION_ICONS[sectionId] || Compass;
 
   const goTo = useCallback((idx) => {
-    if (idx >= total) { setShowConfirm(true); return; }
     if (idx < 0) return;
-    setCurrent(idx);
-    setSelected(answers[idx] ? answers[idx].value : null);
+    // Skip questions already answered — e.g. carried over from the quick assessment.
+    let target = idx;
+    if (idx > current) {
+      while (target < total && answers[ALL_QUESTIONS[target].id]) target++;
+    }
+    if (target >= total) { setShowConfirm(true); return; }
+    setCurrent(target);
+    setSelected(answers[target] ? answers[target].value : null);
     setTimeLeft(TIMER_SECONDS);
-  }, [total, answers]);
+  }, [total, answers, current]);
 
   // Auth check
   useEffect(() => {

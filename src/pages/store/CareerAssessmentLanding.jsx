@@ -224,6 +224,11 @@ export default function CareerAssessmentLanding() {
                 </button>
               )}
 
+              <Link to="/store/career/quick" className="w-full py-3 rounded-xl border border-brand-accent/40 bg-brand-accent/5 text-brand-primary text-sm text-center flex items-center justify-center gap-2 hover:bg-brand-accent/10 transition-all">
+                <Zap size={14} />
+                {lang === 'ar' ? 'جرّب المقياس السريع (6 أسئلة)' : 'Try the Quick Assessment (6 questions)'}
+              </Link>
+
               <Link to="/store/assessments" className="w-full py-3 rounded-xl border border-slate-200 text-slate-600 text-sm text-center flex items-center justify-center gap-2 hover:border-brand-primary/50 hover:text-brand-primary transition-all bg-white">
                 {lang === 'ar' ? 'استكشف مقاييس أخرى' : 'Explore Other Assessments'}
               </Link>

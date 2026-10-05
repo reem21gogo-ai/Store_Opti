@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Mail, Briefcase, Target, ArrowLeft, ArrowRight, Globe, ChevronRight } from 'lucide-react';
+import { User, Mail, Briefcase, Target, ArrowLeft, ArrowRight, Globe, ChevronRight, RefreshCw } from 'lucide-react';
 import StoreNavbar from '@/components/store/StoreNavbar';
 import StoreFooter from '@/components/store/StoreFooter';
 import { base44 } from '@/api/base44Client';
@@ -15,6 +15,10 @@ import { USER_STATUSES } from '@/lib/careerContent';
 const MOTIVATIONS = {
   ar: ['استكشاف مسار مهني مناسب', 'تغيير مجال العمل', 'توجيه الدراسة والتدريب', 'الفضول المهني', 'التحضير لفرصة جديدة'],
   en: ['Exploring a suitable career path', 'Changing my field of work', 'Guiding study and training', 'Professional curiosity', 'Preparing for a new opportunity'],
+};
+
+const readStored = (key) => {
+  try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; }
 };
 
 export default function CareerIntake() {
@@ -32,17 +36,20 @@ export default function CareerIntake() {
   const [user, setUser] = useState(null);
   const [step, setStep] = useState(1); // 1=lang, 2=profile, 3=motivation
   const [errors, setErrors] = useState({});
+  const [quickCount, setQuickCount] = useState(0);
 
   useEffect(() => {
     base44.auth.isAuthenticated().then(async ok => {
       if (!ok) { navigate('/store/login?redirect=/store/career/intake'); return; }
       const u = await base44.auth.me();
+      const quickLead = readStored('quick_career_lead');
+      setQuickCount(Object.keys(readStored('career_assessment_answers')).length);
       setUser(u);
       setForm(f => ({
         ...f,
         fullName: u.full_name || '',
-        preferredName: u.full_name?.split(' ')[0] || '',
-        email: u.email || '',
+        preferredName: quickLead.first_name || u.full_name?.split(' ')[0] || '',
+        email: (quickLead.contact_type === 'email' && quickLead.contact) || u.email || '',
       }));
     });
   }, [navigate]);
@@ -106,6 +113,20 @@ export default function CareerIntake() {
           </div>
         </div>
       </div>
+
+      {quickCount > 0 && (
+        <div className="bg-brand-accent/10 border-b border-brand-accent/20 px-6 py-3">
+          <div className="max-w-2xl mx-auto flex items-center gap-2.5">
+            <RefreshCw size={14} className="text-brand-accent flex-shrink-0" />
+            <p className="text-xs text-brand-primary font-medium">
+              {t(
+                `تم ترحيل ${quickCount} أسئلة من المقياس السريع — لن تحتاج للإجابة عليها مرة أخرى.`,
+                `${quickCount} questions from the quick assessment were carried over — you won't answer them again.`
+              )}
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-2xl mx-auto px-6 py-12">
         <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25 }}>
