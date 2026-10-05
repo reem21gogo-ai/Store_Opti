@@ -188,7 +188,7 @@ export default function TakeQuickCareerAssessment() {
 
       <div className="px-5 pb-6 text-center">
         <span className="text-slate-300 text-xs">
-          {t('أجب بصدق — لا توجد إجابة صحيحة أو خاطئة', 'Answer honestly — there are no right or wrong answers')}
+          {t('اختيارك ينقلك تلقائيًا للسؤال التالي — أجب بصدق', 'Your choice moves you straight on — answer honestly')}
         </span>
       </div>
     </div>

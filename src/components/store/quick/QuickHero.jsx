@@ -1,108 +1,77 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Play, Check, Sparkles } from 'lucide-react';
+import { Play, ListChecks, Timer, Zap, ShieldCheck, Sparkles } from 'lucide-react';
 import { QUICK_TOTAL } from '@/lib/quickCareerQuestions';
 import QuickCountdown from '@/components/store/quick/QuickCountdown';
 
 /**
- * QuickHero — the ad hook: promise, micro-commitment bullets, proof and the first CTA.
+ * QuickHero — one tight screen: the promise, the button, and the facts.
+ * Sized so the CTA is visible on a phone without scrolling.
  */
-export default function QuickHero({ lang = 'ar', isRTL = true, onStart }) {
+export default function QuickHero({ lang = 'ar', onStart }) {
   const t = (ar, en) => (lang === 'ar' ? ar : en);
 
-  const bullets = [
-    t(`${QUICK_TOTAL} سؤالًا فقط — أقل من دقيقتين`, `Only ${QUICK_TOTAL} questions — under two minutes`),
-    t('بدون تسجيل وبدون أي رسوم', 'No sign-up, no fees'),
-    t('نتيجتك تظهر فور انتهائك', 'Your result appears the moment you finish'),
-  ];
-
-  const stats = [
-    { value: QUICK_TOTAL, label: t('سؤالًا', 'questions') },
-    { value: '2', label: t('دقيقة', 'minutes') },
-    { value: '6', label: t('أبعاد مهنية', 'career dimensions') },
-    { value: '0', label: t('رسوم', 'fees') },
+  const facts = [
+    { icon: ListChecks, label: t(`${QUICK_TOTAL} سؤالًا`, `${QUICK_TOTAL} questions`) },
+    { icon: Timer, label: t('أقل من دقيقتين', 'Under two minutes') },
+    { icon: Zap, label: t('نتيجة فورية', 'Instant result') },
+    { icon: ShieldCheck, label: t('بدون تسجيل', 'No sign-up') },
   ];
 
   return (
     <section
-      className="relative overflow-hidden px-5 pt-10 pb-14 lg:pt-16 lg:pb-20"
+      className="px-5 pt-8 pb-10 sm:pt-12 sm:pb-14"
       style={{ background: 'linear-gradient(150deg, #0D1F33, #1A3A5C 60%, #326EA3)' }}
     >
-      <div
-        className="absolute inset-0 opacity-[0.06]"
-        style={{
-          backgroundImage: 'linear-gradient(#05E1AE 1px, transparent 1px), linear-gradient(90deg, #05E1AE 1px, transparent 1px)',
-          backgroundSize: '38px 38px',
-        }}
-      />
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="max-w-lg mx-auto text-center"
+      >
+        <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-accent/15 border border-brand-accent/25 mb-5">
+          <Sparkles size={13} className="text-brand-accent" />
+          <span className="text-brand-accent text-xs font-semibold">
+            {t('مجاني تمامًا — بدون تسجيل', 'Completely free — no sign-up')}
+          </span>
+        </span>
 
-      <div className="relative max-w-5xl mx-auto lg:grid lg:grid-cols-2 lg:gap-12 lg:items-center">
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
-          className="text-center lg:text-start"
+        <h1 className="font-heading font-black text-white text-2xl sm:text-4xl leading-tight mb-3">
+          {t('هل تعمل في المجال الذي يناسبك فعلًا؟', 'Are you really working in the field that fits you?')}
+        </h1>
+
+        <p className="text-white/60 text-sm sm:text-base leading-relaxed mb-7">
+          {t(
+            'اكتشف ميلك المهني الحقيقي في أقل من دقيقتين — أسئلة واضحة، واختيار واحد لكل سؤال.',
+            'Find your real career interest in under two minutes — clear questions, one choice each.'
+          )}
+        </p>
+
+        <button
+          onClick={onStart}
+          className="w-full py-4 rounded-2xl font-heading font-black text-base flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.98]"
+          style={{ background: 'linear-gradient(135deg, #05E1AE, #4ca9fa)', color: '#0D1F33' }}
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-accent/15 border border-brand-accent/25 mb-6">
-            <Sparkles size={13} className="text-brand-accent" />
-            <span className="text-brand-accent text-xs font-semibold">
-              {t('مبني على نموذج عالمي للميول المهنية', 'Built on a global career-interest model')}
-            </span>
-          </div>
+          <Play size={17} fill="currentColor" />
+          {t('ابدأ الاختبار الآن', 'Start the test now')}
+        </button>
 
-          <h1 className="font-heading font-black text-white text-3xl sm:text-4xl lg:text-5xl leading-[1.15] mb-4">
-            {t('هل تعمل في المجال الذي يناسبك فعلًا؟', 'Are you really working in the field that fits you?')}
-          </h1>
-          <p className="text-white/60 text-base leading-relaxed mb-7 max-w-xl lg:mx-0 mx-auto">
-            {t(
-              'المشكلة ليست في قدراتك، بل في أن أحدًا لم يخبرك أين تناسبها. اكتشف ميلك المهني الحقيقي في دقيقتين.',
-              "The problem isn't your abilities — it's that no one told you where they fit. Discover your real career interest in two minutes."
-            )}
-          </p>
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-5">
+          {facts.map((fact, i) => {
+            const Icon = fact.icon;
+            return (
+              <span key={i} className="flex items-center gap-1.5 text-white/55 text-xs">
+                <Icon size={12} className="text-brand-accent" />
+                {fact.label}
+              </span>
+            );
+          })}
+        </div>
 
-          <div className="space-y-2.5 mb-8 text-start max-w-xs mx-auto lg:mx-0">
-            {bullets.map((bullet, i) => (
-              <div key={i} className="flex items-center gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-brand-accent/15 flex items-center justify-center flex-shrink-0">
-                  <Check size={12} className="text-brand-accent" />
-                </span>
-                <span className="text-white/80 text-sm">{bullet}</span>
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={onStart}
-            className="w-full sm:w-auto sm:px-10 py-4 rounded-2xl font-heading font-black text-base flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.98] mx-auto lg:mx-0"
-            style={{ background: 'linear-gradient(135deg, #05E1AE, #4ca9fa)', color: '#0D1F33' }}
-          >
-            <Play size={17} fill="currentColor" />
-            {t('ابدأ الاختبار المجاني الآن', 'Start the free test now')}
-          </button>
-
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mt-10 lg:mt-0"
-        >
-          <div className="rounded-3xl bg-white/[0.06] border border-white/10 backdrop-blur-sm p-5">
-            <div className="grid grid-cols-2 gap-3">
-              {stats.map((stat, i) => (
-                <div key={i} className="rounded-2xl bg-white/[0.05] border border-white/5 px-4 py-3.5 text-center">
-                  <div className="font-heading font-black text-2xl text-brand-accent tabular-nums">{stat.value}</div>
-                  <div className="text-white/50 text-[11px] mt-0.5">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 flex justify-center">
-              <QuickCountdown lang={lang} tone="dark" />
-            </div>
-          </div>
-        </motion.div>
-      </div>
+        <div className="flex justify-center mt-5">
+          <QuickCountdown lang={lang} tone="dark" />
+        </div>
+      </motion.div>
     </section>
   );
 }
