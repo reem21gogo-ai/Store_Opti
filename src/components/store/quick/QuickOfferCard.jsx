@@ -35,7 +35,7 @@ export default function QuickOfferCard({ lang = 'ar', isRTL = true }) {
           <div className="inline-flex items-center gap-1.5 bg-brand-accent/20 border border-brand-accent/30 rounded-full px-3 py-1">
             <BadgePercent size={13} className="text-brand-accent" />
             <span className="text-brand-accent text-xs font-bold">
-              {t(`خصم ${OFFER.discountPercent}% لزوار الإعلان`, `${OFFER.discountPercent}% ad-exclusive discount`)}
+              {t(`خصم ${OFFER.discountPercent}% لفترة محدودة`, `${OFFER.discountPercent}% off, limited time`)}
             </span>
           </div>
           <span className="text-white/40 text-xs">{t('العرض محدود', 'Limited offer')}</span>

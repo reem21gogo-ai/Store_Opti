@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Play, Check, Clock, Users, Star, Sparkles } from 'lucide-react';
+import { Play, Check, Sparkles } from 'lucide-react';
 import { QUICK_TOTAL } from '@/lib/quickCareerQuestions';
 import QuickCountdown from '@/components/store/quick/QuickCountdown';
 
@@ -11,16 +11,16 @@ export default function QuickHero({ lang = 'ar', isRTL = true, onStart }) {
   const t = (ar, en) => (lang === 'ar' ? ar : en);
 
   const bullets = [
-    t(`${QUICK_TOTAL} سؤالًا فقط — بلا تسجيل`, `Only ${QUICK_TOTAL} questions — no sign-up`),
-    t('نتيجة أولية فورية بعد الاختبار', 'Instant preliminary result when you finish'),
-    t('مجاني بالكامل ولا يحتاج تحميل أي تطبيق', 'Completely free, nothing to download'),
+    t(`${QUICK_TOTAL} سؤالًا فقط — أقل من دقيقتين`, `Only ${QUICK_TOTAL} questions — under two minutes`),
+    t('بدون تسجيل وبدون أي رسوم', 'No sign-up, no fees'),
+    t('نتيجتك تظهر فور انتهائك', 'Your result appears the moment you finish'),
   ];
 
   const stats = [
     { value: QUICK_TOTAL, label: t('سؤالًا', 'questions') },
     { value: '2', label: t('دقيقة', 'minutes') },
     { value: '6', label: t('أبعاد مهنية', 'career dimensions') },
-    { value: '9', label: t('صفحات في تقريرك', 'report pages') },
+    { value: '0', label: t('رسوم', 'fees') },
   ];
 
   return (
@@ -46,7 +46,7 @@ export default function QuickHero({ lang = 'ar', isRTL = true, onStart }) {
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-accent/15 border border-brand-accent/25 mb-6">
             <Sparkles size={13} className="text-brand-accent" />
             <span className="text-brand-accent text-xs font-semibold">
-              {t('تقييم مهني مجاني لزوار الإعلان', 'Free career check for ad visitors')}
+              {t('مبني على نموذج عالمي للميول المهنية', 'Built on a global career-interest model')}
             </span>
           </div>
 
@@ -80,14 +80,6 @@ export default function QuickHero({ lang = 'ar', isRTL = true, onStart }) {
             {t('ابدأ الاختبار المجاني الآن', 'Start the free test now')}
           </button>
 
-          <div className="flex flex-wrap justify-center lg:justify-start gap-x-5 gap-y-2 mt-5">
-            {[[Users, t('+1,000 مستخدم', '+1,000 users')], [Star, t('4.8 تقييم', '4.8 rating')], [Clock, t('نتائج فورية', 'Instant results')]].map(([Icon, label], i) => (
-              <span key={i} className="flex items-center gap-1.5 text-white/50 text-xs">
-                <Icon size={12} className="text-brand-accent" />
-                {label}
-              </span>
-            ))}
-          </div>
         </motion.div>
 
         <motion.div

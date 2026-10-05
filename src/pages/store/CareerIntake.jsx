@@ -138,7 +138,7 @@ export default function CareerIntake() {
             <div className="flex items-center gap-2.5">
               <BadgePercent size={14} className="text-brand-accent flex-shrink-0" />
               <p className="text-xs text-white/85 font-medium">
-                {t(`خصم ${OFFER.discountPercent}% لزوار الإعلان محفوظ على مقياسك الكامل.`, `Your ${OFFER.discountPercent}% ad discount is saved for this assessment.`)}
+                {t(`خصمك ${OFFER.discountPercent}% محفوظ على مقياسك الكامل.`, `Your ${OFFER.discountPercent}% discount is saved for this assessment.`)}
               </p>
             </div>
             <QuickCountdown lang={assessmentLang} tone="dark" />

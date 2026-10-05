@@ -27,7 +27,7 @@ const ITEMS = {
     },
     {
       q: 'إلى متى يستمر الخصم؟',
-      a: `الخصم مخصص لزوار الإعلان بقيمة ${OFFER.discountPercent}% وصلاحيته محدودة بالمهلة الظاهرة أعلى الصفحة.`,
+      a: `قيمة الخصم ${OFFER.discountPercent}%، ويسري حتى انتهاء المهلة الظاهرة أعلى الصفحة.`,
     },
   ],
   en: [
@@ -53,7 +53,7 @@ const ITEMS = {
     },
     {
       q: 'How long does the discount last?',
-      a: `The offer is exclusive to ad visitors at ${OFFER.discountPercent}% off, and it stays valid for the countdown shown at the top of the page.`,
+      a: `The discount is ${OFFER.discountPercent}% off, and it stays valid until the countdown at the top of the page ends.`,
     },
   ],
 };

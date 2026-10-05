@@ -3,7 +3,7 @@
  * Built as a conversion funnel: hook → value → curiosity gap → offer → objections.
  */
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Globe, ListChecks, UserCheck, FileText, Wrench, FlaskConical, Palette, Users, Briefcase, Calculator } from 'lucide-react';
 import { useLang } from '@/lib/LanguageContext';
@@ -52,9 +52,7 @@ export default function QuickCareerLanding() {
       {/* Top bar */}
       <div className="bg-corp-dark px-5 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <Link to="/store">
-            <img src={LOGO} alt="OPTIVANCE" className="h-7 w-auto brightness-0 invert" />
-          </Link>
+          <img src={LOGO} alt="OPTIVANCE" className="h-7 w-auto brightness-0 invert" />
           <button
             onClick={toggleLang}
             className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs transition-colors"
@@ -120,8 +118,8 @@ export default function QuickCareerLanding() {
             lang={lang}
             title={t('هذا هو تقريرك الكامل', 'This is your full report')}
             note={t(
-              '9 صفحات: رمز هولاند، مسارات مطابقة بالاسم، وخطة 90 يومًا. يُفتح بعد إكمال المقياس الكامل.',
-              '9 pages: your Holland Code, paths matched by name, and a 90-day plan. It unlocks with the full assessment.'
+              'تقرير من 9 صفحات: مسارات مطابقة بالاسم وخطة 90 يومًا. يُفتح مع المقياس الكامل.',
+              'A 9-page report: paths matched by name and a 90-day plan. It unlocks with the full assessment.'
             )}
           />
 
@@ -165,12 +163,12 @@ export default function QuickCareerLanding() {
         <div className="max-w-xl mx-auto">
           <div className="text-center mb-6">
             <h2 className="font-heading font-black text-corp-dark text-xl sm:text-2xl mb-2">
-              {t('عرض خاص لزوار الإعلان', 'A special offer for ad visitors')}
+              {t('عرض خاص لفترة محدودة', 'A special offer, for a limited time')}
             </h2>
             <p className="text-slate-500 text-sm">
               {t(
-                'أنت الآن على بعد خطوة من معرفة ميلك الحقيقي — والخطوة الكاملة بسعر مخفّض وصلاحية محدودة.',
-                'You are one step away from knowing your real interest — with the full step at a discounted price for a limited time.'
+                'لمن يريد الصورة الكاملة: المقياس المهني الشامل بسعر مخفّض، وصلاحيته مرتبطة بالمهلة داخل العرض.',
+                'For the full picture: the complete career assessment at a reduced price, valid while the offer countdown lasts.'
               )}
             </p>
           </div>
@@ -183,17 +181,7 @@ export default function QuickCareerLanding() {
       {/* Footer */}
       <footer className="px-5 py-8 border-t border-slate-100">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <Link to="/store">
-            <img src={LOGO} alt="OPTIVANCE" className="h-7 w-auto" />
-          </Link>
-          <div className="flex items-center gap-5">
-            <Link to="/store/career" className="text-xs text-slate-400 hover:text-brand-primary transition-colors">
-              {t('المقياس الكامل', 'Full assessment')}
-            </Link>
-            <Link to="/store" className="text-xs text-slate-400 hover:text-brand-primary transition-colors">
-              {t('المتجر', 'Store')}
-            </Link>
-          </div>
+          <img src={LOGO} alt="OPTIVANCE" className="h-7 w-auto" />
           <span className="text-xs text-slate-300">{t('أداة من أوبتيفانس', 'An OPTIVANCE tool')}</span>
         </div>
       </footer>
