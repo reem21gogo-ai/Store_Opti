@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Loader2, Check } from 'lucide-react';
+import { Loader2, Lock } from 'lucide-react';
 
 const AGE_RANGES = {
   ar: [
@@ -21,9 +21,10 @@ const AGE_RANGES = {
 };
 
 /**
- * QuickLeadForm — minimal "save your result" form, shown only after the result.
+ * QuickLeadForm — the exchange step: one name + one contact detail
+ * unlocks the preliminary career profile.
  */
-export default function QuickLeadForm({ lang = 'ar', isRTL = true, saving = false, onSave }) {
+export default function QuickLeadForm({ lang = 'ar', isRTL = true, saving = false, onSave, ctaLabel, note }) {
   const t = (ar, en) => (lang === 'ar' ? ar : en);
   const [firstName, setFirstName] = useState('');
   const [ageRange, setAgeRange] = useState('');
@@ -53,7 +54,12 @@ export default function QuickLeadForm({ lang = 'ar', isRTL = true, saving = fals
     <form onSubmit={submit} className="space-y-3" dir={isRTL ? 'rtl' : 'ltr'}>
       <div>
         <label className="block text-xs font-semibold text-slate-500 mb-1.5">{t('الاسم الأول', 'First name')}</label>
-        <input value={firstName} onChange={e => setFirstName(e.target.value)} className={inputCls} placeholder={t('مثال: نورة', 'e.g. Nora')} />
+        <input
+          value={firstName}
+          onChange={e => setFirstName(e.target.value)}
+          className={inputCls}
+          placeholder={t('مثال: نورة', 'e.g. Nora')}
+        />
       </div>
 
       <div>
@@ -67,7 +73,9 @@ export default function QuickLeadForm({ lang = 'ar', isRTL = true, saving = fals
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-slate-500 mb-1.5">{t('البريد الإلكتروني أو رقم الجوال', 'Email or mobile number')}</label>
+        <label className="block text-xs font-semibold text-slate-500 mb-1.5">
+          {t('البريد الإلكتروني أو رقم الجوال', 'Email or mobile number')}
+        </label>
         <input
           value={contact}
           onChange={e => setContact(e.target.value)}
@@ -85,9 +93,11 @@ export default function QuickLeadForm({ lang = 'ar', isRTL = true, saving = fals
         className="w-full py-4 rounded-2xl font-heading font-black text-sm text-white flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-60"
         style={{ background: 'linear-gradient(135deg, #1A3A5C, #05E1AE)' }}
       >
-        {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-        {t('احفظ نتيجتي', 'Save my result')}
+        {saving ? <Loader2 size={16} className="animate-spin" /> : <Lock size={15} />}
+        {ctaLabel || t('اعرض نتيجتي الآن', 'Reveal my result now')}
       </button>
+
+      {note && <p className="text-[11px] text-slate-400 text-center leading-relaxed">{note}</p>}
     </form>
   );
 }

@@ -1,21 +1,44 @@
 /**
  * TakeQuickCareerAssessment — mobile-first quick player.
- * One question per screen, large tap targets, auto-advance, then a brief
- * "analyzing" transition before the preliminary result.
+ * One question per screen, live discount timer, progress nudges and a staged
+ * analysis screen, then the unlock gate.
  */
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowLeft, ArrowRight, ChevronRight } from 'lucide-react';
+import { X, ArrowLeft, ArrowRight, ChevronRight, Sparkles } from 'lucide-react';
 import { useLang } from '@/lib/LanguageContext';
 import { SCALES } from '@/lib/careerQuestions';
 import { QUICK_QUESTIONS, QUICK_TOTAL, QUICK_SAVE_KEY, QUICK_PROFILE_KEY } from '@/lib/quickCareerQuestions';
 import { buildQuickProfile } from '@/lib/quickCareerScoring';
 import QuickProgress from '@/components/store/quick/QuickProgress';
 import QuickScaleOptions from '@/components/store/quick/QuickScaleOptions';
+import QuickAnalyzing from '@/components/store/quick/QuickAnalyzing';
+import QuickCountdown from '@/components/store/quick/QuickCountdown';
 
 const readAnswers = () => {
   try { return JSON.parse(localStorage.getItem(QUICK_SAVE_KEY) || '{}'); } catch { return {}; }
+};
+
+const NUDGES = {
+  ar: [
+    'بداية قوية — تابع، ملامح ميلك بدأت تتضح.',
+    'أنت في منتصف الطريق — نتيجتك الأولية تقترب.',
+    'اقتربت جدًا — بقيت أسئلة قليلة فقط.',
+    'السؤال الأخير تقريبًا — نجهّز ملفك الآن.',
+  ],
+  en: [
+    'Strong start — the shape of your profile is already forming.',
+    'You are halfway there — your preliminary result is close.',
+    'Almost done — only a few questions left.',
+    'Last question — we are getting your profile ready.',
+  ],
+};
+
+const nudgeFor = (index, total, lang) => {
+  const ratio = index / total;
+  const band = ratio < 0.25 ? 0 : ratio < 0.5 ? 1 : ratio < 0.8 ? 2 : 3;
+  return NUDGES[lang === 'ar' ? 'ar' : 'en'][band];
 };
 
 export default function TakeQuickCareerAssessment() {
@@ -37,7 +60,6 @@ export default function TakeQuickCareerAssessment() {
     const profile = buildQuickProfile(finalAnswers, lang);
     localStorage.setItem(QUICK_PROFILE_KEY, JSON.stringify(profile));
     setPhase('analyzing');
-    setTimeout(() => navigate('/store/career/quick/result'), 1500);
   };
 
   const goTo = (index) => {
@@ -66,29 +88,17 @@ export default function TakeQuickCareerAssessment() {
 
   if (phase === 'analyzing') {
     return (
-      <div className="min-h-screen bg-corp-dark flex flex-col items-center justify-center px-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
-          <div className="w-16 h-16 rounded-2xl bg-brand-accent/15 border border-brand-accent/25 flex items-center justify-center mx-auto mb-6">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
-              className="w-7 h-7 rounded-full border-2 border-brand-accent/25 border-t-brand-accent"
-            />
-          </div>
-          <h2 className="font-heading font-black text-white text-xl mb-2">
-            {t('جاري تحليل ميولك المهنية…', 'Analyzing your career interests…')}
-          </h2>
-          <p className="text-white/40 text-sm">
-            {t('لحظات قليلة ونعرض نتيجتك الأولية', 'Just a moment while we prepare your preliminary result')}
-          </p>
-        </motion.div>
-      </div>
+      <QuickAnalyzing
+        lang={lang}
+        isRTL={isRTL}
+        onDone={() => navigate('/store/career/quick/unlock', { replace: true })}
+      />
     );
   }
 
   return (
     <div className="min-h-screen bg-store-bg flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Top bar + progress */}
+      {/* Top bar + urgency + progress */}
       <div className="bg-white border-b border-slate-100 px-5 py-3.5">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-between mb-3">
@@ -99,12 +109,20 @@ export default function TakeQuickCareerAssessment() {
             >
               <X size={18} />
             </button>
-            <span className="text-xs font-semibold text-slate-400">
-              {t('المقياس السريع', 'Quick Assessment')}
-            </span>
+            <span className="text-xs font-semibold text-slate-400">{t('المقياس السريع', 'Quick Assessment')}</span>
             <span className="w-[18px]" />
           </div>
+
+          <div className="flex justify-center mb-3">
+            <QuickCountdown lang={lang} tone="light" />
+          </div>
+
           <QuickProgress current={current + 1} total={QUICK_TOTAL} />
+
+          <div className="flex items-center gap-1.5 mt-2.5">
+            <Sparkles size={12} className="text-brand-accent flex-shrink-0" />
+            <p className="text-[11px] text-slate-500 font-medium">{nudgeFor(current, QUICK_TOTAL, lang)}</p>
+          </div>
         </div>
       </div>
 
@@ -119,6 +137,18 @@ export default function TakeQuickCareerAssessment() {
               exit={{ opacity: 0, x: direction * -24 }}
               transition={{ duration: 0.22, ease: 'easeOut' }}
             >
+              <div className="flex items-center gap-3 mb-5">
+                <span
+                  className="w-9 h-9 rounded-2xl flex items-center justify-center text-white font-heading font-black text-sm flex-shrink-0"
+                  style={{ background: 'linear-gradient(135deg, #1A3A5C, #05E1AE)' }}
+                >
+                  {current + 1}
+                </span>
+                <span className="text-xs text-slate-400">
+                  {t(`من أصل ${QUICK_TOTAL} أسئلة`, `of ${QUICK_TOTAL} questions`)}
+                </span>
+              </div>
+
               <h1 className="font-heading font-black text-corp-dark text-xl sm:text-2xl leading-snug mb-7">
                 {question[`question_${lang}`] || question.question_en}
               </h1>

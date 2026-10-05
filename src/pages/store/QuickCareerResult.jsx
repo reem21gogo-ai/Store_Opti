@@ -1,19 +1,18 @@
 /**
- * QuickCareerResult — preliminary Career Interest Profile.
- * Shows the real quick result first, then introduces the full assessment
- * and offers a minimal "save your result" step.
+ * QuickCareerResult — the unlocked preliminary Career Interest Profile.
+ * Reached only after the data gate, followed by the ad offer.
  */
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import confetti from 'canvas-confetti';
 import { useLang } from '@/lib/LanguageContext';
 import { base44 } from '@/api/base44Client';
 import {
   Wrench, FlaskConical, Palette, Users, Briefcase, Calculator,
-  Globe, Sparkles, Check, CheckCircle2, ArrowLeft, ArrowRight,
-  Lock, FileText, BarChart2, Target, RefreshCw,
+  Globe, Sparkles, ArrowLeft, ArrowRight, Lock, FileText, BarChart2, Target, RefreshCw,
 } from 'lucide-react';
-import QuickLeadForm from '@/components/store/quick/QuickLeadForm';
+import QuickOfferCard from '@/components/store/quick/QuickOfferCard';
 import {
   QUICK_SAVE_KEY, QUICK_PROFILE_KEY, QUICK_LEAD_KEY, FULL_ANSWERS_KEY, QUICK_TOTAL,
 } from '@/lib/quickCareerQuestions';
@@ -33,16 +32,18 @@ export default function QuickCareerResult() {
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
 
   const [profile, setProfile] = useState(null);
+  const [lead, setLead] = useState(null);
   const [authed, setAuthed] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
     const stored = read(QUICK_PROFILE_KEY);
     if (!stored) { navigate('/store/career/quick', { replace: true }); return; }
+
+    const savedLead = read(QUICK_LEAD_KEY);
+    if (!savedLead?.saved) { navigate('/store/career/quick/unlock', { replace: true }); return; }
+
     setProfile(stored);
-    setSaved(Boolean(read(QUICK_LEAD_KEY)?.saved));
+    setLead(savedLead);
 
     // Carry the quick answers into the full assessment so they aren't asked twice.
     const quick = read(QUICK_SAVE_KEY) || {};
@@ -50,29 +51,14 @@ export default function QuickCareerResult() {
     localStorage.setItem(FULL_ANSWERS_KEY, JSON.stringify({ ...quick, ...existing }));
 
     base44.auth.isAuthenticated().then(setAuthed).catch(() => setAuthed(false));
+
+    confetti({
+      particleCount: 80,
+      spread: 75,
+      origin: { y: 0.25 },
+      colors: ['#05E1AE', '#4ca9fa', '#1A3A5C'],
+    });
   }, [navigate]);
-
-  const handleSave = async (values) => {
-    setSaving(true);
-    setSaveError('');
-    const res = await base44.functions
-      .invoke('submitQuickCareerLead', {
-        ...values,
-        language: lang,
-        strongest_interest: profile.strongest[0],
-        top_interests: profile.top3.map(item => item.code),
-        holland_code: profile.hollandCode,
-      })
-      .catch(() => null);
-    setSaving(false);
-
-    if (res?.data?.saved) {
-      localStorage.setItem(QUICK_LEAD_KEY, JSON.stringify({ ...values, saved: true }));
-      setSaved(true);
-    } else {
-      setSaveError(t('تعذّر الحفظ، يرجى المحاولة مرة أخرى.', 'Could not save, please try again.'));
-    }
-  };
 
   const handleContinue = () => {
     if (authed) navigate('/store/career/intake');
@@ -107,7 +93,10 @@ export default function QuickCareerResult() {
           <Link to="/store">
             <img src={LOGO} alt="OPTIVANCE" className="h-7 w-auto" />
           </Link>
-          <button onClick={toggleLang} className="flex items-center gap-1.5 text-slate-400 hover:text-brand-primary text-xs transition-colors">
+          <button
+            onClick={toggleLang}
+            className="flex items-center gap-1.5 text-slate-400 hover:text-brand-primary text-xs transition-colors"
+          >
             <Globe size={13} />
             {lang === 'ar' ? 'EN' : 'عر'}
           </button>
@@ -120,6 +109,11 @@ export default function QuickCareerResult() {
           <span className="text-xs font-semibold text-brand-primary uppercase tracking-wider">
             {t('ملفك المهني الأولي', 'Preliminary Career Interest Profile')}
           </span>
+          <h1 className="font-heading font-black text-corp-dark text-xl mt-2">
+            {lead?.first_name
+              ? t(`${lead.first_name}، هذا ملفك المهني`, `${lead.first_name}, this is your career profile`)
+              : t('هذا ملفك المهني', 'This is your career profile')}
+          </h1>
           <p className="text-slate-400 text-xs mt-2">
             {t('نتيجة أولية من المقياس السريع', 'A preliminary result from the quick assessment')}
           </p>
@@ -134,7 +128,7 @@ export default function QuickCareerResult() {
           style={{ background: `linear-gradient(135deg, #0D1F33, ${primaryColor})` }}
         >
           <p className="text-white/60 text-xs mb-2">{t('أقوى ميولك', 'Your strongest interest')}</p>
-          <h1 className="font-heading font-black text-2xl mb-3">{strongestNames}</h1>
+          <h2 className="font-heading font-black text-2xl mb-3">{strongestNames}</h2>
           <p className="text-white/80 text-sm leading-relaxed">{strongest[0]?.description[lang]}</p>
           <div className="mt-5 pt-4 border-t border-white/15 flex items-center justify-between">
             <span className="text-white/50 text-xs">{t('رمز هولاند الأولي', 'Preliminary Holland Code')}</span>
@@ -194,7 +188,7 @@ export default function QuickCareerResult() {
           )}
         </motion.div>
 
-        {/* Conversion */}
+        {/* Why the full assessment */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -211,7 +205,7 @@ export default function QuickCareerResult() {
             )}
           </p>
 
-          <div className="space-y-3 mb-6">
+          <div className="space-y-3 mb-5">
             {fullBenefits.map((benefit, i) => {
               const Icon = benefit.icon;
               return (
@@ -223,66 +217,24 @@ export default function QuickCareerResult() {
             })}
           </div>
 
-          <div className="flex items-start gap-2.5 bg-brand-primary/5 rounded-2xl p-3.5 mb-6">
+          <div className="flex items-start gap-2.5 bg-brand-primary/5 rounded-2xl p-3.5">
             <RefreshCw size={15} className="text-brand-primary flex-shrink-0 mt-0.5" />
             <p className="text-xs text-brand-primary leading-relaxed">
               {t(
-                `لقد أكملت أول ${QUICK_TOTAL} أسئلة — تم حفظ إجاباتك وسيتم ترحيلها تلقائيًا إلى المقياس الكامل، فلن تحتاج للإجابة عليها مرة أخرى.`,
-                `You've already completed the first ${QUICK_TOTAL} questions — your answers are saved and will carry over to the full assessment, so you won't answer them again.`
+                `لقد أكملت أول ${QUICK_TOTAL} سؤالًا — إجاباتك محفوظة وستُرحّل تلقائيًا إلى المقياس الكامل، فلن تجيب عليها مرة أخرى.`,
+                `You've already completed the first ${QUICK_TOTAL} questions — your answers are saved and carry over to the full assessment, so you won't answer them again.`
               )}
             </p>
           </div>
-
-          <button
-            onClick={handleContinue}
-            className="w-full py-4 rounded-2xl font-heading font-black text-base text-white flex items-center justify-center gap-2 transition-all hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg, #1A3A5C, #05E1AE)' }}
-          >
-            {authed ? <Arrow size={16} /> : <Lock size={15} />}
-            {t('أكمل المقياس الكامل', 'Continue to Full Assessment')}
-          </button>
-          <p className="text-center text-xs text-slate-400 mt-3">
-            {t('احصل على ملفي المهني الكامل', 'Get my complete Career Interest Profile')}
-          </p>
         </motion.div>
 
-        {/* Save result */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-3xl border border-slate-100 p-6"
-        >
-          {saved ? (
-            <div className="text-center py-2">
-              <div className="w-12 h-12 rounded-2xl bg-brand-accent/10 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 size={22} className="text-brand-accent" />
-              </div>
-              <h3 className="font-heading font-bold text-corp-dark text-base mb-1.5">
-                {t('تم حفظ نتيجتك', 'Your result is saved')}
-              </h3>
-              <p className="text-slate-500 text-sm">
-                {t('يمكنك الآن متابعة المقياس الكامل في أي وقت.', 'You can continue to the full assessment at any time.')}
-              </p>
-            </div>
-          ) : (
-            <>
-              <h3 className="font-heading font-bold text-corp-dark text-base mb-1.5">
-                {t('احفظ نتيجتك', 'Save your result')}
-              </h3>
-              <p className="text-slate-500 text-sm mb-5">
-                {t(
-                  'أدخل بياناتك لتتابع مقياسك وتصل إلى ملفك المهني الكامل.',
-                  'Enter your details so you can continue your assessment and access your complete profile.'
-                )}
-              </p>
-              <QuickLeadForm lang={lang} isRTL={isRTL} saving={saving} onSave={handleSave} />
-              {saveError && <p className="text-xs text-destructive mt-3 text-center">{saveError}</p>}
-            </>
-          )}
+        {/* Offer */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <QuickOfferCard lang={lang} isRTL={isRTL} />
         </motion.div>
 
-        <div className="flex items-center justify-center gap-2 pb-4">
+        <div className="flex items-center justify-center gap-2 pb-6">
+          <Lock size={12} className="text-slate-300" />
           <Link to="/store/career" className="text-slate-400 hover:text-brand-primary text-xs transition-colors">
             {t('تعرّف على المقياس الكامل', 'Learn about the full assessment')}
           </Link>

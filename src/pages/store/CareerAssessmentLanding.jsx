@@ -15,6 +15,7 @@ import CareerOutputPreview from '@/components/store/CareerOutputPreview';
 import StoreFooter from '@/components/store/StoreFooter';
 import { base44 } from '@/api/base44Client';
 import { PRODUCT_INFO, SECTIONS } from '@/lib/careerContent';
+import { QUICK_TOTAL } from '@/lib/quickCareerQuestions';
 
 const SECTION_ICONS = { riasec: Compass, work_values: Heart, skills: Zap, personality: Users, strengths: Star, environment: Building2 };
 
@@ -226,7 +227,7 @@ export default function CareerAssessmentLanding() {
 
               <Link to="/store/career/quick" className="w-full py-3 rounded-xl border border-brand-accent/40 bg-brand-accent/5 text-brand-primary text-sm text-center flex items-center justify-center gap-2 hover:bg-brand-accent/10 transition-all">
                 <Zap size={14} />
-                {lang === 'ar' ? 'جرّب المقياس السريع (6 أسئلة)' : 'Try the Quick Assessment (6 questions)'}
+                {lang === 'ar' ? `جرّب المقياس السريع (${QUICK_TOTAL} أسئلة)` : `Try the Quick Assessment (${QUICK_TOTAL} questions)`}
               </Link>
 
               <Link to="/store/assessments" className="w-full py-3 rounded-xl border border-slate-200 text-slate-600 text-sm text-center flex items-center justify-center gap-2 hover:border-brand-primary/50 hover:text-brand-primary transition-all bg-white">

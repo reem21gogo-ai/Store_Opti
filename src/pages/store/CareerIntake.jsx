@@ -6,11 +6,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Mail, Briefcase, Target, ArrowLeft, ArrowRight, Globe, ChevronRight, RefreshCw } from 'lucide-react';
+import { User, Mail, Briefcase, Target, ArrowLeft, ArrowRight, Globe, ChevronRight, RefreshCw, BadgePercent } from 'lucide-react';
 import StoreNavbar from '@/components/store/StoreNavbar';
 import StoreFooter from '@/components/store/StoreFooter';
 import { base44 } from '@/api/base44Client';
 import { USER_STATUSES } from '@/lib/careerContent';
+import { OFFER, hasFunnelEntry } from '@/lib/quickCareerOffer';
+import QuickCountdown from '@/components/store/quick/QuickCountdown';
 
 const MOTIVATIONS = {
   ar: ['استكشاف مسار مهني مناسب', 'تغيير مجال العمل', 'توجيه الدراسة والتدريب', 'الفضول المهني', 'التحضير لفرصة جديدة'],
@@ -37,6 +39,7 @@ export default function CareerIntake() {
   const [step, setStep] = useState(1); // 1=lang, 2=profile, 3=motivation
   const [errors, setErrors] = useState({});
   const [quickCount, setQuickCount] = useState(0);
+  const [showOffer, setShowOffer] = useState(false);
 
   useEffect(() => {
     base44.auth.isAuthenticated().then(async ok => {
@@ -44,6 +47,7 @@ export default function CareerIntake() {
       const u = await base44.auth.me();
       const quickLead = readStored('quick_career_lead');
       setQuickCount(Object.keys(readStored('career_assessment_answers')).length);
+      setShowOffer(hasFunnelEntry());
       setUser(u);
       setForm(f => ({
         ...f,
@@ -124,6 +128,20 @@ export default function CareerIntake() {
                 `${quickCount} questions from the quick assessment were carried over — you won't answer them again.`
               )}
             </p>
+          </div>
+        </div>
+      )}
+
+      {showOffer && (
+        <div className="bg-corp-dark px-6 py-3">
+          <div className="max-w-2xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <BadgePercent size={14} className="text-brand-accent flex-shrink-0" />
+              <p className="text-xs text-white/85 font-medium">
+                {t(`خصم ${OFFER.discountPercent}% لزوار الإعلان محفوظ على مقياسك الكامل.`, `Your ${OFFER.discountPercent}% ad discount is saved for this assessment.`)}
+              </p>
+            </div>
+            <QuickCountdown lang={assessmentLang} tone="dark" />
           </div>
         </div>
       )}

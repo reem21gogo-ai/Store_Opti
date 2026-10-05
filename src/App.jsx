@@ -32,6 +32,7 @@ import CareerReport from '@/pages/store/CareerReport';
 import QuickCareerLanding from '@/pages/store/QuickCareerLanding';
 import TakeQuickCareerAssessment from '@/pages/store/TakeQuickCareerAssessment';
 import QuickCareerResult from '@/pages/store/QuickCareerResult';
+import QuickCareerUnlock from '@/pages/store/QuickCareerUnlock';
 
 // Admin
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -84,6 +85,7 @@ const AuthenticatedApp = () => {
       <Route path="/store/career/report/:attemptId" element={<CareerReport />} />
       <Route path="/store/career/quick" element={<QuickCareerLanding />} />
       <Route path="/store/career/quick/assessment" element={<TakeQuickCareerAssessment />} />
+      <Route path="/store/career/quick/unlock" element={<QuickCareerUnlock />} />
       <Route path="/store/career/quick/result" element={<QuickCareerResult />} />
 
       {/* Admin */}
