@@ -1,21 +1,18 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Play, ListChecks, Timer, Zap, ShieldCheck, Sparkles } from 'lucide-react';
-import { QUICK_TOTAL } from '@/lib/quickCareerQuestions';
+import { Play, Timer, Zap, Sparkles } from 'lucide-react';
 import QuickCountdown from '@/components/store/quick/QuickCountdown';
 
 /**
- * QuickHero — one tight screen: the promise, the button, and the facts.
+ * QuickHero — one tight screen: the promise, the button, and two facts.
  * Sized so the CTA is visible on a phone without scrolling.
  */
 export default function QuickHero({ lang = 'ar', onStart }) {
   const t = (ar, en) => (lang === 'ar' ? ar : en);
 
   const facts = [
-    { icon: ListChecks, label: t(`${QUICK_TOTAL} سؤالًا`, `${QUICK_TOTAL} questions`) },
     { icon: Timer, label: t('أقل من دقيقتين', 'Under two minutes') },
     { icon: Zap, label: t('نتيجة فورية', 'Instant result') },
-    { icon: ShieldCheck, label: t('بدون تسجيل', 'No sign-up') },
   ];
 
   return (
@@ -32,7 +29,7 @@ export default function QuickHero({ lang = 'ar', onStart }) {
         <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-accent/15 border border-brand-accent/25 mb-5">
           <Sparkles size={13} className="text-brand-accent" />
           <span className="text-brand-accent text-xs font-semibold">
-            {t('مجاني تمامًا — بدون تسجيل', 'Completely free — no sign-up')}
+            {t('مجاني تمامًا', 'Completely free')}
           </span>
         </span>
 
